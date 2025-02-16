@@ -1,0 +1,63 @@
+version: "3.9"
+name: profissu_dev
+
+services:
+  mysql:
+    image: mysql:8.1.0
+    container_name: profissu_mysql
+    environment:
+      - "MYSQL_ROOT_PASSWORD=root"
+      - "MYSQL_DATABASE=profissu"
+      - "MYSQL_USER=admin"
+      - "MYSQL_PASSWORD=admin"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: "mysql --user=$$MYSQL_USER --password=$$MYSQL_PASSWORD --execute \"SHOW DATABASES;\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4.2
+    container_name: profissu_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--requirepass", "admin"]
+    healthcheck:
+      test: "redis-cli -h redis -p 6379 -a admin ping"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: profissu
+    environment:
+      - "SPRING_PROFILE=dev"
+      - "MYSQL_HOST=mysql"
+      - "MYSQL_PORT=3306"
+      - "MYSQL_DATABASE=profissu"
+      - "MYSQL_USER=admin"
+      - "MYSQL_PASSWORD=admin"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+      - "REDIS_PASSWORD=admin"
+    ports:
+      - "8081:8080"
+    volumes:
+      - maven_cache:/root/.m2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  redis_data:
+  maven_cache:

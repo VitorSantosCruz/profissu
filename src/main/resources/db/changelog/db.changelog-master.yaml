@@ -1,0 +1,309 @@
+databaseChangeLog:
+  - changeSet:
+      id: "202502160328"
+      author: VCruz
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+              - column:
+                  name: gender
+                  type: ENUM('MALE', 'FEMALE', 'OTHER')
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: profiles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: bio
+                  type: VARCHAR(255)
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_profiles_user_id
+                    foreignKey: true
+                    references: users(id)
+        - createTable:
+            tableName: contacts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: type
+                  type: ENUM('EMAIL', 'PHONE')
+              - column:
+                  name: value
+                  type: VARCHAR(255)
+              - column:
+                  name: standard
+                  type: BOOLEAN
+              - column:
+                  name: verification_requested_at
+                  type: TIMESTAMP
+              - column:
+                  name: verification_completed_at
+                  type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_contacts_user_id
+                    foreignKey: true
+                    references: users(id)
+        - createTable:
+            tableName: addresses
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: street
+                  type: VARCHAR(255)
+              - column:
+                  name: number
+                  type: VARCHAR(255)
+              - column:
+                  name: city
+                  type: VARCHAR(255)
+              - column:
+                  name: state
+                  type: VARCHAR(255)
+              - column:
+                  name: zip_code
+                  type: VARCHAR(255)
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_addresses_user_id
+                    foreignKey: true
+                    references: users(id)
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+        - createTable:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_users_roles_user_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: role_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_users_roles_role_id
+                    foreignKey: true
+                    references: roles(id)
+        - createTable:
+            tableName: requested_services
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: status
+                  type: ENUM('PENDING', 'INPROGRESS', 'DONE', 'CANCELLED')
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_requested_services_user_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: address_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_requested_services_address_id
+                    foreignKey: true
+                    references: addresses(id)
+        - createTable:
+            tableName: conversations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+              - column:
+                  name: requester_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_conversations_requester_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: service_provider_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_conversations_service_provider_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: requested_service_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_conversations_requested_service_id
+                    foreignKey: true
+                    references: requested_services(id)
+        - createTable:
+            tableName: messages
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: message
+                  type: TEXT
+              - column:
+                  name: is_read
+                  type: BOOLEAN
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_messages_user_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: conversation_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_messages_conversation_id
+                    foreignKey: true
+                    references: conversations(id)
+        - createTable:
+            tableName: reviews
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+              - column:
+                  name: review
+                  type: TEXT
+              - column:
+                  name: stars
+                  type: TINYINT
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_reviews_user_id
+                    foreignKey: true
+                    references: users(id)
+              - column:
+                  name: requested_service_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_reviews_requested_service_id
+                    foreignKey: true
+                    references: requested_services(id)

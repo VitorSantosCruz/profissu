@@ -1,0 +1,28 @@
+name: "Labeler"
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  enforce-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Branch Name
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          if [[ ! "$BRANCH_NAME" =~ ^(feat|fix|chore|docs|upgrade|release) ]]; then
+            echo "Branch name '$BRANCH_NAME' does not follow the required pattern!"
+            exit 1
+          fi
+
+  add-label:
+    runs-on: ubuntu-latest
+    needs: enforce-branch
+
+    steps:
+      - uses: actions/labeler@v5

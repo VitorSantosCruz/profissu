@@ -1,0 +1,12 @@
+release:
+  - head-branch: "^release"
+feature:
+  - head-branch: "^feat"
+bugfix:
+  - head-branch: "^fix"
+chore:
+  - head-branch: "^chore"
+docs:
+  - head-branch: "^docs"
+dependencies:
+  - head-branch: "^upgrade"

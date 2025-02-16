@@ -1,0 +1,34 @@
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
+
+exclude-labels:
+  - "release"
+
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bugfix'
+  - title: '🛠️ Maintenance'
+    labels:
+      - 'chore'
+      - 'upgrade'
+  - title: '📝 Documentation'
+    labels:
+      - 'docs'
+
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+template: |
+  ## Changes
+
+  $CHANGES
+
+  ### Contributors
+
+  $CONTRIBUTORS
+
+  #### Previous Release
+
+  $PREVIOUS_TAG
