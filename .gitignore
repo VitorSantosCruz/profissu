@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### RSA keys ###
+profissu.key
+profissu.pub

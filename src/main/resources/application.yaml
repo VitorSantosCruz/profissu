@@ -35,3 +35,8 @@ management:
     metrics:
       export:
         enabled: true
+
+profissu:
+  jwt:
+    private-key-location: classpath:profissu.key
+    public-key-location: classpath:profissu.pub
