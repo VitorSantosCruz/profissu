@@ -31,12 +31,25 @@ public class SecurityConfig {
   @Value("${profissu.jwt.private-key-location}")
   private RSAPrivateKey privateKey;
 
+  private final String[] swaggerEndpoints = {
+      "/swagger-ui/index.html",
+      "/swagger-ui/swagger-ui.css",
+      "/swagger-ui/index.css",
+      "/swagger-ui/swagger-ui-bundle.js",
+      "/swagger-ui/swagger-ui-standalone-preset.js",
+      "/swagger-ui/swagger-initializer.js",
+      "/v3/api-docs/swagger-config",
+      "/swagger-ui/favicon-32x32.png",
+      "/v3/api-docs"
+  };
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/login").permitAll()
+            .requestMatchers(HttpMethod.GET, swaggerEndpoints).permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
