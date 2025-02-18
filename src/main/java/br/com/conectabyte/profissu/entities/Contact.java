@@ -25,32 +25,32 @@ public class Contact {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "created_at", nullable = true)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", nullable = true)
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private ContactTypeEnum type;
 
-  @Column(nullable = true)
+  @Column(unique = true, nullable = false)
   private String value;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private boolean standard;
 
-  @Column(name = "verification_requested_at", nullable = true)
+  @Column(name = "verification_requested_at")
   private LocalDateTime verificationRequestedAt;
 
-  @Column(name = "verification_completed_at", nullable = true)
+  @Column(name = "verification_completed_at")
   private LocalDateTime verificationCompletedAt;
 
-  @Column(name = "deleted_at", nullable = true)
+  @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 }

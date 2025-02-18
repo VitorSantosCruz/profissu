@@ -24,21 +24,21 @@ public class Conversation {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "created_at", nullable = true)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", nullable = true)
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @Column(name = "is_active", nullable = true)
+  @Column(name = "is_active", nullable = false)
   private boolean isActive;
 
   @ManyToOne
-  @JoinColumn(name = "requester_id")
+  @JoinColumn(name = "requester_id", nullable = false)
   private User requester;
 
   @ManyToOne
-  @JoinColumn(name = "service_provider_id")
+  @JoinColumn(name = "service_provider_id", nullable = false)
   private User serviceProvider;
 
   @OneToMany(mappedBy = "conversation")

@@ -22,17 +22,17 @@ public class Message {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "created_at", nullable = true)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "is_read", nullable = true)
+  @Column(name = "is_read", nullable = false)
   private boolean read;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
   @ManyToOne
-  @JoinColumn(name = "conversation_id")
+  @JoinColumn(name = "conversation_id", nullable = false)
   private Conversation conversation;
 }

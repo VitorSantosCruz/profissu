@@ -22,29 +22,28 @@ public class Review {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "created_at", nullable = true)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", nullable = true)
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private String title;
 
-  @Column(nullable = true)
   private String review;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private int stars;
 
-  @Column(name = "deleted_at", nullable = true)
+  @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
   @ManyToOne
-  @JoinColumn(name = "requested_service_id")
+  @JoinColumn(name = "requested_service_id", nullable = false)
   private RequestedService requestedService;
 }

@@ -9,6 +9,6 @@ import org.springframework.data.repository.query.Param;
 import br.com.conectabyte.profissu.entities.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-  @Query("FROM User u JOIN FETCH u.contacts c WHERE c.type = 'EMAIL' AND c.standard AND c.value = :email")
+  @Query("FROM User u JOIN FETCH u.contacts c WHERE c.type = 'EMAIL' AND c.standard AND c.value = :email AND c.deletedAt IS NULL")
   Optional<User> findByEmail(@Param("email") String email);
 }

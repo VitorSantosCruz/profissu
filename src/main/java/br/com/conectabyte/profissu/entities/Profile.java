@@ -20,10 +20,10 @@ public class Profile {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private String bio;
 
   @OneToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 }

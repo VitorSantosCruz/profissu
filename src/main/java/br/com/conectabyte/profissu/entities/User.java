@@ -38,7 +38,7 @@ public class User {
   @Column(name = "created_at", nullable = true)
   private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", nullable = true)
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
   @Column(nullable = true)
@@ -51,15 +51,17 @@ public class User {
   @Enumerated(EnumType.STRING)
   private GenderEnum gender;
 
-  @Column(name = "deleted_at", nullable = true)
+  @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
   @OneToOne(mappedBy = "user")
   private Profile profile;
 
-  @OneToMany(mappedBy = "user")
+  @Column(nullable = false)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private List<Contact> contacts;
 
+  @Column(nullable = false)
   @OneToMany(mappedBy = "user")
   private List<Address> addersses;
 
@@ -72,6 +74,7 @@ public class User {
   @OneToMany(mappedBy = "user")
   private List<Message> messages;
 
+  @Column(nullable = false)
   @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles;
