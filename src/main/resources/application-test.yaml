@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST_TEST}:${MYSQL_PORT_TEST}/${MYSQL_DATABASE_TEST}
+    username: ${MYSQL_USER_TEST}
+    password: ${MYSQL_PASSWORD_TEST}
+  liquibase:
+    drop-first: true
+  cache:
+    type: none
+  data:
+    redis:
+      host: localhost
+      port: 0
+      password: ""

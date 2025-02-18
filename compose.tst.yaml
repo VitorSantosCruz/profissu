@@ -1,0 +1,45 @@
+version: "3.9"
+name: profissu_test
+
+services:
+  mysql_test:
+    image: mysql:8.1.0
+    container_name: profissu_mysql
+    environment:
+      - "MYSQL_ROOT_PASSWORD=root"
+      - "MYSQL_DATABASE=profissu_test"
+      - "MYSQL_USER=admin"
+      - "MYSQL_PASSWORD=admin"
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data_test:/var/lib/mysql
+    healthcheck:
+      test: "mysql --user=$$MYSQL_USER --password=$$MYSQL_PASSWORD --execute \"SHOW DATABASES;\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: maven:3.9.9-amazoncorretto-21-alpine
+    container_name: profissu
+    environment:
+      - "MYSQL_HOST_TEST=mysql_test"
+      - "MYSQL_PORT_TEST=3306"
+      - "MYSQL_DATABASE_TEST=profissu_test"
+      - "MYSQL_USER_TEST=admin"
+      - "MYSQL_PASSWORD_TEST=admin"
+    ports:
+      - "8082:8081"
+    volumes:
+      - .:/app
+      - maven_cache_test:/root/.m2
+    working_dir: /app
+    command: ["mvn", "test"]
+    depends_on:
+      mysql_test:
+        condition: service_healthy
+
+volumes:
+  mysql_data_test:
+  maven_cache_test:
