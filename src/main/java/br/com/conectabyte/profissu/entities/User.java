@@ -35,19 +35,19 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "created_at", nullable = true)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private String name;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   private String password;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private GenderEnum gender;
 

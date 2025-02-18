@@ -5,3 +5,10 @@ spring:
     password: ${MYSQL_PASSWORD_TEST}
   liquibase:
     drop-first: true
+  cache:
+    type: none
+  data:
+    redis:
+      host: localhost
+      port: 0
+      password: ""

@@ -24,10 +24,6 @@ services:
     image: maven:3.9.9-amazoncorretto-21-alpine
     container_name: profissu
     environment:
-      - "SPRING_PROFILE=test"
-      - "REDIS_HOST=redis"
-      - "REDIS_PORT=6379"
-      - "REDIS_PASSWORD=admin"
       - "MYSQL_HOST_TEST=mysql_test"
       - "MYSQL_PORT_TEST=3306"
       - "MYSQL_DATABASE_TEST=profissu_test"
