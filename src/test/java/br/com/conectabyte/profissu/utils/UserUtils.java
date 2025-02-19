@@ -11,7 +11,7 @@ public class UserUtils {
 
     user.setCreatedAt(LocalDateTime.now());
     user.setName("Test");
-    user.setPassword("$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy"); // admin
+    user.setPassword("$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G"); // admin
     user.setGender(GenderEnum.MALE);
 
     return user;

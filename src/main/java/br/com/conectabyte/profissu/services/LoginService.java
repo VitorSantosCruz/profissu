@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LoginService {
   private final TokenService tokenService;
   private final UserService userService;

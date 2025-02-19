@@ -43,7 +43,7 @@ public class LoginControllerTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     when(loginService.login(any())).thenReturn(new LoginResponseDto(token, expiresIn));
 
     mockMvc.perform(post("/login")
@@ -57,7 +57,7 @@ public class LoginControllerTest {
   @Test
   void shouldReturnUnauthorizedWhenBadCredentials() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     when(loginService.login(any())).thenThrow(BadCredentialsException.class);
 
     mockMvc.perform(post("/login")
@@ -70,7 +70,7 @@ public class LoginControllerTest {
   @Test
   void shouldReturnUnauthorizedWhenEmailUnverified() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     when(loginService.login(any())).thenThrow(EmailNotVerifiedException.class);
 
     mockMvc.perform(post("/login")
@@ -90,7 +90,7 @@ public class LoginControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenContentEmailIsInvalid() throws Exception {
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
     mockMvc.perform(post("/login")
         .contentType(MediaType.APPLICATION_JSON)
