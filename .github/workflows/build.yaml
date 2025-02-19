@@ -67,7 +67,7 @@ jobs:
 
       - name: Tests
         env:
-          MYSQL_HOST_TEST: mysql_test
+          MYSQL_HOST_TEST: 127.0.0.1
           MYSQL_PORT_TEST: 3307
           MYSQL_DATABASE_TEST: profissu_test
           MYSQL_USER_TEST: admin
