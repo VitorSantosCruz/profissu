@@ -67,7 +67,19 @@ jobs:
 
       - name: Tests
         env:
-          SPRING_PROFILE: test
+          MYSQL_HOST_TEST: mysql_test
+          MYSQL_PORT_TEST: 3307
+          MYSQL_DATABASE_TEST: profissu_test
+          MYSQL_USER_TEST: admin
+          MYSQL_PASSWORD_TEST: admin
+        run: |
+          openssl genrsa -out src/main/resources/profissu.key 4096 && \
+          openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
+          mvn test
+
+      - name: Build
+        env:
+          SPRING_PROFILE: dev
           MYSQL_HOST: 127.0.0.1
           MYSQL_PORT: 3307
           MYSQL_DATABASE: profissu
