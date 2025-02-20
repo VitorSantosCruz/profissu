@@ -36,7 +36,7 @@ public class User {
   private Long id;
 
   @Column(name = "created_at", nullable = false)
-  private LocalDateTime createdAt;
+  private LocalDateTime createdAt = LocalDateTime.now();
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
@@ -54,7 +54,7 @@ public class User {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
-  @OneToOne(mappedBy = "user")
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
   private Profile profile;
 
   @Column(nullable = false)
@@ -62,8 +62,8 @@ public class User {
   private List<Contact> contacts;
 
   @Column(nullable = false)
-  @OneToMany(mappedBy = "user")
-  private List<Address> addersses;
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<Address> addresses;
 
   @OneToMany(mappedBy = "requester")
   private List<Conversation> conversationsAsARequester;

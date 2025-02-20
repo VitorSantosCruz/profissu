@@ -42,9 +42,9 @@ public class LoginServiceTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
-    final var user = UserUtils.createUser();
-    final var contact = ContactUtils.createContact(user);
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
     user.setContacts(List.of(contact));
 
     when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
@@ -62,7 +62,7 @@ public class LoginServiceTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
     when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.empty());
@@ -76,10 +76,10 @@ public class LoginServiceTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
     when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
-    when(userService.findByEmail(any())).thenReturn(Optional.of(UserUtils.createUser()));
+    when(userService.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
     when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
     assertThrows(BadCredentialsException.class, () -> loginService.login(new LoginRequestDto(email, password)));
@@ -90,9 +90,9 @@ public class LoginServiceTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$pZKpygPyYuXXySPufr4VAeNrcKhxueFwXXNm.p7mvrKnUSamaXoPy";
-    final var user = UserUtils.createUser();
-    final var contact = ContactUtils.createContact(user);
+    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
 

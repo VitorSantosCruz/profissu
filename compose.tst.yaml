@@ -4,7 +4,7 @@ name: profissu_test
 services:
   mysql_test:
     image: mysql:8.1.0
-    container_name: profissu_mysql
+    container_name: profissu_mysql_test
     environment:
       - "MYSQL_ROOT_PASSWORD=root"
       - "MYSQL_DATABASE=profissu_test"
@@ -22,7 +22,7 @@ services:
 
   app:
     image: maven:3.9.9-amazoncorretto-21-alpine
-    container_name: profissu
+    container_name: profissu_test
     environment:
       - "MYSQL_HOST_TEST=mysql_test"
       - "MYSQL_PORT_TEST=3306"

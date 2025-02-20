@@ -15,6 +15,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -70,6 +71,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -120,6 +122,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -174,6 +177,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
+                    unique: true
         - createTable:
             tableName: users_roles
             columns:
@@ -211,6 +215,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -262,6 +267,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -308,6 +314,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -348,6 +355,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
                   constraints:
                     nullable: false
               - column:
@@ -385,3 +393,98 @@ databaseChangeLog:
                     foreignKeyName: fk_reviews_requested_service_id
                     foreignKey: true
                     references: requested_services(id)
+
+  - changeSet:
+      id: "202502190351"
+      author: VCruz
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: name
+                  value: "admin"
+              - column:
+                  name: password
+                  value: "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G"
+              - column:
+                  name: gender
+                  value: "MALE"
+        - insert:
+            tableName: profiles
+            columns:
+              - column:
+                  name: user_id
+                  value: "1"
+        - insert:
+            tableName: contacts
+            columns:
+              - column:
+                  name: type
+                  value: "EMAIL"
+              - column:
+                  name: value
+                  value: "admin@conectabyte.com.br"
+              - column:
+                  name: standard
+                  value: "1"
+              - column:
+                  name: verification_requested_at
+                  valueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: verification_completed_at
+                  valueComputed: "CURRENT_TIMESTAMP"
+              - column:
+                  name: user_id
+                  value: "1"
+        - insert:
+            tableName: addresses
+            columns:
+              - column:
+                  name: street
+                  value: "123 Main St"
+              - column:
+                  name: number
+                  value: "101"
+              - column:
+                  name: city
+                  value: "Springfield"
+              - column:
+                  name: state
+                  value: "IL"
+              - column:
+                  name: zip_code
+                  value: "62701"
+              - column:
+                  name: user_id
+                  value: "1"
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: name
+                  value: ADMIN
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "2"
+              - column:
+                  name: name
+                  value: USER
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: "1"
+              - column:
+                  name: role_id
+                  value: "1"

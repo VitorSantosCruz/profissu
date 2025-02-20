@@ -24,8 +24,8 @@ public class UserRepositoryTest {
   @Test
   void shouldReturnUserWhenEmailIsValid() {
     final var email = "test@conectabyte.com.br";
-    final var user = UserUtils.createUser();
-    user.setContacts(List.of(ContactUtils.createContact(user)));
+    final var user = UserUtils.create();
+    user.setContacts(List.of(ContactUtils.create(user)));
     userRepository.save(user);
     final var optionalUser = userRepository.findByEmail(email);
 
@@ -47,8 +47,8 @@ public class UserRepositoryTest {
   @Test
   void shouldNotFindUserWithoutEmailType() {
     final var email = "test@conectabyte.com.br";
-    final var user = UserUtils.createUser();
-    final var contact = ContactUtils.createContact(user);
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
     contact.setType(ContactTypeEnum.PHONE);
     user.setContacts(List.of(contact));
     userRepository.save(user);
@@ -60,8 +60,8 @@ public class UserRepositoryTest {
   @Test
   void shouldNotFindUserWithoutDefaultEmail() {
     final var email = "test@conectabyte.com.br";
-    final var user = UserUtils.createUser();
-    final var contact = ContactUtils.createContact(user);
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
     contact.setStandard(false);
     user.setContacts(List.of(contact));
     userRepository.save(user);
