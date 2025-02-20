@@ -15,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,7 +32,7 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class UserControllerTest {
+public class RegisterControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
   @Autowired
@@ -49,7 +48,6 @@ public class UserControllerTest {
   private ObjectMapper objectMapper;
 
   @Test
-  @WithMockUser(username = "test", roles = { "USER" })
   void shouldReturnSavedUserWhenUserDataIsValid() throws Exception {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
@@ -58,7 +56,7 @@ public class UserControllerTest {
     user.setProfile(new Profile());
     when(userService.save(any())).thenReturn(userMapper.userToUserResponseDto(user));
 
-    mockMvc.perform(post("/users")
+    mockMvc.perform(post("/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
         .andExpect(status().isCreated())
@@ -72,14 +70,13 @@ public class UserControllerTest {
   }
 
   @Test
-  @WithMockUser(username = "test", roles = { "USER" })
   void shouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(new User()));
 
-    mockMvc.perform(post("/users")
+    mockMvc.perform(post("/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
         .andExpect(status().isBadRequest())
