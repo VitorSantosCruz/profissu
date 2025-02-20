@@ -20,14 +20,14 @@ public class LoginService {
     var optionalUser = userService.findByEmail(loginRequest.email());
 
     if (optionalUser.isEmpty() || !optionalUser.get().isValidPassword(loginRequest, passwordEncoder)) {
-      throw new BadCredentialsException("credentials.is.not.valid");
+      throw new BadCredentialsException("Credentials is not valid");
     }
 
     optionalUser.get().getContacts().stream()
         .filter(c -> c.getValue().equals(loginRequest.email()) && c.getVerificationCompletedAt() == null)
         .findFirst()
         .ifPresent(c -> {
-          throw new EmailNotVerifiedException("email.is.not.verified");
+          throw new EmailNotVerifiedException("E-mail is not verified");
         });
 
     return tokenService.create(optionalUser.get());
