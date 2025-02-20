@@ -14,7 +14,6 @@ import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.mappers.UserMapper;
-import br.com.conectabyte.profissu.repositories.RoleRepository;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService {
   private final UserRepository userRepository;
-  private final RoleRepository roleRepository;
+  private final RoleService roleService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
@@ -33,14 +32,14 @@ public class UserService {
   }
 
   @Transactional
-  public UserResponseDto registerUser(UserRequestDto userDto) {
+  public UserResponseDto save(UserRequestDto userDto) {
     var userToBeSaved = userMapper.userRequestDtoToUser(userDto);
     userToBeSaved.setPassword(bCryptPasswordEncoder.encode(userDto.password()));
     userToBeSaved.getContacts().forEach(c -> c.setUser(userToBeSaved));
     userToBeSaved.getAddresses().forEach(a -> a.setUser(userToBeSaved));
     userToBeSaved.setProfile(Profile.builder().user(userToBeSaved).build());
     userToBeSaved.setRoles(
-        Set.of(roleRepository.findByName(RoleEnum.USER.toString())
+        Set.of(roleService.findByName(RoleEnum.USER.toString())
             .orElse(Role.builder().name("USER").build())));
 
     var user = userRepository.save(userToBeSaved);

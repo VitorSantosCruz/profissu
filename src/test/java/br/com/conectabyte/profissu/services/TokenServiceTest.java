@@ -29,7 +29,7 @@ public class TokenServiceTest {
 
   @Test
   void shouldReturnTokenWhenSuccess() {
-    final var user = UserUtils.createUser();
+    final var user = UserUtils.create();
     final var map = Map.of("key", new Object());
 
     user.setRoles((Set.of(RoleUtils.createRole())));

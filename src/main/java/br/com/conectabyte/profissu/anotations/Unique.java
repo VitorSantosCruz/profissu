@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import br.com.conectabyte.profissu.anotations.validators.UniqueValidator;
+import br.com.conectabyte.profissu.validators.UniqueValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

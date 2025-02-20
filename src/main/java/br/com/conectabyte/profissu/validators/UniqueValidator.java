@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.anotations.validators;
+package br.com.conectabyte.profissu.validators;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,6 +13,6 @@ public class UniqueValidator implements ConstraintValidator<Unique, String> {
 
   @Override
   public boolean isValid(String email, ConstraintValidatorContext context) {
-    return email != null && !email.isBlank() && userRepository.findByEmail(email).isEmpty();
+    return userRepository.findByEmail(email).isEmpty();
   }
 }

@@ -7,10 +7,9 @@ import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 
 public class ContactUtils {
-  public static Contact createContact(User user) {
+  public static Contact create(User user) {
     var contact = new Contact();
 
-    contact.setCreatedAt(LocalDateTime.now());
     contact.setType(ContactTypeEnum.EMAIL);
     contact.setValue("test@conectabyte.com.br");
     contact.setStandard(true);
