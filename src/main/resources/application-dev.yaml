@@ -1,2 +1,5 @@
 server:
   port: 8081
+
+profissu:
+  url: http://localhost:8081

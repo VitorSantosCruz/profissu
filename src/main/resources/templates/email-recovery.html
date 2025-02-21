@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Password Recovery - Profisu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #F0F4F7;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      background-color: #ffffff;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .logo {
+      width: 180px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Quicksand', sans-serif;
+      color: #1A73E8;
+      font-size: 36px;
+      margin: 20px 0;
+      letter-spacing: 1px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 15px 30px;
+      margin-top: 20px;
+      text-decoration: none;
+      background-color: #1A73E8;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 500;
+      border-radius: 50px;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #1668c1;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #999;
+      margin-top: 40px;
+    }
+
+    .footer a {
+      color: #1A73E8;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <img th:src="${profissuLogoUrl}" alt="Profisu Logo" class="logo">
+    <h1>Password Recovery</h1>
+    <p>Hello,</p>
+    <p>We received a request to reset your password. Please click the button below to create a new password and regain access to your account.</p>
+    <a th:href="${resetLink}" class="button">Reset Your Password</a>
+    <p>If you didn't request this, you can safely ignore this email.</p>
+    <div class="footer">
+      <p>&copy; 2025 Profisu. All rights reserved.</p>
+      <p>Need help? <a href="mailto:support@profisu.com">Contact our support</a></p>
+    </div>
+  </div>
+</body>
+
+</html>

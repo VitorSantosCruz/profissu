@@ -24,6 +24,19 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 2
+  mail:
+    host: ${EMAIL_HOST}
+    port: ${EMAIL_PORT}
+    username: ${EMAIL_USER}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          timeout: 5000
+
 management:
   endpoints:
     web:

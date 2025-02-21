@@ -3,16 +3,16 @@ package br.com.conectabyte.profissu.validators;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import br.com.conectabyte.profissu.anotations.Unique;
-import br.com.conectabyte.profissu.repositories.UserRepository;
+import br.com.conectabyte.profissu.services.UserService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class UniqueValidator implements ConstraintValidator<Unique, String> {
   @Autowired
-  private UserRepository userRepository;
+  private UserService userService;
 
   @Override
   public boolean isValid(String email, ConstraintValidatorContext context) {
-    return userRepository.findByEmail(email).isEmpty();
+    return userService.findByEmail(email).isEmpty();
   }
 }

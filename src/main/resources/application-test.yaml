@@ -12,3 +12,9 @@ spring:
       host: localhost
       port: 0
       password: ""
+
+server:
+  port: 8082
+
+profissu:
+  url: http://localhost:8082
