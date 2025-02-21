@@ -12,6 +12,13 @@ spring:
       host: localhost
       port: 0
       password: ""
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 server:
   port: 8082
