@@ -6,6 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,15 +23,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.UserRequestDto;
+import br.com.conectabyte.profissu.entities.Profile;
+import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.services.LoginService;
+import br.com.conectabyte.profissu.services.UserService;
+import br.com.conectabyte.profissu.utils.AddressUtils;
+import br.com.conectabyte.profissu.utils.ContactUtils;
+import br.com.conectabyte.profissu.utils.UserUtils;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class LoginControllerTest {
+public class AuthControllerTest {
+  private final UserMapper userMapper = UserMapper.INSTANCE;
+
   @Autowired
   private MockMvc mockMvc;
+
+  @MockBean
+  private UserService userService;
 
   @MockBean
   private LoginService loginService;
@@ -106,6 +122,42 @@ public class LoginControllerTest {
     mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, null))))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  void shouldReturnSavedUserWhenUserDataIsValid() throws Exception {
+    final var user = UserUtils.create();
+    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setAddresses(List.of(AddressUtils.create(user)));
+    user.setId(1L);
+    user.setProfile(new Profile());
+    when(userService.save(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
+
+    mockMvc.perform(post("/auth/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").exists())
+        .andExpect(jsonPath("$.name").exists())
+        .andExpect(jsonPath("$.password").doesNotExist())
+        .andExpect(jsonPath("$.gender").exists())
+        .andExpect(jsonPath("$.profile").exists())
+        .andExpect(jsonPath("$.contacts").exists())
+        .andExpect(jsonPath("$.addresses").exists());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
+    final var user = UserUtils.create();
+    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setAddresses(List.of(AddressUtils.create(user)));
+    when(userService.findByEmail(any())).thenReturn(Optional.of(new User()));
+
+    mockMvc.perform(post("/auth/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("All fields must be valid"));
   }
