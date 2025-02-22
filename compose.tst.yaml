@@ -20,6 +20,18 @@ services:
       timeout: 5s
       retries: 5
 
+  maildev:
+    image: maildev/maildev:2.2.1
+    container_name: profissu_maildev_test
+    ports:
+      - "1081:1080"
+      - "1026:1025"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:1080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     image: maven:3.9.9-amazoncorretto-21-alpine
     container_name: profissu_test
@@ -29,6 +41,10 @@ services:
       - "MYSQL_DATABASE_TEST=profissu_test"
       - "MYSQL_USER_TEST=admin"
       - "MYSQL_PASSWORD_TEST=admin"
+      - "EMAIL_HOST_TEST=maildev"
+      - "EMAIL_PORT_TEST=1026"
+      - "EMAIL_USER_TEST="
+      - "EMAIL_PASSWORD_TEST="
     ports:
       - "8082:8081"
     volumes:
@@ -38,6 +54,8 @@ services:
     command: ["mvn", "test"]
     depends_on:
       mysql_test:
+        condition: service_healthy
+      maildev:
         condition: service_healthy
 
 volumes:
