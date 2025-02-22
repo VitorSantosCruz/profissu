@@ -43,13 +43,18 @@ public class SecurityConfig {
       "/v3/api-docs"
   };
 
+  private final String[] staticResources = {
+      "/images/profissu.jpeg"
+  };
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/*").permitAll()
             .requestMatchers(HttpMethod.GET, swaggerEndpoints).permitAll()
+            .requestMatchers(HttpMethod.GET, staticResources).permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

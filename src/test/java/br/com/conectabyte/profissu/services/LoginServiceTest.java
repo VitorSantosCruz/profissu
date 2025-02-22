@@ -26,7 +26,7 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 @ActiveProfiles("test")
 public class LoginServiceTest {
   @MockBean
-  private TokenService tokenService;
+  private JwtService jwtService;
 
   @MockBean
   private UserService userService;
@@ -47,7 +47,7 @@ public class LoginServiceTest {
     final var contact = ContactUtils.create(user);
     user.setContacts(List.of(contact));
 
-    when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
+    when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
@@ -64,7 +64,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
-    when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
+    when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.empty());
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
@@ -78,7 +78,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
-    when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
+    when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
     when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
@@ -96,7 +96,7 @@ public class LoginServiceTest {
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
 
-    when(tokenService.create(any())).thenReturn(new LoginResponseDto(token, expiresIn));
+    when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 

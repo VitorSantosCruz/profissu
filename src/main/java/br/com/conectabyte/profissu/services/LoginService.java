@@ -15,26 +15,26 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class LoginService {
-  private final TokenService tokenService;
+  private final JwtService jwtService;
   private final UserService userService;
   private final BCryptPasswordEncoder passwordEncoder;
 
   public LoginResponseDto login(LoginRequestDto loginRequest) {
     var optionalUser = userService.findByEmail(loginRequest.email());
 
-    this.validate(optionalUser, loginRequest, passwordEncoder);
+    this.validate(optionalUser, loginRequest);
 
-    return tokenService.create(optionalUser.get());
+    return jwtService.createJwtToken(optionalUser.get());
   }
 
-  private void validate(Optional<User> optionalUser, LoginRequestDto loginRequest,
-      BCryptPasswordEncoder passwordEncoder2) {
+  private void validate(Optional<User> optionalUser, LoginRequestDto loginRequest) {
     if (optionalUser.isEmpty() || !optionalUser.get().isValidPassword(loginRequest, passwordEncoder)) {
       throw new BadCredentialsException("Credentials is not valid");
     }
 
     optionalUser.get().getContacts().stream()
-        .filter(c -> c.getValue().equals(loginRequest.email()) && c.getVerificationCompletedAt() == null)
+        .filter(c -> c.getValue().equals(loginRequest.email()))
+        .filter(c -> c.getVerificationCompletedAt() == null)
         .findFirst()
         .ifPresent(c -> {
           throw new EmailNotVerifiedException("E-mail is not verified");

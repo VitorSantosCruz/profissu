@@ -1,6 +1,6 @@
 # **Profissu - Connecting Clients and Professionals**
 
-[![Profissu Logo](src/main/resources/static/profissu.jpeg)](src/main/resources/static/profissu.jpeg)
+[![Profissu Logo](src/main/resources/static/images/profissu.jpeg)](src/main/resources/static/images/profissu.jpeg)
 
 **Profissu** is an innovative platform designed to efficiently and transparently connect clients with professionals from various fields. We simplify the search for qualified specialists, enabling clients to find the ideal professional for their needs while allowing professionals to showcase their services and reach new clients.
 

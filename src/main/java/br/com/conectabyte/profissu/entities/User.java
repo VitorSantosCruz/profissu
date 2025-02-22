@@ -23,13 +23,11 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
+@Data
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,6 +54,9 @@ public class User {
 
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
   private Profile profile;
+
+  @OneToOne(mappedBy = "user")
+  private Token token;
 
   @Column(nullable = false)
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

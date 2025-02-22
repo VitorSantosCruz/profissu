@@ -1,34 +1,59 @@
 package br.com.conectabyte.profissu.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
+import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
+import jakarta.mail.MessagingException;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 public class UserServiceTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
-  @MockBean
+  @Mock
   private UserRepository userRepository;
 
-  @Autowired
+  @Mock
+  private TokenService tokenService;
+
+  @Mock
+  private EmailService emailService;
+
+  @Mock
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+  @Mock
+  private RoleService roleService;
+
+  @InjectMocks
   private UserService userService;
 
   @Test
@@ -37,8 +62,8 @@ public class UserServiceTest {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
 
-    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    final var optionalUser = userService.findByEmail(email);
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    final var optionalUser = this.userService.findByEmail(email);
 
     assertTrue(optionalUser.isPresent());
     assertTrue(optionalUser.get().getContacts().stream()
@@ -50,7 +75,7 @@ public class UserServiceTest {
   @Test
   void shouldNotReturnUserWhenEmailIsInvalid() {
     when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
-    final var optionalUser = userService.findByEmail("invalid@conectabyte.com.br");
+    final var optionalUser = this.userService.findByEmail("invalid@conectabyte.com.br");
 
     assertTrue(optionalUser.isEmpty());
   }
@@ -60,10 +85,130 @@ public class UserServiceTest {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
-    when(userRepository.save(any())).thenReturn(user);
+    when(this.userRepository.save(any())).thenReturn(user);
 
-    final var savedUser = userService.save(userMapper.userToUserRequestDto(user));
+    final var savedUser = this.userService.save(userMapper.userToUserRequestDto(user));
 
     assertTrue(savedUser != null);
+  }
+
+  @Test
+  void shouldRecoverPasswordSucessfully() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
+    doNothing().when(this.tokenService).deleteByUser(any());
+    when(this.tokenService.save(any())).thenReturn(new Token());
+    doNothing().when(this.emailService).sendPasswordRecoveryEmail(any(), any());
+
+    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+
+    verify(this.tokenService, times(1)).deleteByUser(any());
+    verify(this.tokenService, times(1)).save(any());
+    verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
+  }
+
+  @Test
+  void shouldErrorWhenSendPasswordRecoveryEmailFail() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
+    doNothing().when(this.tokenService).deleteByUser(any());
+    when(this.tokenService.save(any())).thenReturn(new Token());
+    doThrow(new MessagingException()).when(this.emailService).sendPasswordRecoveryEmail(any(), any());
+
+    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+
+    verify(this.tokenService, times(1)).deleteByUser(any());
+    verify(this.tokenService, times(1)).save(any());
+    verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
+  }
+
+  @Test
+  void shouldErrorWhenUserWithInformedEmailNotExists() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.empty());
+    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+
+    verify(this.tokenService, times(0)).deleteByUser(any());
+    verify(this.tokenService, times(0)).save(any());
+    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUserNotFound() {
+    when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+
+    final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
+    var response = userService.resetPassword(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("Reset code is invalid.", response.message());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenTokenIsNull() {
+    final var user = UserUtils.create();
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+
+    final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
+    final var response = userService.resetPassword(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("Reset code is invalid.", response.message());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenTokenIsInvalid() {
+    final var user = UserUtils.create();
+    user.setToken(new Token());
+
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
+
+    final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
+    final var response = userService.resetPassword(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("Reset code is invalid.", response.message());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenTokenIsExpired() {
+    final var user = UserUtils.create();
+    final var token = Token.builder()
+        .value("CODE")
+        .createdAt(LocalDateTime.now().minusMinutes(2))
+        .build();
+    user.setToken(token);
+
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+    doNothing().when(tokenService).deleteByUser(any());
+
+    final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
+    final var response = userService.resetPassword(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("Reset code is expired.", response.message());
+  }
+
+  @Test
+  void shouldReturnOkWhenPasswordIsUpdated() {
+    final var user = UserUtils.create();
+    user.setToken(new Token());
+
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+    when(bCryptPasswordEncoder.encode(any())).thenReturn("encodedPassword");
+    doNothing().when(tokenService).deleteByUser(any());
+
+    final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
+    final var response = userService.resetPassword(requestDto);
+
+    assertEquals(HttpStatus.OK.value(), response.responseCode());
+    assertEquals("Password was updated.", response.message());
+    verify(tokenService, times(1)).deleteByUser(user);
   }
 }
