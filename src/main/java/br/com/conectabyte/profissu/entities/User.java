@@ -55,6 +55,9 @@ public class User {
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
   private Profile profile;
 
+  @OneToOne(mappedBy = "user")
+  private Token token;
+
   @Column(nullable = false)
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private List<Contact> contacts;
