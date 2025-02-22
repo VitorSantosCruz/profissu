@@ -50,6 +50,9 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.save(user));
   }
 
+  @Operation(summary = "Recover password", description = "Receives password recovery requests", responses = {
+      @ApiResponse(responseCode = "201", description = "Password recovery request successfully received.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
+  })
   @PostMapping("/password-recovery")
   public ResponseEntity<Void> recoverPassword(@Valid @RequestBody PasswordRecoveryRequestDto passwordRecoveryDto) {
     this.userService.recoverPassword(passwordRecoveryDto.email());
