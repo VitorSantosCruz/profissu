@@ -20,12 +20,12 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class TokenServiceTest {
+public class JwtServiceTest {
   @MockBean
   private JwtEncoder jwtEncoder;
 
   @Autowired
-  private TokenService tokenService;
+  private JwtService jwtService;
 
   @Test
   void shouldReturnTokenWhenSuccess() {
@@ -36,6 +36,6 @@ public class TokenServiceTest {
     user.setId(1L);
     when(jwtEncoder.encode(any())).thenReturn(new Jwt("TOKEN", Instant.now(), Instant.now(), map, map));
 
-    tokenService.create(user);
+    jwtService.createJwtToken(user);
   }
 }
