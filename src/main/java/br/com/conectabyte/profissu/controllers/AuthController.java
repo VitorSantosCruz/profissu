@@ -59,6 +59,10 @@ public class AuthController {
     return ResponseEntity.accepted().build();
   }
 
+  @Operation(summary = "Reset password", description = "Receives password reset requests", responses = {
+      @ApiResponse(responseCode = "200", description = "Password was successfully reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResetPasswordResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Password was not reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResetPasswordResponseDto.class)))
+  })
   @PostMapping("/password-reset")
   public ResponseEntity<ResetPasswordResponseDto> resetPassword(
       @Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
