@@ -11,6 +11,8 @@ import br.com.conectabyte.profissu.dtos.ExceptionDto;
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
 import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.UserResponseDto;
 import br.com.conectabyte.profissu.services.LoginService;
@@ -49,9 +51,15 @@ public class AuthController {
   }
 
   @PostMapping("/password-recovery")
-  public ResponseEntity<Void> recoverPassword(
-      @Valid @RequestBody PasswordRecoveryRequestDto passwordRecoveryDto) {
-        this.userService.recoverPassword(passwordRecoveryDto.email());
-        return ResponseEntity.accepted().build();
+  public ResponseEntity<Void> recoverPassword(@Valid @RequestBody PasswordRecoveryRequestDto passwordRecoveryDto) {
+    this.userService.recoverPassword(passwordRecoveryDto.email());
+    return ResponseEntity.accepted().build();
+  }
+
+  @PostMapping("/password-reset")
+  public ResponseEntity<ResetPasswordResponseDto> resetPassword(
+      @Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
+    final var response = this.userService.resetPassword(resetPasswordRequestDto);
+    return ResponseEntity.status(response.responseCode()).body(response);
   }
 }
