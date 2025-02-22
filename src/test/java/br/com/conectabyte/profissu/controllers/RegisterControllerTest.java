@@ -20,10 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.mappers.UserMapper;
-import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
@@ -41,9 +41,6 @@ public class RegisterControllerTest {
   @MockBean
   private UserService userService;
 
-  @MockBean
-  private UserRepository userRepository;
-
   @Autowired
   private ObjectMapper objectMapper;
 
@@ -54,9 +51,9 @@ public class RegisterControllerTest {
     user.setAddresses(List.of(AddressUtils.create(user)));
     user.setId(1L);
     user.setProfile(new Profile());
-    when(userService.save(any())).thenReturn(userMapper.userToUserResponseDto(user));
+    when(userService.save(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
 
-    mockMvc.perform(post("/register")
+    mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
         .andExpect(status().isCreated())
@@ -74,9 +71,9 @@ public class RegisterControllerTest {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
-    when(userRepository.findByEmail(any())).thenReturn(Optional.of(new User()));
+    when(userService.findByEmail(any())).thenReturn(Optional.of(new User()));
 
-    mockMvc.perform(post("/register")
+    mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
         .andExpect(status().isBadRequest())

@@ -44,7 +44,7 @@ public class LoginControllerTest {
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     when(loginService.login(any())).thenReturn(new LoginResponseDto(token, expiresIn));
 
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, password))))
         .andExpect(status().isCreated())
@@ -59,7 +59,7 @@ public class LoginControllerTest {
     final var errorMessage = "Credentials is not valid";
     when(loginService.login(any())).thenThrow(new BadCredentialsException(errorMessage));
 
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, password))))
         .andExpect(status().isUnauthorized())
@@ -73,7 +73,7 @@ public class LoginControllerTest {
     final var errorMessage = "E-mail is not verified";
     when(loginService.login(any())).thenThrow(new EmailNotVerifiedException(errorMessage));
 
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, password))))
         .andExpect(status().isUnauthorized())
@@ -82,7 +82,7 @@ public class LoginControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenContentBodyIsInvalid() throws Exception {
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Malformed json"));
@@ -92,7 +92,7 @@ public class LoginControllerTest {
   void shouldReturnBadRequestWhenContentEmailIsInvalid() throws Exception {
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(null, password))))
         .andExpect(status().isBadRequest())
@@ -103,7 +103,7 @@ public class LoginControllerTest {
   void shouldReturnBadRequestWhenContentPasswordIsInvalid() throws Exception {
     final var email = "invalid@conectabyte.com.br";
 
-    mockMvc.perform(post("/login")
+    mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, null))))
         .andExpect(status().isBadRequest())
