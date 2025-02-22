@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,6 +25,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.User;
@@ -57,7 +62,7 @@ public class AuthControllerTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     when(loginService.login(any())).thenReturn(new LoginResponseDto(token, expiresIn));
 
     mockMvc.perform(post("/auth/login")
@@ -69,9 +74,9 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnUnauthorizedWhenBadCredentials() throws Exception {
+  void shouldReturnUnauthorizedWhenCredentialsAreInvalid() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var errorMessage = "Credentials is not valid";
     when(loginService.login(any())).thenThrow(new BadCredentialsException(errorMessage));
 
@@ -83,9 +88,9 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnUnauthorizedWhenEmailUnverified() throws Exception {
+  void shouldReturnUnauthorizedWhenEmailIsNotVerified() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var errorMessage = "E-mail is not verified";
     when(loginService.login(any())).thenThrow(new EmailNotVerifiedException(errorMessage));
 
@@ -97,7 +102,7 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenContentBodyIsInvalid() throws Exception {
+  void shouldReturnBadRequestWhenRequestBodyIsMalformed() throws Exception {
     mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
@@ -105,8 +110,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenContentEmailIsInvalid() throws Exception {
-    final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+  void shouldReturnBadRequestWhenEmailIsMissing() throws Exception {
+    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
     mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +121,7 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenContentPasswordIsInvalid() throws Exception {
+  void shouldReturnBadRequestWhenPasswordIsMissing() throws Exception {
     final var email = "invalid@conectabyte.com.br";
 
     mockMvc.perform(post("/auth/login")
@@ -127,7 +132,7 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnSavedUserWhenUserDataIsValid() throws Exception {
+  void shouldRegisterUserWhenDataIsValid() throws Exception {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
@@ -149,7 +154,7 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenEmailAlreadyExists() throws Exception {
+  void shouldReturnBadRequestWhenEmailIsAlreadyRegistered() throws Exception {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
@@ -158,6 +163,87 @@ public class AuthControllerTest {
     mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(userMapper.userToUserRequestDto(user))))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  void shouldAcceptPasswordRecoveryRequestWhenEmailIsValid() throws Exception {
+    final var passwordRecoveryRequestDto = new PasswordRecoveryRequestDto("test@conectabyte.com.br");
+    doNothing().when(userService).recoverPassword(any());
+
+    mockMvc.perform(post("/auth/password-recovery")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(passwordRecoveryRequestDto)))
+        .andExpect(status().isAccepted());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenPasswordRecoveryEmailIsMissing() throws Exception {
+    final var passwordRecoveryRequestDto = new PasswordRecoveryRequestDto(null);
+
+    mockMvc.perform(post("/auth/password-recovery")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(passwordRecoveryRequestDto)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  void shouldResetPasswordSuccessfullyWhenDataIsValid() throws Exception {
+    final var pesetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", "CODE");
+    when(userService.resetPassword(any()))
+        .thenReturn(new ResetPasswordResponseDto(HttpStatus.OK.value(), "Password was updated."));
+
+    mockMvc.perform(post("/auth/password-reset")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(pesetPasswordRequestDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Password was updated."));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenResetCodeIsInvalid() throws Exception {
+    final var pesetPasswordRequestDto = new ResetPasswordRequestDto("invalid@conectabyte.com.br", "@Admin123", "CODE");
+    when(userService.resetPassword(any()))
+        .thenReturn(new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
+
+    mockMvc.perform(post("/auth/password-reset")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(pesetPasswordRequestDto)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Reset code is invalid."));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenResetEmailIsMissing() throws Exception {
+    final var pesetPasswordRequestDto = new ResetPasswordRequestDto(null, "@Admin123", "CODE");
+
+    mockMvc.perform(post("/auth/password-reset")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(pesetPasswordRequestDto)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenResetPasswordIsMissing() throws Exception {
+    final var pesetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", null, "CODE");
+
+    mockMvc.perform(post("/auth/password-reset")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(pesetPasswordRequestDto)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenResetCodeIsMissing() throws Exception {
+    final var pesetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", null);
+
+    mockMvc.perform(post("/auth/password-reset")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(pesetPasswordRequestDto)))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("All fields must be valid"));
   }
