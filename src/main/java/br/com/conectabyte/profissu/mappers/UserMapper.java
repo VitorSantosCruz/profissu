@@ -21,6 +21,7 @@ public interface UserMapper {
   @Mapping(target = "profile", ignore = true)
   @Mapping(target = "roles", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "token", ignore = true)
   User userRequestDtoToUser(UserRequestDto userRequestDto);
 
   UserRequestDto userToUserRequestDto(User user);
@@ -33,6 +34,7 @@ public interface UserMapper {
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "roles", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "token", ignore = true)
   User userResponseDtoToUser(UserResponseDto userResponseDto);
 
   UserResponseDto userToUserResponseDto(User user);
