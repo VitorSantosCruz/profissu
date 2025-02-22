@@ -33,7 +33,8 @@ public class LoginService {
     }
 
     optionalUser.get().getContacts().stream()
-        .filter(c -> c.getValue().equals(loginRequest.email()) && c.getVerificationCompletedAt() == null)
+        .filter(c -> c.getValue().equals(loginRequest.email()))
+        .filter(c -> c.getVerificationCompletedAt() == null)
         .findFirst()
         .ifPresent(c -> {
           throw new EmailNotVerifiedException("E-mail is not verified");

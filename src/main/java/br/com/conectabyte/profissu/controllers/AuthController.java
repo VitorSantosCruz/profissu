@@ -55,7 +55,7 @@ public class AuthController {
   })
   @PostMapping("/password-recovery")
   public ResponseEntity<Void> recoverPassword(@Valid @RequestBody PasswordRecoveryRequestDto passwordRecoveryDto) {
-    this.userService.recoverPassword(passwordRecoveryDto.email());
+    this.userService.recoverPassword(passwordRecoveryDto);
     return ResponseEntity.accepted().build();
   }
 

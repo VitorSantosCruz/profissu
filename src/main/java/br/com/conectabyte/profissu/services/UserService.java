@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
@@ -67,7 +68,8 @@ public class UserService {
   }
 
   @Async
-  public void recoverPassword(String email) {
+  public void recoverPassword(PasswordRecoveryRequestDto passwordRecoveryRequestDto) {
+    final var email = passwordRecoveryRequestDto.email();
     final var optionalUser = this.findByEmail(email);
     final var resetCode = UUID.randomUUID().toString().split("-")[1];
 

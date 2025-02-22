@@ -45,14 +45,14 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 public class AuthControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
-  @Autowired
-  private MockMvc mockMvc;
-
   @MockBean
   private UserService userService;
 
   @MockBean
   private LoginService loginService;
+
+  @Autowired
+  private MockMvc mockMvc;
 
   @Autowired
   private ObjectMapper objectMapper;
