@@ -13,10 +13,10 @@ spring:
       port: 0
       password: ""
   mail:
-    host: ${EMAIL_HOST_TEST}
-    port: ${EMAIL_PORT_TEST}
-    username: ${EMAIL_USER_TEST}
-    password: ${EMAIL_PASSWORD_TEST}
+    host: localhost
+    port: 0
+    username: ''
+    password: ''
     properties:
       mail:
         smtp:

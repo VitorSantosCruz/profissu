@@ -27,18 +27,6 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
-      redis:
-        image: redis:7.4.2
-        env:
-          REDIS_PASSWORD: admin
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli -h redis -p 6379 -a admin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,6 +53,12 @@ jobs:
       - name: Install openssl
         run: sudo apt-get update && sudo apt-get install -y openssl
 
+      - name: Build
+        run: |
+          openssl genrsa -out src/main/resources/profissu.key 4096 && \
+          openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
+          mvn clean package -DskipTests
+
       - name: Tests
         env:
           MYSQL_HOST_TEST: 127.0.0.1
@@ -73,22 +67,6 @@ jobs:
           MYSQL_USER_TEST: admin
           MYSQL_PASSWORD_TEST: admin
         run: |
-          openssl genrsa -out src/main/resources/profissu.key 4096 && \
+          openssl  mvn clean packaggenrsa -out src/main/resources/profissu.key 4096 && \
           openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
           mvn test
-
-      - name: Build
-        env:
-          SPRING_PROFILE: dev
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_PORT: 3307
-          MYSQL_DATABASE: profissu
-          MYSQL_USER: admin
-          MYSQL_PASSWORD: admin
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
-          REDIS_PASSWORD: admin
-        run: |
-          openssl genrsa -out src/main/resources/profissu.key 4096 && \
-          openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
-          mvn clean package -DskipTests
