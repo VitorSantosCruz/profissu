@@ -22,7 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
@@ -101,7 +101,7 @@ public class UserServiceTest {
     when(this.tokenService.save(any())).thenReturn(new Token());
     doNothing().when(this.emailService).sendPasswordRecoveryEmail(any(), any());
 
-    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+    this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(1)).deleteByUser(any());
     verify(this.tokenService, times(1)).save(any());
@@ -117,7 +117,7 @@ public class UserServiceTest {
     when(this.tokenService.save(any())).thenReturn(new Token());
     doThrow(new MessagingException()).when(this.emailService).sendPasswordRecoveryEmail(any(), any());
 
-    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+    this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(1)).deleteByUser(any());
     verify(this.tokenService, times(1)).save(any());
@@ -129,7 +129,7 @@ public class UserServiceTest {
     final var email = "test@conectabyte.com.br";
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.empty());
-    this.userService.recoverPassword(new PasswordRecoveryRequestDto(email));
+    this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(0)).deleteByUser(any());
     verify(this.tokenService, times(0)).save(any());

@@ -23,11 +23,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
-import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.User;
@@ -169,22 +169,22 @@ public class AuthControllerTest {
 
   @Test
   void shouldAcceptPasswordRecoveryRequestWhenEmailIsValid() throws Exception {
-    final var passwordRecoveryRequestDto = new PasswordRecoveryRequestDto("test@conectabyte.com.br");
+    final var emailValueRequestDto = new EmailValueRequestDto("test@conectabyte.com.br");
     doNothing().when(userService).recoverPassword(any());
 
     mockMvc.perform(post("/auth/password-recovery")
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(passwordRecoveryRequestDto)))
+        .content(objectMapper.writeValueAsString(emailValueRequestDto)))
         .andExpect(status().isAccepted());
   }
 
   @Test
   void shouldReturnBadRequestWhenPasswordRecoveryEmailIsMissing() throws Exception {
-    final var passwordRecoveryRequestDto = new PasswordRecoveryRequestDto(null);
+    final var emailValueRequestDto = new EmailValueRequestDto(null);
 
     mockMvc.perform(post("/auth/password-recovery")
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(passwordRecoveryRequestDto)))
+        .content(objectMapper.writeValueAsString(emailValueRequestDto)))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("All fields must be valid"));
   }
@@ -193,7 +193,7 @@ public class AuthControllerTest {
   void shouldResetPasswordSuccessfullyWhenDataIsValid() throws Exception {
     final var pesetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", "CODE");
     when(userService.resetPassword(any()))
-        .thenReturn(new ResetPasswordResponseDto(HttpStatus.OK.value(), "Password was updated."));
+        .thenReturn(new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated."));
 
     mockMvc.perform(post("/auth/password-reset")
         .contentType(MediaType.APPLICATION_JSON)
@@ -206,7 +206,7 @@ public class AuthControllerTest {
   void shouldReturnBadRequestWhenResetCodeIsInvalid() throws Exception {
     final var pesetPasswordRequestDto = new ResetPasswordRequestDto("invalid@conectabyte.com.br", "@Admin123", "CODE");
     when(userService.resetPassword(any()))
-        .thenReturn(new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
+        .thenReturn(new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
 
     mockMvc.perform(post("/auth/password-reset")
         .contentType(MediaType.APPLICATION_JSON)

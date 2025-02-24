@@ -7,12 +7,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.ExceptionDto;
 import br.com.conectabyte.profissu.dtos.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.LoginResponseDto;
-import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
+import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.UserResponseDto;
 import br.com.conectabyte.profissu.services.LoginService;
@@ -50,21 +51,34 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.register(user));
   }
 
+  @PostMapping("/sign-up-confirmation")
+  public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
+      @Valid @RequestBody SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
+    final var response = this.userService.signUpConfirmation(signUpConfirmationRequestDto);
+    return ResponseEntity.status(response.responseCode()).body(response);
+  }
+
+  @PostMapping("/sign-up-confirmation/resend")
+  public ResponseEntity<Void> resendSignUpConfirmation(@Valid @RequestBody EmailValueRequestDto emailValueRequestDto) {
+    this.userService.resendSignUpConfirmation(emailValueRequestDto);
+    return ResponseEntity.accepted().build();
+  }
+
   @Operation(summary = "Recover password", description = "Receives password recovery requests", responses = {
       @ApiResponse(responseCode = "201", description = "Password recovery request successfully received.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
   })
   @PostMapping("/password-recovery")
-  public ResponseEntity<Void> recoverPassword(@Valid @RequestBody PasswordRecoveryRequestDto passwordRecoveryDto) {
-    this.userService.recoverPassword(passwordRecoveryDto);
+  public ResponseEntity<Void> recoverPassword(@Valid @RequestBody EmailValueRequestDto emailValueRequestDto) {
+    this.userService.recoverPassword(emailValueRequestDto);
     return ResponseEntity.accepted().build();
   }
 
   @Operation(summary = "Reset password", description = "Receives password reset requests", responses = {
-      @ApiResponse(responseCode = "200", description = "Password was successfully reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResetPasswordResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Password was not reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResetPasswordResponseDto.class)))
+      @ApiResponse(responseCode = "200", description = "Password was successfully reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Password was not reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
   })
   @PostMapping("/password-reset")
-  public ResponseEntity<ResetPasswordResponseDto> resetPassword(
+  public ResponseEntity<MessageValueResponseDto> resetPassword(
       @Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
     final var response = this.userService.resetPassword(resetPasswordRequestDto);
     return ResponseEntity.status(response.responseCode()).body(response);

@@ -11,9 +11,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
+import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.UserResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
@@ -73,11 +74,42 @@ public class UserService {
     return userMapper.userToUserResponseDto(user);
   }
 
-  @Async
-  public void recoverPassword(PasswordRecoveryRequestDto passwordRecoveryRequestDto) {
-    final var email = passwordRecoveryRequestDto.email();
+  public MessageValueResponseDto signUpConfirmation(SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
+    final var email = signUpConfirmationRequestDto.email();
     final var optionalUser = this.findByEmail(email);
-    final var resetCode = UUID.randomUUID().toString().split("-")[1];
+
+    if (optionalUser.isEmpty()) {
+      log.warn("No user found with this e-mail: {}", email);
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+    }
+
+    final var user = optionalUser.get();
+    final var messageError = validateToken(user, email, signUpConfirmationRequestDto.resetCode());
+
+    if (messageError != null) {
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+    }
+
+    user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
+        .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
+    this.tokenService.deleteByUser(user);
+    this.save(user);
+
+    return new MessageValueResponseDto(HttpStatus.OK.value(), "Sign up was confirmed.");
+  }
+
+  @Async
+  public void resendSignUpConfirmation(EmailValueRequestDto emailValueRequestDto) {
+    sendRecoverPassword(emailValueRequestDto.email(), true);
+  }
+
+  @Async
+  public void recoverPassword(EmailValueRequestDto emailValueRequestDto) {
+    sendRecoverPassword(emailValueRequestDto.email(), false);
+  }
+
+  private void sendRecoverPassword(String email, boolean isSignUp) {
+    final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
       log.warn("No user found with this e-mail: {}", email);
@@ -88,44 +120,69 @@ public class UserService {
     final var userIsVerified = user.getContacts().stream()
         .anyMatch(c -> c.isStandard() && c.getVerificationCompletedAt() != null);
 
-    if (!userIsVerified) {
+    if (isSignUp && userIsVerified) {
+      log.warn("User with this e-mail: {} is already verified.", email);
+      return;
+    }
+
+    if (!isSignUp && !userIsVerified) {
       log.warn("User with this e-mail: {} is not verified.", email);
       return;
     }
 
+    final var resetCode = UUID.randomUUID().toString().split("-")[1];
     this.tokenService.save(user, resetCode, bCryptPasswordEncoder);
 
     try {
-      emailService.sendPasswordRecoveryEmail(email, resetCode);
+      if (isSignUp) {
+        user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
+            .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
+        emailService.sendSignUpConfirmation(email, resetCode);
+      } else {
+        emailService.sendPasswordRecoveryEmail(email, resetCode);
+      }
       log.info("E-mail successfully sent to {}", email);
     } catch (MessagingException e) {
       log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
     }
   }
 
-  public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
+  public MessageValueResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
     final var email = resetPasswordRequestDto.email();
     final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
       log.warn("No user found with this e-mail: {}", email);
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
     }
 
     final var user = optionalUser.get();
+    final var messageError = validateToken(user, email, resetPasswordRequestDto.resetCode());
+
+    if (messageError != null) {
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+    }
+
+    user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
+    this.tokenService.deleteByUser(user);
+
+    return new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated.");
+  }
+
+  private String validateToken(User user, String email, String resetCode) {
     final var token = user.getToken();
 
     if (token == null) {
-      log.warn("Reset code not found for user with this e-mail: {}", resetPasswordRequestDto.email());
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Missing reset code.");
+      log.warn("Reset code not found for user with this e-mail: {}", email);
+      return "Missing reset code.";
     }
 
-    final var isValidToken = bCryptPasswordEncoder.matches(resetPasswordRequestDto.resetCode(),
+    final var isValidToken = bCryptPasswordEncoder.matches(resetCode,
         token.getValue());
 
     if (!isValidToken) {
       log.warn("Reset code is invalid.");
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return "Reset code is invalid.";
     }
 
     final var isExpiredToken = token.getCreatedAt().plusMinutes(1).isBefore(LocalDateTime.now());
@@ -133,12 +190,9 @@ public class UserService {
     if (isExpiredToken) {
       log.warn("Reset code is expired.");
       this.tokenService.deleteByUser(user);
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is expired.");
+      return "Reset code is expired.";
     }
 
-    user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
-    this.tokenService.deleteByUser(user);
-
-    return new ResetPasswordResponseDto(HttpStatus.OK.value(), "Password was updated.");
+    return null;
   }
 }
