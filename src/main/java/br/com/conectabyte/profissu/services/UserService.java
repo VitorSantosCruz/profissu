@@ -18,7 +18,6 @@ import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.UserResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
-import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.mappers.UserMapper;
@@ -52,10 +51,13 @@ public class UserService {
   }
 
   @Transactional
-  public UserResponseDto save(UserRequestDto userDto) {
+  public UserResponseDto register(UserRequestDto userDto) {
     final var userToBeSaved = userMapper.userRequestDtoToUser(userDto);
     userToBeSaved.setPassword(bCryptPasswordEncoder.encode(userDto.password()));
-    userToBeSaved.getContacts().forEach(c -> c.setUser(userToBeSaved));
+    userToBeSaved.getContacts().forEach(c -> {
+      c.setUser(userToBeSaved);
+      c.setVerificationRequestedAt(LocalDateTime.now());
+    });
     userToBeSaved.getAddresses().forEach(a -> a.setUser(userToBeSaved));
     userToBeSaved.setProfile(Profile.builder().user(userToBeSaved).build());
     userToBeSaved.setRoles(
@@ -63,6 +65,10 @@ public class UserService {
             .orElse(Role.builder().name("USER").build())));
 
     final var user = this.save(userToBeSaved);
+    final var resetCode = UUID.randomUUID().toString().split("-")[1];
+
+    this.tokenService.save(user, resetCode, bCryptPasswordEncoder);
+    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), resetCode);
 
     return userMapper.userToUserResponseDto(user);
   }
@@ -78,12 +84,16 @@ public class UserService {
       return;
     }
 
-    final var token = Token.builder()
-        .value(bCryptPasswordEncoder.encode(resetCode))
-        .user(optionalUser.get())
-        .build();
-    this.tokenService.deleteByUser(optionalUser.get());
-    this.tokenService.save(token);
+    final var user = optionalUser.get();
+    final var userIsVerified = user.getContacts().stream()
+        .anyMatch(c -> c.isStandard() && c.getVerificationCompletedAt() != null);
+
+    if (!userIsVerified) {
+      log.warn("User with this e-mail: {} is not verified.", email);
+      return;
+    }
+
+    this.tokenService.save(user, resetCode, bCryptPasswordEncoder);
 
     try {
       emailService.sendPasswordRecoveryEmail(email, resetCode);
@@ -94,10 +104,11 @@ public class UserService {
   }
 
   public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
-    final var optionalUser = this.findByEmail(resetPasswordRequestDto.email());
+    final var email = resetPasswordRequestDto.email();
+    final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
-      log.warn("No user found with this e-mail: {}", resetPasswordRequestDto.email());
+      log.warn("No user found with this e-mail: {}", email);
       return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
     }
 
@@ -106,7 +117,7 @@ public class UserService {
 
     if (token == null) {
       log.warn("Reset code not found for user with this e-mail: {}", resetPasswordRequestDto.email());
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Missing reset code.");
     }
 
     final var isValidToken = bCryptPasswordEncoder.matches(resetPasswordRequestDto.resetCode(),
@@ -121,13 +132,12 @@ public class UserService {
 
     if (isExpiredToken) {
       log.warn("Reset code is expired.");
-      this.tokenService.deleteByUser(optionalUser.get());
+      this.tokenService.deleteByUser(user);
       return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is expired.");
     }
 
     user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
-
-    this.tokenService.deleteByUser(optionalUser.get());
+    this.tokenService.deleteByUser(user);
 
     return new ResetPasswordResponseDto(HttpStatus.OK.value(), "Password was updated.");
   }

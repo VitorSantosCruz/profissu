@@ -1,5 +1,6 @@
 package br.com.conectabyte.profissu.services;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.entities.Token;
@@ -30,5 +31,14 @@ public class TokenService {
     token.getUser().setToken(null);
 
     this.delete(token);
+  }
+
+  public void save(User user, String resetCode, PasswordEncoder passwordEncoder) {
+    final var token = Token.builder()
+        .value(passwordEncoder.encode(resetCode))
+        .user(user)
+        .build();
+    this.deleteByUser(user);
+    this.save(token);
   }
 }

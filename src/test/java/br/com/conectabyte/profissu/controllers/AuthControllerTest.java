@@ -138,7 +138,7 @@ public class AuthControllerTest {
     user.setAddresses(List.of(AddressUtils.create(user)));
     user.setId(1L);
     user.setProfile(new Profile());
-    when(userService.save(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
+    when(userService.register(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
 
     mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)

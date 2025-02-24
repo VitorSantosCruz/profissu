@@ -87,7 +87,7 @@ public class UserServiceTest {
     user.setAddresses(List.of(AddressUtils.create(user)));
     when(this.userRepository.save(any())).thenReturn(user);
 
-    final var savedUser = this.userService.save(userMapper.userToUserRequestDto(user));
+    final var savedUser = this.userService.register(userMapper.userToUserRequestDto(user));
 
     assertTrue(savedUser != null);
   }

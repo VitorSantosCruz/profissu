@@ -47,7 +47,7 @@ public class AuthController {
   })
   @PostMapping("/register")
   public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRequestDto user) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.save(user));
+    return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.register(user));
   }
 
   @Operation(summary = "Recover password", description = "Receives password recovery requests", responses = {
