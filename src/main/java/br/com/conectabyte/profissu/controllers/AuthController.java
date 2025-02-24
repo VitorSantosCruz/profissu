@@ -51,6 +51,10 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.register(user));
   }
 
+  @Operation(summary = "Sign-up confirmation", description = "Receives sign-up confirmation requests", responses = {
+      @ApiResponse(responseCode = "200", description = "Sign-up was successfully confirmated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Sign-up was not confirmated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
+  })
   @PostMapping("/sign-up-confirmation")
   public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
       @Valid @RequestBody SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
