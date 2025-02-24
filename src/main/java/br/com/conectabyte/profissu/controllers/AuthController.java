@@ -62,6 +62,9 @@ public class AuthController {
     return ResponseEntity.status(response.responseCode()).body(response);
   }
 
+  @Operation(summary = "Resend sign-up confirmation", description = "Receives resend sign-up confirmation requests", responses = {
+      @ApiResponse(responseCode = "201", description = "Resend sign-up confirmation request successfully received.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
+  })
   @PostMapping("/sign-up-confirmation/resend")
   public ResponseEntity<Void> resendSignUpConfirmation(@Valid @RequestBody EmailValueRequestDto emailValueRequestDto) {
     this.userService.resendSignUpConfirmation(emailValueRequestDto);
