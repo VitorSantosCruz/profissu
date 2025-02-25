@@ -11,14 +11,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.PasswordRecoveryRequestDto;
+import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordResponseDto;
+import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.UserResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
-import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.mappers.UserMapper;
@@ -52,83 +52,150 @@ public class UserService {
   }
 
   @Transactional
-  public UserResponseDto save(UserRequestDto userDto) {
+  public UserResponseDto register(UserRequestDto userDto) {
     final var userToBeSaved = userMapper.userRequestDtoToUser(userDto);
     userToBeSaved.setPassword(bCryptPasswordEncoder.encode(userDto.password()));
-    userToBeSaved.getContacts().forEach(c -> c.setUser(userToBeSaved));
+    userToBeSaved.getContacts().forEach(c -> {
+      c.setUser(userToBeSaved);
+      c.setVerificationRequestedAt(LocalDateTime.now());
+    });
     userToBeSaved.getAddresses().forEach(a -> a.setUser(userToBeSaved));
     userToBeSaved.setProfile(Profile.builder().user(userToBeSaved).build());
     userToBeSaved.setRoles(
-        Set.of(roleService.findByName(RoleEnum.USER.toString())
+        Set.of(roleService.findByName(RoleEnum.USER.name())
             .orElse(Role.builder().name("USER").build())));
 
     final var user = this.save(userToBeSaved);
+    final var code = UUID.randomUUID().toString().split("-")[1];
+
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
+    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), code);
 
     return userMapper.userToUserResponseDto(user);
   }
 
-  @Async
-  public void recoverPassword(PasswordRecoveryRequestDto passwordRecoveryRequestDto) {
-    final var email = passwordRecoveryRequestDto.email();
+  public MessageValueResponseDto signUpConfirmation(SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
+    final var email = signUpConfirmationRequestDto.email();
     final var optionalUser = this.findByEmail(email);
-    final var resetCode = UUID.randomUUID().toString().split("-")[1];
+
+    if (optionalUser.isEmpty()) {
+      log.warn("No user found with this e-mail: {}", email);
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No user found with this e-mail.");
+    }
+
+    final var user = optionalUser.get();
+    final var messageError = validateToken(user, email, signUpConfirmationRequestDto.code());
+
+    if (messageError != null) {
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+    }
+
+    user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
+        .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
+    this.tokenService.deleteByUser(user);
+    this.save(user);
+
+    return new MessageValueResponseDto(HttpStatus.OK.value(), "Sign up was confirmed.");
+  }
+
+  @Async
+  public void resendSignUpConfirmation(EmailValueRequestDto emailValueRequestDto) {
+    sendCodeEmail(emailValueRequestDto.email(), true);
+  }
+
+  @Async
+  public void recoverPassword(EmailValueRequestDto emailValueRequestDto) {
+    sendCodeEmail(emailValueRequestDto.email(), false);
+  }
+
+  private void sendCodeEmail(String email, boolean isSignUp) {
+    final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
       log.warn("No user found with this e-mail: {}", email);
       return;
     }
 
-    final var token = Token.builder()
-        .value(bCryptPasswordEncoder.encode(resetCode))
-        .user(optionalUser.get())
-        .build();
-    this.tokenService.deleteByUser(optionalUser.get());
-    this.tokenService.save(token);
+    final var user = optionalUser.get();
+    final var userIsVerified = user.getContacts().stream()
+        .filter(c -> c.isStandard())
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .findFirst()
+        .isPresent();
+
+    if (isSignUp && userIsVerified) {
+      log.warn("User with this e-mail: {} is already verified.", email);
+      return;
+    }
+
+    if (!isSignUp && !userIsVerified) {
+      log.warn("User with this e-mail: {} is not verified.", email);
+      return;
+    }
+
+    final var code = UUID.randomUUID().toString().split("-")[1];
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
 
     try {
-      emailService.sendPasswordRecoveryEmail(email, resetCode);
+      if (isSignUp) {
+        user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
+            .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
+        emailService.sendSignUpConfirmation(email, code);
+      } else {
+        emailService.sendPasswordRecoveryEmail(email, code);
+      }
       log.info("E-mail successfully sent to {}", email);
     } catch (MessagingException e) {
       log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
     }
   }
 
-  public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
-    final var optionalUser = this.findByEmail(resetPasswordRequestDto.email());
+  public MessageValueResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
+    final var email = resetPasswordRequestDto.email();
+    final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
-      log.warn("No user found with this e-mail: {}", resetPasswordRequestDto.email());
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      log.warn("No user found with this e-mail: {}", email);
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No user found with this e-mail.");
     }
 
     final var user = optionalUser.get();
+    final var messageError = validateToken(user, email, resetPasswordRequestDto.code());
+
+    if (messageError != null) {
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+    }
+
+    user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
+    this.tokenService.deleteByUser(user);
+
+    return new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated.");
+  }
+
+  private String validateToken(User user, String email, String code) {
     final var token = user.getToken();
 
     if (token == null) {
-      log.warn("Reset code not found for user with this e-mail: {}", resetPasswordRequestDto.email());
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      log.warn("Reset code not found for user with this e-mail: {}", email);
+      return "Missing reset code for user with this e-mail.";
     }
 
-    final var isValidToken = bCryptPasswordEncoder.matches(resetPasswordRequestDto.resetCode(),
+    final var isValidToken = bCryptPasswordEncoder.matches(code,
         token.getValue());
 
     if (!isValidToken) {
       log.warn("Reset code is invalid.");
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return "Reset code is invalid.";
     }
 
     final var isExpiredToken = token.getCreatedAt().plusMinutes(1).isBefore(LocalDateTime.now());
 
     if (isExpiredToken) {
       log.warn("Reset code is expired.");
-      this.tokenService.deleteByUser(optionalUser.get());
-      return new ResetPasswordResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is expired.");
+      this.tokenService.deleteByUser(user);
+      return "Reset code is expired.";
     }
 
-    user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
-
-    this.tokenService.deleteByUser(optionalUser.get());
-
-    return new ResetPasswordResponseDto(HttpStatus.OK.value(), "Password was updated.");
+    return null;
   }
 }

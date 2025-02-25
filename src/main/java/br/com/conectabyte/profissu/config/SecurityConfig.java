@@ -52,7 +52,7 @@ public class SecurityConfig {
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers(HttpMethod.POST, "/auth/*").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
             .requestMatchers(HttpMethod.GET, swaggerEndpoints).permitAll()
             .requestMatchers(HttpMethod.GET, staticResources).permitAll()
             .anyRequest().authenticated())

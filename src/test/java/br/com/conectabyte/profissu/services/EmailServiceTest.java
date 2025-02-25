@@ -43,4 +43,19 @@ class EmailServiceTest {
     verify(javaMailSender, times(1)).send(mimeMessage);
     verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
   }
+
+  @Test
+  void shouldSendSignUpConfirmationEmailSuccessfully() throws MessagingException {
+    final var htmlContent = "<html><body>Reset Code: 123456</body></html>";
+    final var mimeMessage = mock(MimeMessage.class);
+
+    when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+    when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
+
+    emailService.sendSignUpConfirmation("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(1)).send(mimeMessage);
+    verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
+  }
 }

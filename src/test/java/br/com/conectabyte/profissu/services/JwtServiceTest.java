@@ -32,7 +32,7 @@ public class JwtServiceTest {
     final var user = UserUtils.create();
     final var map = Map.of("key", new Object());
 
-    user.setRoles((Set.of(RoleUtils.createRole())));
+    user.setRoles((Set.of(RoleUtils.create())));
     user.setId(1L);
     when(jwtEncoder.encode(any())).thenReturn(new Jwt("TOKEN", Instant.now(), Instant.now(), map, map));
 

@@ -32,7 +32,7 @@ public class LoginServiceTest {
   private UserService userService;
 
   @MockBean
-  private BCryptPasswordEncoder passwordEncoder;
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @Autowired
   private LoginService loginService;
@@ -49,7 +49,7 @@ public class LoginServiceTest {
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(user));
-    when(passwordEncoder.matches(any(), any())).thenReturn(true);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
 
     final var loginResponseDto = loginService.login(new LoginRequestDto(email, password));
 
@@ -66,7 +66,7 @@ public class LoginServiceTest {
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.empty());
-    when(passwordEncoder.matches(any(), any())).thenReturn(true);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
 
     assertThrows(BadCredentialsException.class, () -> loginService.login(new LoginRequestDto(email, password)));
   }
@@ -80,7 +80,7 @@ public class LoginServiceTest {
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
-    when(passwordEncoder.matches(any(), any())).thenReturn(false);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
 
     assertThrows(BadCredentialsException.class, () -> loginService.login(new LoginRequestDto(email, password)));
   }
@@ -98,7 +98,7 @@ public class LoginServiceTest {
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
     when(userService.findByEmail(any())).thenReturn(Optional.of(user));
-    when(passwordEncoder.matches(any(), any())).thenReturn(true);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
 
     assertThrows(EmailNotVerifiedException.class, () -> loginService.login(new LoginRequestDto(email, password)));
   }
