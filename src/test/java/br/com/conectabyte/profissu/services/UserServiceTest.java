@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.mappers.UserMapper;
@@ -95,33 +96,49 @@ public class UserServiceTest {
   @Test
   void shouldRecoverPasswordSucessfully() throws MessagingException {
     final var email = "test@conectabyte.com.br";
+    final var user = UserUtils.create();
+    user.setContacts(List.of(ContactUtils.create(user)));
 
-    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
-    doNothing().when(this.tokenService).deleteByUser(any());
-    when(this.tokenService.save(any())).thenReturn(new Token());
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    doNothing().when(this.tokenService).save(any(), any(), any());
     doNothing().when(this.emailService).sendPasswordRecoveryEmail(any(), any());
 
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
-    verify(this.tokenService, times(1)).deleteByUser(any());
-    verify(this.tokenService, times(1)).save(any());
+    verify(this.tokenService, times(1)).save(any(), any(), any());
     verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
   }
 
   @Test
   void shouldErrorWhenSendPasswordRecoveryEmailFail() throws MessagingException {
     final var email = "test@conectabyte.com.br";
+    final var user = UserUtils.create();
+    user.setContacts(List.of(ContactUtils.create(user)));
 
-    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
-    doNothing().when(this.tokenService).deleteByUser(any());
-    when(this.tokenService.save(any())).thenReturn(new Token());
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    doNothing().when(this.tokenService).save(any(), any(), any());
     doThrow(new MessagingException()).when(this.emailService).sendPasswordRecoveryEmail(any(), any());
 
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
-    verify(this.tokenService, times(1)).deleteByUser(any());
-    verify(this.tokenService, times(1)).save(any());
+    verify(this.tokenService, times(1)).save(any(), any(), any());
     verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
+  }
+
+  @Test
+  void shouldErrorWhenUserWithThisEmailIsNotVerified() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    contact.setVerificationCompletedAt(null);
+    user.setContacts(List.of());
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    this.userService.recoverPassword(new EmailValueRequestDto(email));
+
+    verify(this.tokenService, times(0)).save(any(), any(), any());
+    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
   }
 
   @Test
@@ -131,8 +148,7 @@ public class UserServiceTest {
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.empty());
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
-    verify(this.tokenService, times(0)).deleteByUser(any());
-    verify(this.tokenService, times(0)).save(any());
+    verify(this.tokenService, times(0)).save(any(), any(), any());
     verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
   }
 
@@ -144,7 +160,7 @@ public class UserServiceTest {
     var response = userService.resetPassword(requestDto);
 
     assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Reset code is invalid.", response.message());
+    assertEquals("No user found with this e-mail.", response.message());
   }
 
   @Test
@@ -156,7 +172,7 @@ public class UserServiceTest {
     final var response = userService.resetPassword(requestDto);
 
     assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Reset code is invalid.", response.message());
+    assertEquals("Missing reset code for user with this e-mail.", response.message());
   }
 
   @Test
@@ -201,7 +217,7 @@ public class UserServiceTest {
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
-    when(bCryptPasswordEncoder.encode(any())).thenReturn("encodedPassword");
+    when(bCryptPasswordEncoder.encode(any())).thenReturn("encoded");
     doNothing().when(tokenService).deleteByUser(any());
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
@@ -210,5 +226,85 @@ public class UserServiceTest {
     assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Password was updated.", response.message());
     verify(tokenService, times(1)).deleteByUser(user);
+  }
+
+  @Test
+  void shouldResendSignUpConfirmationSucessfully() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    contact.setVerificationCompletedAt(null);
+    user.setContacts(List.of(contact));
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    doNothing().when(this.tokenService).save(any(), any(), any());
+    doNothing().when(this.emailService).sendSignUpConfirmation(any(), any());
+
+    this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
+
+    verify(this.tokenService, times(1)).save(any(), any(), any());
+    verify(this.emailService, times(1)).sendSignUpConfirmation(any(), any());
+  }
+
+  @Test
+  void shouldErrorWhenUserWithThisEmailIsAlreadyVerified() throws MessagingException {
+    final var email = "test@conectabyte.com.br";
+    final var user = UserUtils.create();
+
+    user.setContacts(List.of(ContactUtils.create(user)));
+
+    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
+
+    verify(this.tokenService, times(0)).save(any(), any(), any());
+    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
+  }
+
+  @Test
+  void shouldReturnOkRequestWhenSignUpWasConfirmed() {
+    final var user = UserUtils.create();
+    final var token = Token.builder()
+        .value("CODE")
+        .createdAt(LocalDateTime.now())
+        .build();
+
+    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setToken(token);
+
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    when(this.userRepository.save(any())).thenReturn(user);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+    doNothing().when(tokenService).deleteByUser(any());
+
+    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    final var response = userService.signUpConfirmation(requestDto);
+
+    assertEquals(HttpStatus.OK.value(), response.responseCode());
+    assertEquals("Sign up was confirmed.", response.message());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenNoUserFoundForInformedEmail() {
+    when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+
+    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    final var response = userService.signUpConfirmation(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("No user found with this e-mail.", response.message());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenMissingCodeForUserWithThisEmail() {
+    final var user = UserUtils.create();
+
+    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+
+    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    final var response = userService.signUpConfirmation(requestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
+    assertEquals("Missing reset code for user with this e-mail.", response.message());
   }
 }

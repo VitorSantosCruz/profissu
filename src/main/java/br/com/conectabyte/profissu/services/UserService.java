@@ -62,14 +62,14 @@ public class UserService {
     userToBeSaved.getAddresses().forEach(a -> a.setUser(userToBeSaved));
     userToBeSaved.setProfile(Profile.builder().user(userToBeSaved).build());
     userToBeSaved.setRoles(
-        Set.of(roleService.findByName(RoleEnum.USER.toString())
+        Set.of(roleService.findByName(RoleEnum.USER.name())
             .orElse(Role.builder().name("USER").build())));
 
     final var user = this.save(userToBeSaved);
-    final var resetCode = UUID.randomUUID().toString().split("-")[1];
+    final var code = UUID.randomUUID().toString().split("-")[1];
 
-    this.tokenService.save(user, resetCode, bCryptPasswordEncoder);
-    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), resetCode);
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
+    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), code);
 
     return userMapper.userToUserResponseDto(user);
   }
@@ -80,11 +80,11 @@ public class UserService {
 
     if (optionalUser.isEmpty()) {
       log.warn("No user found with this e-mail: {}", email);
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No user found with this e-mail.");
     }
 
     final var user = optionalUser.get();
-    final var messageError = validateToken(user, email, signUpConfirmationRequestDto.resetCode());
+    final var messageError = validateToken(user, email, signUpConfirmationRequestDto.code());
 
     if (messageError != null) {
       return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
@@ -100,15 +100,15 @@ public class UserService {
 
   @Async
   public void resendSignUpConfirmation(EmailValueRequestDto emailValueRequestDto) {
-    sendRecoverPassword(emailValueRequestDto.email(), true);
+    sendCodeEmail(emailValueRequestDto.email(), true);
   }
 
   @Async
   public void recoverPassword(EmailValueRequestDto emailValueRequestDto) {
-    sendRecoverPassword(emailValueRequestDto.email(), false);
+    sendCodeEmail(emailValueRequestDto.email(), false);
   }
 
-  private void sendRecoverPassword(String email, boolean isSignUp) {
+  private void sendCodeEmail(String email, boolean isSignUp) {
     final var optionalUser = this.findByEmail(email);
 
     if (optionalUser.isEmpty()) {
@@ -118,7 +118,10 @@ public class UserService {
 
     final var user = optionalUser.get();
     final var userIsVerified = user.getContacts().stream()
-        .anyMatch(c -> c.isStandard() && c.getVerificationCompletedAt() != null);
+        .filter(c -> c.isStandard())
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .findFirst()
+        .isPresent();
 
     if (isSignUp && userIsVerified) {
       log.warn("User with this e-mail: {} is already verified.", email);
@@ -130,16 +133,16 @@ public class UserService {
       return;
     }
 
-    final var resetCode = UUID.randomUUID().toString().split("-")[1];
-    this.tokenService.save(user, resetCode, bCryptPasswordEncoder);
+    final var code = UUID.randomUUID().toString().split("-")[1];
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
 
     try {
       if (isSignUp) {
         user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
             .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
-        emailService.sendSignUpConfirmation(email, resetCode);
+        emailService.sendSignUpConfirmation(email, code);
       } else {
-        emailService.sendPasswordRecoveryEmail(email, resetCode);
+        emailService.sendPasswordRecoveryEmail(email, code);
       }
       log.info("E-mail successfully sent to {}", email);
     } catch (MessagingException e) {
@@ -153,11 +156,11 @@ public class UserService {
 
     if (optionalUser.isEmpty()) {
       log.warn("No user found with this e-mail: {}", email);
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid.");
+      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No user found with this e-mail.");
     }
 
     final var user = optionalUser.get();
-    final var messageError = validateToken(user, email, resetPasswordRequestDto.resetCode());
+    final var messageError = validateToken(user, email, resetPasswordRequestDto.code());
 
     if (messageError != null) {
       return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
@@ -169,15 +172,15 @@ public class UserService {
     return new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated.");
   }
 
-  private String validateToken(User user, String email, String resetCode) {
+  private String validateToken(User user, String email, String code) {
     final var token = user.getToken();
 
     if (token == null) {
       log.warn("Reset code not found for user with this e-mail: {}", email);
-      return "Missing reset code.";
+      return "Missing reset code for user with this e-mail.";
     }
 
-    final var isValidToken = bCryptPasswordEncoder.matches(resetCode,
+    final var isValidToken = bCryptPasswordEncoder.matches(code,
         token.getValue());
 
     if (!isValidToken) {

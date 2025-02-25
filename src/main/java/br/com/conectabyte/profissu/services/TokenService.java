@@ -33,9 +33,9 @@ public class TokenService {
     this.delete(token);
   }
 
-  public void save(User user, String resetCode, PasswordEncoder passwordEncoder) {
+  public void save(User user, String code, PasswordEncoder passwordEncoder) {
     final var token = Token.builder()
-        .value(passwordEncoder.encode(resetCode))
+        .value(passwordEncoder.encode(code))
         .user(user)
         .build();
     this.deleteByUser(user);

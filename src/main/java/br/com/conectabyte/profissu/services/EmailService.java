@@ -45,10 +45,10 @@ public class EmailService {
     javaMailSender.send(message);
   }
 
-  public void sendPasswordRecoveryEmail(String email, String resetCode) throws MessagingException {
+  public void sendPasswordRecoveryEmail(String email, String code) throws MessagingException {
     final var variables = Map.of(
         "profissuLogoUrl", profissuUrl + LOGO_PATH,
-        "resetCode", resetCode,
+        "code", code,
         "emailTitle", "Password Recovery",
         "emailMessage",
         "We received a request to reset your password. Please use the following code to create a new password.",
@@ -60,10 +60,10 @@ public class EmailService {
   }
 
   @Async
-  public void sendSignUpConfirmation(String email, String confirmationCode) {
+  public void sendSignUpConfirmation(String email, String code) {
     final var variables = Map.of(
         "profissuLogoUrl", profissuUrl + LOGO_PATH,
-        "resetCode", confirmationCode,
+        "code", code,
         "emailTitle", "Sign Up Confirmation",
         "emailMessage", "Thank you for signing up for Profisu! Please use the code below to confirm your registration:",
         "footerMessage", "If you did not sign up, you can safely ignore this email.");
@@ -76,5 +76,4 @@ public class EmailService {
       log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
     }
   }
-
 }
