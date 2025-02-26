@@ -21,6 +21,7 @@ import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import jakarta.mail.MessagingException;
@@ -74,6 +75,7 @@ public class UserService {
     return userMapper.userToUserResponseDto(user);
   }
 
+  @Transactional
   public MessageValueResponseDto signUpConfirmation(SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
     final var email = signUpConfirmationRequestDto.email();
     final var optionalUser = this.findByEmail(email);
@@ -99,11 +101,13 @@ public class UserService {
   }
 
   @Async
+  @Transactional
   public void resendSignUpConfirmation(EmailValueRequestDto emailValueRequestDto) {
     sendCodeEmail(emailValueRequestDto.email(), true);
   }
 
   @Async
+  @Transactional
   public void recoverPassword(EmailValueRequestDto emailValueRequestDto) {
     sendCodeEmail(emailValueRequestDto.email(), false);
   }
@@ -197,5 +201,13 @@ public class UserService {
     }
 
     return null;
+  }
+
+  @Transactional
+  public UserResponseDto findById(Long id) {
+    final var optionalUser = this.userRepository.findById(id);
+    final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
+
+    return userMapper.userToUserResponseDto(user);
   }
 }
