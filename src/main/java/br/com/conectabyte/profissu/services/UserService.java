@@ -11,16 +11,17 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
-import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
-import br.com.conectabyte.profissu.dtos.UserRequestDto;
-import br.com.conectabyte.profissu.dtos.UserResponseDto;
+import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
+import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
+import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import jakarta.mail.MessagingException;
@@ -74,6 +75,7 @@ public class UserService {
     return userMapper.userToUserResponseDto(user);
   }
 
+  @Transactional
   public MessageValueResponseDto signUpConfirmation(SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
     final var email = signUpConfirmationRequestDto.email();
     final var optionalUser = this.findByEmail(email);
@@ -99,11 +101,13 @@ public class UserService {
   }
 
   @Async
+  @Transactional
   public void resendSignUpConfirmation(EmailValueRequestDto emailValueRequestDto) {
     sendCodeEmail(emailValueRequestDto.email(), true);
   }
 
   @Async
+  @Transactional
   public void recoverPassword(EmailValueRequestDto emailValueRequestDto) {
     sendCodeEmail(emailValueRequestDto.email(), false);
   }
@@ -197,5 +201,13 @@ public class UserService {
     }
 
     return null;
+  }
+
+  @Transactional
+  public UserResponseDto findById(Long id) {
+    final var optionalUser = this.userRepository.findById(id);
+    final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
+
+    return userMapper.userToUserResponseDto(user);
   }
 }

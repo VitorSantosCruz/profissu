@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import br.com.conectabyte.profissu.dtos.ExceptionDto;
+import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +40,13 @@ public class RestExceptionHandler {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionDto(e.getMessage(), null));
   }
 
-  @ExceptionHandler(NoResourceFoundException.class)
+  @ExceptionHandler({ NoResourceFoundException.class, ResourceNotFoundException.class })
   public ResponseEntity<ExceptionDto> notFoundExceptionHandler(Exception e) {
     log.error("Error: {}", e.getMessage());
+    if (e instanceof ResourceNotFoundException) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionDto(e.getMessage(), null));
+    }
+
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionDto("Resource not found", null));
   }
 

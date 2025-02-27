@@ -23,13 +23,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
-import br.com.conectabyte.profissu.dtos.LoginRequestDto;
-import br.com.conectabyte.profissu.dtos.LoginResponseDto;
-import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
-import br.com.conectabyte.profissu.dtos.UserRequestDto;
+import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
+import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;

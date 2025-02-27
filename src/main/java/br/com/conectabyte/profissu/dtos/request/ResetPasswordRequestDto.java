@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.dtos;
+package br.com.conectabyte.profissu.dtos.request;
 
 import org.hibernate.validator.constraints.Length;
 

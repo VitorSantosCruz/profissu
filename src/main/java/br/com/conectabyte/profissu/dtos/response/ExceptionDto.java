@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.dtos;
+package br.com.conectabyte.profissu.dtos.response;
 
 import java.util.List;
 

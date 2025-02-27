@@ -6,10 +6,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.LoginRequestDto;
-import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
+import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,6 +20,7 @@ public class LoginService {
   private final UserService userService;
   private final BCryptPasswordEncoder passwordEncoder;
 
+  @Transactional
   public LoginResponseDto login(LoginRequestDto loginRequest) {
     var optionalUser = userService.findByEmail(loginRequest.email());
 
