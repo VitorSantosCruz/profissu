@@ -210,4 +210,14 @@ public class UserService {
 
     return userMapper.userToUserResponseDto(user);
   }
+
+  @Async
+  public void deleteById(Long id) {
+    final var optionalUser = this.userRepository.findById(id);
+
+    optionalUser.ifPresent(user -> {
+      user.setDeletedAt(LocalDateTime.now());
+      userRepository.save(user);
+    });
+  }
 }
