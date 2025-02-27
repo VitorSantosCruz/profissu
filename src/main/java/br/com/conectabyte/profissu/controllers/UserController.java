@@ -33,6 +33,10 @@ public class UserController {
     return ResponseEntity.ok().body(this.userService.findById(id));
   }
 
+  @Operation(summary = "Delete user profile by ID", description = "Soft deletes the user profile by the given ID.", responses = {
+      @ApiResponse(responseCode = "202", description = "Accept delete request", content = @Content(mediaType = "application/json")),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
     this.userService.deleteById(id);
