@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import br.com.conectabyte.profissu.dtos.UserRequestDto;
-import br.com.conectabyte.profissu.dtos.UserResponseDto;
+import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
+import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 
 @Mapper(uses = { ContactMapper.class, AddressMapper.class, ProfileMapper.class })

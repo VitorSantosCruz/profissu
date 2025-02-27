@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import br.com.conectabyte.profissu.dtos.ExceptionDto;
+import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import lombok.val;

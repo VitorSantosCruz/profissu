@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import br.com.conectabyte.profissu.dtos.AddressRequestDto;
-import br.com.conectabyte.profissu.dtos.AddressResponseDto;
+import br.com.conectabyte.profissu.dtos.request.AddressRequestDto;
+import br.com.conectabyte.profissu.dtos.response.AddressResponseDto;
 import br.com.conectabyte.profissu.entities.Address;
 
 @Mapper

@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.services;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -57,5 +58,20 @@ class EmailServiceTest {
     verify(javaMailSender, times(1)).createMimeMessage();
     verify(javaMailSender, times(1)).send(mimeMessage);
     verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
+  }
+
+  @Test
+  void shouldLogErrorWhenMessagingExceptionIsThrown() throws Exception {
+    final var mimeMessage = mock(MimeMessage.class);
+
+    doAnswer(invocation -> {
+      throw new MessagingException("Simulated MessagingException");
+    }).when(javaMailSender).createMimeMessage();
+
+    emailService.sendSignUpConfirmation("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(0)).send(mimeMessage);
+    verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
   }
 }

@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import lombok.RequiredArgsConstructor;

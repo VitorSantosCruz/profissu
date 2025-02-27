@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.dtos;
+package br.com.conectabyte.profissu.dtos.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

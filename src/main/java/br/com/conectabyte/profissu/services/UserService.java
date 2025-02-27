@@ -11,12 +11,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
-import br.com.conectabyte.profissu.dtos.MessageValueResponseDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
-import br.com.conectabyte.profissu.dtos.UserRequestDto;
-import br.com.conectabyte.profissu.dtos.UserResponseDto;
+import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
+import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
+import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
 import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;

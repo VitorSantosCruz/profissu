@@ -6,8 +6,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.conectabyte.profissu.dtos.LoginRequestDto;
-import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
+import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import jakarta.transaction.Transactional;

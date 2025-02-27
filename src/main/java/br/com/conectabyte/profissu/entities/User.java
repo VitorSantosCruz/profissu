@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import br.com.conectabyte.profissu.dtos.LoginRequestDto;
+import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.enums.GenderEnum;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

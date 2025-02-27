@@ -1,6 +1,8 @@
 package br.com.conectabyte.profissu.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -22,11 +24,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import br.com.conectabyte.profissu.dtos.EmailValueRequestDto;
-import br.com.conectabyte.profissu.dtos.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.SignUpConfirmationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
@@ -306,5 +309,22 @@ public class UserServiceTest {
 
     assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
     assertEquals("Missing reset code for user with this e-mail.", response.message());
+  }
+
+  @Test
+  void shouldFindAnUserWhenUserWithIdExists() {
+    when(userRepository.findById(any())).thenReturn(Optional.of(UserUtils.create()));
+
+    final var user = userService.findById(any());
+
+    assertNotNull(user);
+  }
+
+  @Test
+  void shouldThrowsExceptionWhenUserNotBeFound() {
+    when(userRepository.findById(any())).thenReturn(Optional.empty());
+
+    final var exceptionMessage = assertThrows(ResourceNotFoundException.class, () -> userService.findById(any()));
+    assertEquals("User not found.", exceptionMessage.getMessage());
   }
 }

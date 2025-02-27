@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.dtos;
+package br.com.conectabyte.profissu.dtos.response;
 
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 

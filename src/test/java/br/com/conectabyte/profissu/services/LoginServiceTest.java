@@ -16,8 +16,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import br.com.conectabyte.profissu.dtos.LoginRequestDto;
-import br.com.conectabyte.profissu.dtos.LoginResponseDto;
+import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
+import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
