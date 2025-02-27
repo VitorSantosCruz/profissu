@@ -7,17 +7,16 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.repositories.RoleRepository;
 import br.com.conectabyte.profissu.utils.RoleUtils;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 public class RoleServiceTest {
   @Mock
   private RoleRepository roleRepository;

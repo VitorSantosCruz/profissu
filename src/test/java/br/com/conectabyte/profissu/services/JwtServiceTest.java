@@ -8,27 +8,30 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.test.context.ActiveProfiles;
 
 import br.com.conectabyte.profissu.utils.RoleUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 public class JwtServiceTest {
-  @MockBean
+  @Mock
   private JwtEncoder jwtEncoder;
 
-  @Autowired
+  @InjectMocks
   private JwtService jwtService;
 
   @Test
-  void shouldReturnTokenWhenSuccess() {
+  void shouldReturnTokenWhenSuccess() throws Exception {
+    var issuerField = JwtService.class.getDeclaredField("issuer");
+    issuerField.setAccessible(true);
+    issuerField.set(jwtService, "profissu");
+
     final var user = UserUtils.create();
     final var map = Map.of("key", new Object());
 
