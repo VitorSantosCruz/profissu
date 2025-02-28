@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,11 +44,14 @@ public class RestExceptionHandler {
   @ExceptionHandler({ NoResourceFoundException.class, ResourceNotFoundException.class })
   public ResponseEntity<ExceptionDto> notFoundExceptionHandler(Exception e) {
     log.error("Error: {}", e.getMessage());
-    if (e instanceof ResourceNotFoundException) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionDto(e.getMessage(), null));
-    }
+    final var messageError = e instanceof ResourceNotFoundException ? e.getMessage() : "Resource not found";
 
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionDto("Resource not found", null));
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionDto(messageError, null));
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ExceptionDto> handleAccessDeniedException(AccessDeniedException ex) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ExceptionDto("Access denied.", null));
   }
 
   @ExceptionHandler(Exception.class)

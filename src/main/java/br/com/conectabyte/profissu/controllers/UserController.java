@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,8 +36,10 @@ public class UserController {
 
   @Operation(summary = "Delete user profile by ID", description = "Soft deletes the user profile by the given ID.", responses = {
       @ApiResponse(responseCode = "202", description = "Accept delete request", content = @Content(mediaType = "application/json")),
-      @ApiResponse(responseCode = "401", description = "Invalid or missing credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+      @ApiResponse(responseCode = "401", description = "Invalid or missing credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
+  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
     this.userService.deleteById(id);
