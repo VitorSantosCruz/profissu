@@ -20,16 +20,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import br.com.conectabyte.profissu.config.SecurityConfig;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.services.SecurityService;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest({ UserController.class, SecurityService.class })
 @Import(SecurityConfig.class)
 public class UserControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
   @MockBean
   private UserService userService;
+
+  @MockBean
+  private SecurityService securityService;
 
   @Autowired
   private MockMvc mockMvc;
@@ -57,10 +61,31 @@ public class UserControllerTest {
 
   @Test
   @WithMockUser
-  void shouldAcceptDeletionRequest() throws Exception {
+  void shouldAllowProfileDeletionWhenUserIsOwner() throws Exception {
     doNothing().when(userService).deleteById(any());
+    when(securityService.isOwner(1L)).thenReturn(true);
 
     mockMvc.perform(delete("/users/1"))
         .andExpect(status().isAccepted());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldAllowProfileDeletionWhenUserIsAdmin() throws Exception {
+    doNothing().when(userService).deleteById(any());
+    when(securityService.isAdmin()).thenReturn(true);
+
+    mockMvc.perform(delete("/users/1"))
+        .andExpect(status().isAccepted());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldRejectDeletionRequestWhenUserIsNeitherAdminNorOwner() throws Exception {
+    doNothing().when(userService).deleteById(any());
+
+    mockMvc.perform(delete("/users/1"))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Access denied."));
   }
 }
