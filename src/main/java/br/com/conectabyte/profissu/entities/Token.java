@@ -2,6 +2,8 @@ package br.com.conectabyte.profissu.entities;
 
 import java.time.LocalDateTime;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,4 +38,8 @@ public class Token {
   @OneToOne
   @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
+
+  public boolean isValid(String code, PasswordEncoder passwordEncoder) {
+    return passwordEncoder.matches(code, this.value);
+  }
 }
