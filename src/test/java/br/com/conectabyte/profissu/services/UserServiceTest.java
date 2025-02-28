@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
@@ -38,7 +37,6 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 import jakarta.mail.MessagingException;
 
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles("test")
 public class UserServiceTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
@@ -326,5 +324,15 @@ public class UserServiceTest {
 
     final var exceptionMessage = assertThrows(ResourceNotFoundException.class, () -> userService.findById(any()));
     assertEquals("User not found.", exceptionMessage.getMessage());
+  }
+
+  @Test
+  void shouldMarkUserAsDeleted() {
+    final var user = UserUtils.create();
+    when(userRepository.findById(any())).thenReturn(Optional.of(user));
+
+    userService.deleteById(any());
+
+    assertNotNull(user.getDeletedAt());;
   }
 }
