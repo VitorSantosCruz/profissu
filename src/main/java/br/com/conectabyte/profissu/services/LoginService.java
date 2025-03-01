@@ -30,7 +30,7 @@ public class LoginService {
   }
 
   private void validate(Optional<User> optionalUser, LoginRequestDto loginRequest) {
-    if (optionalUser.isEmpty() || !optionalUser.get().isValidPassword(loginRequest, passwordEncoder)) {
+    if (optionalUser.isEmpty() || !optionalUser.get().isValidPassword(loginRequest.password(), passwordEncoder)) {
       throw new BadCredentialsException("Credentials is not valid");
     }
 

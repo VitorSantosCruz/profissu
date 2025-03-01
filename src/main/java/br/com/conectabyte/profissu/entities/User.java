@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.enums.GenderEnum;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -80,7 +79,7 @@ public class User {
   @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles;
 
-  public boolean isValidPassword(LoginRequestDto loginRequest, PasswordEncoder passwordEncoder) {
-    return passwordEncoder.matches(loginRequest.password(), this.password);
+  public boolean isValidPassword(String password, PasswordEncoder passwordEncoder) {
+    return passwordEncoder.matches(password, this.password);
   }
 }

@@ -43,28 +43,23 @@ Profissu is built with modern and robust technologies, ensuring high performance
 
 ## **System Architecture**
 
-Profissu follows a well-defined layered architecture, promoting maintainability, scalability, and testability:
+Profissu follows a layered architecture, promoting maintainability, scalability, and testability:
 
 * **Presentation Layer (Controllers):** Handles HTTP requests, validates inputs, and interacts with the Application Layer.
 * **Application Layer (Services):** Contains business logic, orchestrating interactions between components.
 * **Persistence Layer (Repositories):** Abstracts database access, simplifying data persistence operations.
 * **Domain Layer (Domain Model):** Defines core entities and their relationships, representing the application's business concepts.
 
-## **Component-Based Organization**
-
-We adopt a component-based organization to structure the project effectively, dividing it into independent modules, each responsible for a specific system functionality. This approach improves maintainability, code reusability, and application scalability.
-
 ## **Development Practices**
 
 * **Agile Development:** We follow agile methodologies, prioritizing iterative development, frequent feedback, and continuous improvement.
-* **Test-Driven Development (TDD):** We write tests before code to ensure code quality and reduce the risk of bugs.  
 * **Continuous Integration/Continuous Deployment (CI/CD):** We aim to implement CI/CD pipelines to automate the build, test, and deployment processes.
 
 ## **How to Run the Application**
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/VitorSantosCruz/profissu.git](https://github.com/VitorSantosCruz/profissu.git)
+   git clone https://github.com/VitorSantosCruz/profissu.git
    ```
 
 2. **Navigate to the Project Directory:**

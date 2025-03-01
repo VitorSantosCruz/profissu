@@ -8,10 +8,12 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
@@ -184,8 +186,7 @@ public class UserService {
       return "Missing reset code for user with this e-mail.";
     }
 
-    final var isValidToken = bCryptPasswordEncoder.matches(code,
-        token.getValue());
+    final var isValidToken = token.isValid(code, bCryptPasswordEncoder);
 
     if (!isValidToken) {
       log.warn("Reset code is invalid.");
@@ -219,5 +220,18 @@ public class UserService {
       user.setDeletedAt(LocalDateTime.now());
       userRepository.save(user);
     });
+  }
+
+  public void updatePassword(Long id, PasswordRequestDto passwordRequestDto) {
+    final var optionalUser = this.userRepository.findById(id);
+    final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
+    final var isValidPassword = user.isValidPassword(passwordRequestDto.currentPassword(), bCryptPasswordEncoder);
+
+    if (!isValidPassword) {
+      throw new BadCredentialsException("Current password is not valid.");
+    }
+
+    user.setPassword(bCryptPasswordEncoder.encode(passwordRequestDto.newPassword()));
+    this.save(user);
   }
 }

@@ -22,72 +22,73 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Operations related to managing authentication")
 public class AuthController {
   private final LoginService loginService;
   private final UserService userService;
 
-  @Operation(summary = "Authenticate user", description = "Validates user credentials and returns authentication details.", responses = {
+  @Operation(summary = "Authenticate user", description = "Validates the provided user credentials and returns authentication details, including access tokens.", responses = {
       @ApiResponse(responseCode = "200", description = "User successfully authenticated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping("/login")
   public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto credentials) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(loginService.login(credentials));
+    return ResponseEntity.ok(loginService.login(credentials));
   }
 
-  @Operation(summary = "Register user", description = "Validates user data save and returns saved user data.", responses = {
+  @Operation(summary = "Register new user", description = "Validates and saves the provided user data, creating a new user account.", responses = {
       @ApiResponse(responseCode = "201", description = "User successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping("/register")
   public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRequestDto user) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.register(user));
+    return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
   }
 
-  @Operation(summary = "Sign-up confirmation", description = "Receives sign-up confirmation requests", responses = {
-      @ApiResponse(responseCode = "200", description = "Sign-up was successfully confirmated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Sign-up was not confirmated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
+  @Operation(summary = "Confirm user sign-up", description = "Validates and confirms a user's sign-up request.", responses = {
+      @ApiResponse(responseCode = "200", description = "Sign-up successfully confirmed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Sign-up confirmation failed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
   })
   @PostMapping("/sign-up-confirmation")
   public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
-      @Valid @RequestBody SignUpConfirmationRequestDto signUpConfirmationRequestDto) {
-    final var response = this.userService.signUpConfirmation(signUpConfirmationRequestDto);
+      @Valid @RequestBody SignUpConfirmationRequestDto request) {
+    final var response = this.userService.signUpConfirmation(request);
     return ResponseEntity.status(response.responseCode()).body(response);
   }
 
-  @Operation(summary = "Resend sign-up confirmation", description = "Receives resend sign-up confirmation requests", responses = {
-      @ApiResponse(responseCode = "201", description = "Resend sign-up confirmation request successfully received.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
+  @Operation(summary = "Resend sign-up confirmation email", description = "Triggers a request to resend the sign-up confirmation email.", responses = {
+      @ApiResponse(responseCode = "202", description = "Confirmation email will be resent", content = @Content(mediaType = "application/json"))
   })
   @PostMapping("/sign-up-confirmation/resend")
-  public ResponseEntity<Void> resendSignUpConfirmation(@Valid @RequestBody EmailValueRequestDto emailValueRequestDto) {
-    this.userService.resendSignUpConfirmation(emailValueRequestDto);
+  public ResponseEntity<Void> resendSignUpConfirmation(@Valid @RequestBody EmailValueRequestDto request) {
+    this.userService.resendSignUpConfirmation(request);
     return ResponseEntity.accepted().build();
   }
 
-  @Operation(summary = "Recover password", description = "Receives password recovery requests", responses = {
-      @ApiResponse(responseCode = "201", description = "Password recovery request successfully received.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
+  @Operation(summary = "Request password recovery", description = "Initiates the password recovery process by sending an email with recovery instructions.", responses = {
+      @ApiResponse(responseCode = "202", description = "Password recovery email will be sent", content = @Content(mediaType = "application/json"))
   })
   @PostMapping("/password-recovery")
-  public ResponseEntity<Void> recoverPassword(@Valid @RequestBody EmailValueRequestDto emailValueRequestDto) {
-    this.userService.recoverPassword(emailValueRequestDto);
+  public ResponseEntity<Void> recoverPassword(@Valid @RequestBody EmailValueRequestDto request) {
+    this.userService.recoverPassword(request);
     return ResponseEntity.accepted().build();
   }
 
-  @Operation(summary = "Reset password", description = "Receives password reset requests", responses = {
-      @ApiResponse(responseCode = "200", description = "Password was successfully reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Password was not reset.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
+  @Operation(summary = "Reset user password", description = "Processes a password reset request and updates the user's password if valid.", responses = {
+      @ApiResponse(responseCode = "200", description = "Password successfully reset", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Password reset failed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageValueResponseDto.class)))
   })
   @PostMapping("/password-reset")
-  public ResponseEntity<MessageValueResponseDto> resetPassword(
-      @Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
-    final var response = this.userService.resetPassword(resetPasswordRequestDto);
+  public ResponseEntity<MessageValueResponseDto> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
+    final var response = this.userService.resetPassword(request);
     return ResponseEntity.status(response.responseCode()).body(response);
   }
 }

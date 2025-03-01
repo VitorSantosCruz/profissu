@@ -21,9 +21,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
+import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
@@ -333,6 +335,51 @@ public class UserServiceTest {
 
     userService.deleteById(any());
 
-    assertNotNull(user.getDeletedAt());;
+    assertNotNull(user.getDeletedAt());
+  }
+
+  @Test
+  void shouldUpdatePasswordWhenDataIsValid() {
+    final var user = UserUtils.create();
+
+    when(userRepository.findById(any())).thenReturn(Optional.of(user));
+    when(this.userRepository.save(any())).thenReturn(user);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+    when(bCryptPasswordEncoder.encode(any())).thenReturn("encoded");
+
+    userService.updatePassword(1L, new PasswordRequestDto("currentPassword", "newPassword"));
+
+    verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void shouldThrowsExceptionWhenUserNotFound() {
+    final var passwordRequestDto = new PasswordRequestDto("currentPassword", "newPassword");
+    when(userRepository.findById(any())).thenReturn(Optional.empty());
+
+    final var exceptionMessage = assertThrows(ResourceNotFoundException.class,
+        () -> userService.updatePassword(1L, passwordRequestDto));
+
+    assertEquals("User not found.", exceptionMessage.getMessage());
+
+    verify(userRepository, times(0)).save(any());
+    verify(bCryptPasswordEncoder, times(0)).matches(any(CharSequence.class), any(String.class));
+    verify(bCryptPasswordEncoder, times(0)).encode(any());
+  }
+
+  @Test
+  void shouldThrowsExceptionWhenCurrentPasswordNotMatches() {
+    final var passwordRequestDto = new PasswordRequestDto("currentPassword", "newPassword");
+
+    when(userRepository.findById(any())).thenReturn(Optional.of(UserUtils.create()));
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
+
+    final var exceptionMessage = assertThrows(BadCredentialsException.class,
+        () -> userService.updatePassword(1L, passwordRequestDto));
+
+    assertEquals("Current password is not valid.", exceptionMessage.getMessage());
+
+    verify(userRepository, times(0)).save(any());
+    verify(bCryptPasswordEncoder, times(0)).encode(any());
   }
 }
