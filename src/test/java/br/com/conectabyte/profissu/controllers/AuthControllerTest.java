@@ -62,7 +62,7 @@ public class AuthControllerTest {
     final var token = "token_test";
     final var expiresIn = 1L;
     final var email = "test@conectabyte.com.br";
-    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "admin";
     when(loginService.login(any())).thenReturn(new LoginResponseDto(token, expiresIn));
 
     mockMvc.perform(post("/auth/login")
@@ -76,7 +76,7 @@ public class AuthControllerTest {
   @Test
   void shouldReturnUnauthorizedWhenCredentialsAreInvalid() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "admin";
     final var errorMessage = "Credentials is not valid";
     when(loginService.login(any())).thenThrow(new BadCredentialsException(errorMessage));
 
@@ -90,7 +90,7 @@ public class AuthControllerTest {
   @Test
   void shouldReturnUnauthorizedWhenEmailIsNotVerified() throws Exception {
     final var email = "invalid@conectabyte.com.br";
-    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "admin";
     final var errorMessage = "E-mail is not verified";
     when(loginService.login(any())).thenThrow(new EmailNotVerifiedException(errorMessage));
 
@@ -111,7 +111,7 @@ public class AuthControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenEmailIsMissing() throws Exception {
-    final var password = "Exceptiony.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
+    final var password = "admin";
 
     mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
