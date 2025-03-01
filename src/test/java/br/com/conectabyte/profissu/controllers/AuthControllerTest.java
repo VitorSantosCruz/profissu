@@ -30,7 +30,6 @@ import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
-import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
@@ -137,7 +136,6 @@ public class AuthControllerTest {
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     user.setId(1L);
-    user.setProfile(new Profile());
     when(userService.register(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
 
     mockMvc.perform(post("/auth/register")
@@ -146,9 +144,9 @@ public class AuthControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists())
         .andExpect(jsonPath("$.name").exists())
+        .andExpect(jsonPath("$.bio").exists())
         .andExpect(jsonPath("$.password").doesNotExist())
         .andExpect(jsonPath("$.gender").exists())
-        .andExpect(jsonPath("$.profile").exists())
         .andExpect(jsonPath("$.contacts").exists())
         .andExpect(jsonPath("$.addresses").exists());
   }

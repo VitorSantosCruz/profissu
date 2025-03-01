@@ -19,7 +19,6 @@ import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
-import br.com.conectabyte.profissu.entities.Profile;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
@@ -63,7 +62,6 @@ public class UserService {
       c.setVerificationRequestedAt(LocalDateTime.now());
     });
     userToBeSaved.getAddresses().forEach(a -> a.setUser(userToBeSaved));
-    userToBeSaved.setProfile(Profile.builder().user(userToBeSaved).build());
     userToBeSaved.setRoles(
         Set.of(roleService.findByName(RoleEnum.USER.name())
             .orElse(Role.builder().name("USER").build())));
