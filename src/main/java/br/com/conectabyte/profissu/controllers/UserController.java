@@ -50,6 +50,12 @@ public class UserController {
     return ResponseEntity.accepted().build();
   }
 
+  @Operation(summary = "Update user password", description = "Updates the password of a user identified by the given ID. Requires authentication.", responses = {
+      @ApiResponse(responseCode = "204", description = "Password successfully updated"),
+      @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "User does not have permission to update this password", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @PutMapping("/{id}/password")
   public ResponseEntity<Void> updatePassword(@PathVariable Long id,
