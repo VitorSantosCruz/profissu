@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
-import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
 import br.com.conectabyte.profissu.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,20 +27,23 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
   private final UserService userService;
 
-  @Operation(summary = "Get user by ID", description = "Find a user by their ID and return user data.", responses = {
-      @ApiResponse(responseCode = "200", description = "User successfully found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "401", description = "Invalid or missing credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  @Operation(summary = "Retrieve user by ID", description = "Fetches a user's details using the provided ID. Requires authentication.", responses = {
+      @ApiResponse(responseCode = "200", description = "User successfully retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Malformed ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "User does not have permission to access this resource", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "No user exists with the given ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
     return ResponseEntity.ok().body(this.userService.findById(id));
   }
 
-  @Operation(summary = "Delete user profile by ID", description = "Soft deletes the user profile by the given ID.", responses = {
-      @ApiResponse(responseCode = "202", description = "Accept delete request", content = @Content(mediaType = "application/json")),
-      @ApiResponse(responseCode = "401", description = "Invalid or missing credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  @Operation(summary = "Soft delete user profile", description = "Marks the user profile as deleted (soft delete) using the provided ID. Requires authentication.", responses = {
+      @ApiResponse(responseCode = "202", description = "The user profile will be soft deleted"),
+      @ApiResponse(responseCode = "400", description = "Malformed ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "User does not have permission to delete this profile", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @DeleteMapping("/{id}")
