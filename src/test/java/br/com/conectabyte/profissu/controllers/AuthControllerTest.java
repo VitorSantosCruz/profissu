@@ -68,7 +68,7 @@ public class AuthControllerTest {
     mockMvc.perform(post("/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new LoginRequestDto(email, password))))
-        .andExpect(status().isCreated())
+        .andExpect(status().isOk())
         .andExpect(jsonPath("$.accessToken").value(token))
         .andExpect(jsonPath("$.expiresIn").value(expiresIn));
   }
