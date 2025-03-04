@@ -44,7 +44,7 @@ public class UserController {
 
   @Operation(summary = "Soft delete user profile", description = "Marks the user profile as deleted (soft delete) using the provided ID. Requires authentication.", responses = {
       @ApiResponse(responseCode = "202", description = "The user profile will be soft deleted"),
-      @ApiResponse(responseCode = "400", description = "Malformed ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "403", description = "User does not have permission to delete this profile", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
@@ -55,6 +55,13 @@ public class UserController {
     return ResponseEntity.accepted().build();
   }
 
+  @Operation(summary = "Update user profile", description = "Updates the profile information of a user. Only the owner of the profile or an admin can perform this operation.", responses = {
+      @ApiResponse(responseCode = "200", description = "User profile successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @PutMapping("/{id}")
   public ResponseEntity<UserResponseDto> updateById(@PathVariable Long id,
@@ -66,7 +73,8 @@ public class UserController {
       @ApiResponse(responseCode = "204", description = "Password successfully updated"),
       @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "User does not have permission to update this password", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+      @ApiResponse(responseCode = "403", description = "User does not have permission to update this password", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @PutMapping("/{id}/password")
