@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
 import br.com.conectabyte.profissu.services.UserService;
@@ -38,7 +39,7 @@ public class UserController {
   })
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
-    return ResponseEntity.ok().body(this.userService.findById(id));
+    return ResponseEntity.ok().body(this.userService.findByIdAndReturnDto(id));
   }
 
   @Operation(summary = "Soft delete user profile", description = "Marks the user profile as deleted (soft delete) using the provided ID. Requires authentication.", responses = {
@@ -52,6 +53,13 @@ public class UserController {
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
     this.userService.deleteById(id);
     return ResponseEntity.accepted().build();
+  }
+
+  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
+  @PutMapping("/{id}")
+  public ResponseEntity<UserResponseDto> updateById(@PathVariable Long id,
+      @Valid @RequestBody ProfileRequestDto profileRequestDto) {
+    return ResponseEntity.ok().body(this.userService.update(id, profileRequestDto));
   }
 
   @Operation(summary = "Update user password", description = "Updates the password of a user identified by the given ID. Requires authentication.", responses = {

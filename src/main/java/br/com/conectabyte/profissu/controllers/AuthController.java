@@ -2,22 +2,25 @@ package br.com.conectabyte.profissu.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.conectabyte.profissu.dtos.request.ContactConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
+import br.com.conectabyte.profissu.services.ContactService;
 import br.com.conectabyte.profissu.services.LoginService;
 import br.com.conectabyte.profissu.services.UserService;
+import br.com.conectabyte.profissu.validators.groups.ValidatorGroup;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
   private final LoginService loginService;
   private final UserService userService;
+  private final ContactService contactService;
 
   @Operation(summary = "Authenticate user", description = "Validates the provided user credentials and returns authentication details, including access tokens.", responses = {
       @ApiResponse(responseCode = "200", description = "User successfully authenticated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDto.class))),
@@ -49,7 +53,7 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping("/register")
-  public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRequestDto user) {
+  public ResponseEntity<UserResponseDto> register(@Validated(ValidatorGroup.class) @RequestBody UserRequestDto user) {
     return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
   }
 
@@ -59,8 +63,8 @@ public class AuthController {
   })
   @PostMapping("/sign-up-confirmation")
   public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
-      @Valid @RequestBody SignUpConfirmationRequestDto request) {
-    final var response = this.userService.signUpConfirmation(request);
+      @Valid @RequestBody ContactConfirmationRequestDto request) {
+    final var response = this.contactService.contactConfirmation(request);
     return ResponseEntity.status(response.responseCode()).body(response);
   }
 
