@@ -1,20 +1,26 @@
 ---
-name: Bug Report
-about: Use este template para relatar problemas encontrados no projeto.
-title: '[BUG] '
-labels: bug
-assignees: ''
-
+name: "Bug Report"
+about: "Report issues found in the project"
+title: "[BUG] Briefly describe the issue"
+labels: ["bug"]
+assignees: []
 ---
-**Descrição do erro:**
-- Descreva o erro ou comportamento inesperado.
 
-**Passos para reproduzir:**
-1. Passo 1
-2. Passo 2
+## Bug Description
+Clearly and concisely describe the unexpected behavior or issue.
 
-**Comportamento esperado:**
-- O que você esperava que acontecesse?
+## Steps to Reproduce
+1. **Step 1** - Explain the first step required to reproduce the issue.
+2. **Step 2** - Continue detailing the steps until the issue occurs.
 
-**Informações adicionais:**
-- (Se aplicável) Informações adicionais, como logs ou screenshots.
+## Expected Behavior
+Describe what should happen if the system is working correctly.
+
+## Screenshots and Logs (if applicable)
+Attach screenshots or logs that help analyze the problem, if necessary.
+
+## Additional Information
+Include other relevant details, such as system environment:
+- **Operating System:** (Windows/Linux/macOS)
+- **Browser and Version:** (if applicable)
+- **System Version:** (if applicable)

@@ -1,16 +1,19 @@
 ---
-name: Feature Request
-about: Use este template para sugerir uma nova funcionalidade.
-title: '[FEATURE] '
-labels: enhancement
-assignees: ''
-
+name: "Feature Request"
+about: "Suggest a new feature or improvement"
+title: "[FEATURE] Briefly describe the feature"
+labels: ["enhancement"]
+assignees: []
 ---
-**Descrição da funcionalidade:**
-- Descreva a nova funcionalidade ou melhoria sugerida.
 
-**Motivação:**
-- Por que essa funcionalidade seria útil?
+## Feature Description  
+Clearly describe the new feature or improvement being suggested.
 
-**Alternativas:**
-- Alguma alternativa já implementada ou ideia para contornar o problema?
+## Motivation  
+Explain why this feature would be useful and how it improves the project.
+
+## Alternatives Considered  
+Are there any existing alternatives or workarounds for this issue? If so, describe them.
+
+## Additional Context (if applicable)  
+Include any extra details, such as related issues, references, or mockups.
