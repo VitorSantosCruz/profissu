@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,10 +25,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
+import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.ContactTypeEnum;
+import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
@@ -64,13 +64,12 @@ public class UserServiceTest {
   void shouldReturnUserWhenEmailIsValid() {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    final var optionalUser = this.userService.findByEmail(email);
+    final var findedUser = this.userService.findByEmail(email);
 
-    assertTrue(optionalUser.isPresent());
-    assertTrue(optionalUser.get().getContacts().stream()
+    assertTrue(findedUser.getContacts().stream()
         .filter(c -> c.getValue().equals(email) && c.getType().equals(ContactTypeEnum.EMAIL) && c.isStandard()
             && c.getVerificationCompletedAt() != null)
         .findAny().isPresent());
@@ -79,15 +78,17 @@ public class UserServiceTest {
   @Test
   void shouldNotReturnUserWhenEmailIsInvalid() {
     when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
-    final var optionalUser = this.userService.findByEmail("invalid@conectabyte.com.br");
 
-    assertTrue(optionalUser.isEmpty());
+    final var exceptionMessage = assertThrows(ResourceNotFoundException.class,
+        () -> this.userService.findByEmail(any()));
+
+    assertEquals("User not found.", exceptionMessage.getMessage());
   }
 
   @Test
   void shouldRegisterUserWhenUserDataIsValid() {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     when(this.userRepository.save(any())).thenReturn(user);
 
@@ -100,7 +101,7 @@ public class UserServiceTest {
   void shouldRecoverPasswordSucessfully() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
@@ -116,7 +117,7 @@ public class UserServiceTest {
   void shouldErrorWhenSendPasswordRecoveryEmailFail() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
@@ -132,7 +133,7 @@ public class UserServiceTest {
   void shouldErrorWhenUserWithThisEmailIsNotVerified() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.create(user);
+    final var contact = ContactUtils.createEmail(user);
 
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of());
@@ -170,6 +171,7 @@ public class UserServiceTest {
   void shouldReturnBadRequestWhenTokenIsNull() {
     final var user = UserUtils.create();
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
+    when(tokenService.validateToken(any(), any(), any())).thenReturn("Missing reset code for user with this e-mail.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
     final var response = userService.resetPassword(requestDto);
@@ -181,10 +183,9 @@ public class UserServiceTest {
   @Test
   void shouldReturnBadRequestWhenTokenIsInvalid() {
     final var user = UserUtils.create();
-    user.setToken(new Token());
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
+    when(tokenService.validateToken(any(), any(), any())).thenReturn("Reset code is invalid.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
     final var response = userService.resetPassword(requestDto);
@@ -196,15 +197,9 @@ public class UserServiceTest {
   @Test
   void shouldReturnBadRequestWhenTokenIsExpired() {
     final var user = UserUtils.create();
-    final var token = Token.builder()
-        .value("CODE")
-        .createdAt(LocalDateTime.now().minusMinutes(2))
-        .build();
-    user.setToken(token);
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
-    doNothing().when(tokenService).deleteByUser(any());
+    when(tokenService.validateToken(any(), any(), any())).thenReturn("Reset code is expired.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
     final var response = userService.resetPassword(requestDto);
@@ -219,7 +214,6 @@ public class UserServiceTest {
     user.setToken(new Token());
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
     when(bCryptPasswordEncoder.encode(any())).thenReturn("encoded");
     doNothing().when(tokenService).deleteByUser(any());
 
@@ -235,7 +229,7 @@ public class UserServiceTest {
   void shouldResendSignUpConfirmationSucessfully() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.create(user);
+    final var contact = ContactUtils.createEmail(user);
 
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
@@ -255,60 +249,13 @@ public class UserServiceTest {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
 
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(0)).save(any(), any(), any());
     verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
-  }
-
-  @Test
-  void shouldReturnOkRequestWhenSignUpWasConfirmed() {
-    final var user = UserUtils.create();
-    final var token = Token.builder()
-        .value("CODE")
-        .createdAt(LocalDateTime.now())
-        .build();
-
-    user.setContacts(List.of(ContactUtils.create(user)));
-    user.setToken(token);
-
-    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    when(this.userRepository.save(any())).thenReturn(user);
-    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
-    doNothing().when(tokenService).deleteByUser(any());
-
-    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    final var response = userService.signUpConfirmation(requestDto);
-
-    assertEquals(HttpStatus.OK.value(), response.responseCode());
-    assertEquals("Sign up was confirmed.", response.message());
-  }
-
-  @Test
-  void shouldReturnBadRequestWhenNoUserFoundForInformedEmail() {
-    when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
-
-    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    final var response = userService.signUpConfirmation(requestDto);
-
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("No user found with this e-mail.", response.message());
-  }
-
-  @Test
-  void shouldReturnBadRequestWhenMissingCodeForUserWithThisEmail() {
-    final var user = UserUtils.create();
-
-    when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-
-    final var requestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    final var response = userService.signUpConfirmation(requestDto);
-
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Missing reset code for user with this e-mail.", response.message());
   }
 
   @Test
@@ -381,5 +328,62 @@ public class UserServiceTest {
 
     verify(userRepository, times(0)).save(any());
     verify(bCryptPasswordEncoder, times(0)).encode(any());
+  }
+
+  @Test
+  void shouldReturnUserResponseDtoWhenUserExists() {
+    final var user = UserUtils.create();
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+    final var result = userService.findByIdAndReturnDto(1L);
+
+    assertEquals(userMapper.userToUserResponseDto(user), result);
+  }
+
+  @Test
+  void shouldThrowResourceNotFoundExceptionWhenUserNotExists() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      userService.findByIdAndReturnDto(1L);
+    });
+
+    assertEquals("User not found.", exception.getMessage());
+  }
+
+  @Test
+  void shouldUpdateUserProfileWhenUserExists() {
+    final var user = UserUtils.create();
+
+    final var newName = "New Name";
+    final var newBio = "New Bio";
+    final var newGender = GenderEnum.FEMALE;
+    final var profileRequestDto = new ProfileRequestDto(newName, newBio, newGender);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.save(user)).thenReturn(user);
+
+    final var result = userService.update(1L, profileRequestDto);
+
+    assertEquals(userMapper.userToUserResponseDto(user), result);
+
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void shouldBeThrowResourceNotFoundExceptionWhenUserNotExists() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+    final var newName = "New Name";
+    final var newBio = "New Bio";
+    final var newGender = GenderEnum.FEMALE;
+    final var profileRequestDto = new ProfileRequestDto(newName, newBio, newGender);
+
+    final var exception = assertThrows(ResourceNotFoundException.class, () -> {
+      userService.update(1L, profileRequestDto);
+    });
+
+    assertEquals("User not found.", exception.getMessage());
   }
 }

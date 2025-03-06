@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +22,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.conectabyte.profissu.config.SecurityConfig;
+import br.com.conectabyte.profissu.dtos.request.ContactConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
-import br.com.conectabyte.profissu.dtos.request.SignUpConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.services.ContactService;
 import br.com.conectabyte.profissu.services.LoginService;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
@@ -46,6 +47,9 @@ public class AuthControllerTest {
 
   @MockBean
   private UserService userService;
+
+  @MockBean
+  private ContactService contactService;
 
   @MockBean
   private LoginService loginService;
@@ -133,9 +137,12 @@ public class AuthControllerTest {
   @Test
   void shouldRegisterUserWhenDataIsValid() throws Exception {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     user.setId(1L);
+
+    when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
     when(userService.register(any(UserRequestDto.class))).thenReturn(userMapper.userToUserResponseDto(user));
 
     mockMvc.perform(post("/auth/register")
@@ -154,9 +161,9 @@ public class AuthControllerTest {
   @Test
   void shouldReturnBadRequestWhenEmailIsAlreadyRegistered() throws Exception {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
+    user.setContacts(List.of(ContactUtils.createEmail(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
-    when(userService.findByEmail(any())).thenReturn(Optional.of(new User()));
+    when(userService.findByEmail(any())).thenReturn(new User());
 
     mockMvc.perform(post("/auth/register")
         .contentType(MediaType.APPLICATION_JSON)
@@ -248,8 +255,8 @@ public class AuthControllerTest {
 
   @Test
   void shouldConfirmSignupSuccessfullyWhenDataIsValid() throws Exception {
-    final var signUpConfirmationRequestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    when(userService.signUpConfirmation(any()))
+    final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    when(contactService.contactConfirmation(any()))
         .thenReturn(new MessageValueResponseDto(HttpStatus.OK.value(), "Sign up was confirmed."));
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
@@ -261,8 +268,8 @@ public class AuthControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenSignupCodeIsInvalid() throws Exception {
-    final var signUpConfirmationRequestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    when(userService.signUpConfirmation(any()))
+    final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    when(contactService.contactConfirmation(any()))
         .thenReturn(new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
@@ -274,7 +281,7 @@ public class AuthControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenSignupResetEmailIsMissing() throws Exception {
-    final var signUpConfirmationRequestDto = new SignUpConfirmationRequestDto(null, "CODE");
+    final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto(null, "CODE");
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
         .contentType(MediaType.APPLICATION_JSON)
@@ -285,7 +292,7 @@ public class AuthControllerTest {
 
   @Test
   void shouldReturnBadRequestWhenSignupCodeIsMissing() throws Exception {
-    final var signUpConfirmationRequestDto = new SignUpConfirmationRequestDto("test@conectabyte.com.br", null);
+    final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", null);
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
         .contentType(MediaType.APPLICATION_JSON)

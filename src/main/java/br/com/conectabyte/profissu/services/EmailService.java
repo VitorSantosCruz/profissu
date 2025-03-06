@@ -95,5 +95,4 @@ public class EmailService {
       log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
     }
   }
-
 }

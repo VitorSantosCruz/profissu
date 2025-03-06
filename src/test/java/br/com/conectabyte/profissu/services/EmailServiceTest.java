@@ -74,4 +74,34 @@ class EmailServiceTest {
     verify(javaMailSender, times(0)).send(mimeMessage);
     verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
   }
+
+  @Test
+  void shouldSendContactConfirmationEmailSuccessfully() throws MessagingException {
+    final var htmlContent = "<html><body>We received your contact request. Please use the code below to confirm your e-mail address: 123456</body></html>";
+    final var mimeMessage = mock(MimeMessage.class);
+
+    when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+    when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
+
+    emailService.sendContactConfirmation("test@conectabyte.com.br", "123456");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(1)).send(mimeMessage);
+    verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
+  }
+
+  @Test
+  void shouldShowErrorWhenMessagingExceptionIsThrown() throws Exception {
+    final var mimeMessage = mock(MimeMessage.class);
+
+    doAnswer(invocation -> {
+      throw new MessagingException("Simulated MessagingException");
+    }).when(javaMailSender).createMimeMessage();
+
+    emailService.sendContactConfirmation("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(0)).send(mimeMessage);
+    verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
+  }
 }

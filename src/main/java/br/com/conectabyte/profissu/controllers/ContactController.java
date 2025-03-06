@@ -57,5 +57,4 @@ public class ContactController {
       @Validated @RequestBody ContactRequestDto contactRequestDto) {
     return ResponseEntity.ok().body(this.contactService.update(id, contactRequestDto));
   }
-
 }
