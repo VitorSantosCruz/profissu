@@ -46,9 +46,10 @@ services:
       retries: 5
 
   app:
-    image: maven:3.9.9-amazoncorretto-21-alpine
+    build: .
     container_name: profissu
     environment:
+      - "JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       - "SPRING_PROFILE=dev"
       - "MYSQL_HOST=mysql"
       - "MYSQL_PORT=3306"
@@ -64,11 +65,9 @@ services:
       - "EMAIL_PASSWORD="
     ports:
       - "8081:8081"
+      - "5005:5005"
     volumes:
-      - .:/app
       - maven_cache:/root/.m2
-    working_dir: /app
-    command: ["mvn", "spring-boot:run"]
     depends_on:
       mysql:
         condition: service_healthy

@@ -42,6 +42,9 @@ public class User {
   private String name;
 
   @Column(nullable = false)
+  private String bio;
+
+  @Column(nullable = false)
   private String password;
 
   @Column(nullable = false)
@@ -50,9 +53,6 @@ public class User {
 
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
-
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-  private Profile profile;
 
   @OneToOne(mappedBy = "user")
   private Token token;

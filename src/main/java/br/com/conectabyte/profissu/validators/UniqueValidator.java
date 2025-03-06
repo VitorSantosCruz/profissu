@@ -13,6 +13,12 @@ public class UniqueValidator implements ConstraintValidator<Unique, String> {
 
   @Override
   public boolean isValid(String email, ConstraintValidatorContext context) {
-    return userService.findByEmail(email).isEmpty();
+    try {
+      userService.findByEmail(email);
+
+      return false;
+    } catch (Exception e) {
+      return true;
+    }
   }
 }

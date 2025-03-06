@@ -7,6 +7,7 @@ public class AddressUtils {
   public static Address create(User user) {
     var address = new Address();
 
+    address.setId(0L);
     address.setStreet("123 Main St");
     address.setNumber("101");
     address.setCity("Springfield");

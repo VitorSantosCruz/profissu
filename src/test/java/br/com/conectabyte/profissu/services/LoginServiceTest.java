@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -43,11 +43,11 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.create(user);
+    final var contact = ContactUtils.createEmail(user);
     user.setContacts(List.of(contact));
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
-    when(userService.findByEmail(any())).thenReturn(Optional.of(user));
+    when(userService.findByEmail(any())).thenReturn(user);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
 
     final var loginResponseDto = loginService.login(new LoginRequestDto(email, password));
@@ -61,7 +61,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
-    when(userService.findByEmail(any())).thenReturn(Optional.empty());
+    when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
     assertThrows(BadCredentialsException.class, () -> loginService.login(new LoginRequestDto(email, password)));
   }
@@ -71,7 +71,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
 
-    when(userService.findByEmail(any())).thenReturn(Optional.of(UserUtils.create()));
+    when(userService.findByEmail(any())).thenReturn(UserUtils.create());
 
     assertThrows(BadCredentialsException.class, () -> loginService.login(new LoginRequestDto(email, password)));
   }
@@ -81,11 +81,11 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.create(user);
+    final var contact = ContactUtils.createEmail(user);
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
 
-    when(userService.findByEmail(any())).thenReturn(Optional.of(user));
+    when(userService.findByEmail(any())).thenReturn(user);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
 
     assertThrows(EmailNotVerifiedException.class, () -> loginService.login(new LoginRequestDto(email, password)));

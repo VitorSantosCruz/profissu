@@ -76,4 +76,23 @@ public class EmailService {
       log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
     }
   }
+
+  public void sendContactConfirmation(
+      String email,
+      String code) {
+    final var variables = Map.of(
+        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "code", code,
+        "emailTitle", "Contact Confirmation",
+        "emailMessage", "We received your contact request. Please use the code below to confirm your e-mail address:",
+        "footerMessage", "If you did not request this confirmation, you can safely ignore this email.");
+    final var sendEmailDto = new SendEmailDto(email, "Contact Confirmation - Profisu", "code-verification-email.html",
+        variables);
+
+    try {
+      sendEmail(sendEmailDto);
+    } catch (MessagingException e) {
+      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
+    }
+  }
 }

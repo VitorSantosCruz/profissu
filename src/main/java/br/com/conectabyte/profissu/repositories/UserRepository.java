@@ -10,27 +10,27 @@ import br.com.conectabyte.profissu.entities.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
   @Query("""
-          FROM User u
-            WHERE u.id = :id
-            AND EXISTS (
-                  FROM u.contacts c
-                    WHERE c.type = 'EMAIL'
-                    AND c.standard
-                    AND c.verificationCompletedAt IS NOT NULL
-                    AND c.deletedAt IS NULL
-            )
-            AND u.deletedAt IS NULL
+      FROM User u
+        WHERE u.id = :id
+        AND EXISTS (
+          FROM u.contacts c
+            WHERE c.type = 'EMAIL'
+            AND c.standard
+            AND c.verificationCompletedAt IS NOT NULL
+            AND c.deletedAt IS NULL
+        )
+        AND u.deletedAt IS NULL
       """)
   Optional<User> findById(@Param("id") Long id);
 
   @Query("""
       FROM User u
         WHERE EXISTS (
-            FROM u.contacts c
-              WHERE c.value = :email
-              AND c.type = 'EMAIL'
-              AND c.standard
-              AND c.deletedAt IS NULL
+          FROM u.contacts c
+            WHERE c.value = :email
+            AND c.type = 'EMAIL'
+            AND c.standard
+            AND c.deletedAt IS NULL
         )
       """)
   Optional<User> findByEmail(@Param("email") String email);

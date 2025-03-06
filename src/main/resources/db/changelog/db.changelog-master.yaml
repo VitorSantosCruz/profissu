@@ -27,6 +27,9 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: bio
+                  type: TEXT
+              - column:
                   name: password
                   type: VARCHAR(255)
                   constraints:
@@ -66,26 +69,6 @@ databaseChangeLog:
                     nullable: false
                     unique: true
                     foreignKeyName: fk_tokens_user_id
-                    foreignKey: true
-                    references: users(id)
-        - createTable:
-            tableName: profiles
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-              - column:
-                  name: bio
-                  type: VARCHAR(255)
-              - column:
-                  name: user_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
-                    foreignKeyName: fk_profiles_user_id
                     foreignKey: true
                     references: users(id)
         - createTable:
@@ -438,17 +421,14 @@ databaseChangeLog:
                   name: name
                   value: "admin"
               - column:
+                  name: bio
+                  value: "💜"
+              - column:
                   name: password
                   value: "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G"
               - column:
                   name: gender
                   value: "MALE"
-        - insert:
-            tableName: profiles
-            columns:
-              - column:
-                  name: user_id
-                  value: "1"
         - insert:
             tableName: contacts
             columns:

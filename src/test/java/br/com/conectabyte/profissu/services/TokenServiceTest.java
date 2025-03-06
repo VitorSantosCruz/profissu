@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,16 +20,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.repositories.TokenRepository;
+import br.com.conectabyte.profissu.utils.TokenUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TokenServiceTest {
-
   @Mock
   private TokenRepository tokenRepository;
-
-  @Mock
-  private Token token;
 
   @Mock
   private User user;
@@ -37,6 +36,8 @@ class TokenServiceTest {
 
   @InjectMocks
   private TokenService tokenService;
+
+  private final Token token = TokenUtils.create(UserUtils.create());
 
   @Test
   void shouldSaveTokenSuccessfully() {
@@ -59,13 +60,11 @@ class TokenServiceTest {
   @Test
   void shouldDeleteTokenByUserSuccessfully() {
     when(user.getToken()).thenReturn(token);
-    when(token.getUser()).thenReturn(user);
     doNothing().when(tokenRepository).delete(any());
 
     tokenService.deleteByUser(user);
 
     verify(tokenRepository, times(1)).delete(token);
-    verify(user, times(1)).setToken(null);
   }
 
   @Test
@@ -97,4 +96,44 @@ class TokenServiceTest {
     assertEquals(user, savedToken.getUser());
   }
 
+  @Test
+  void shouldReturnErrorWhenTokenIsMissing() {
+    when(user.getToken()).thenReturn(null);
+
+    final var result = tokenService.validateToken(user, "test@example.com", "code");
+
+    assertEquals("Missing reset code for user with this e-mail.", result);
+  }
+
+  @Test
+  void shouldReturnErrorWhenTokenIsInvalid() {
+    when(user.getToken()).thenReturn(token);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
+
+    final var result = tokenService.validateToken(user, "test@example.com", "invalidCode");
+
+    assertEquals("Reset code is invalid.", result);
+  }
+
+  @Test
+  void shouldReturnErrorWhenTokenIsExpired() {
+    token.setCreatedAt(LocalDateTime.now().minusMinutes(2));
+    when(user.getToken()).thenReturn(token);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+
+    final var result = tokenService.validateToken(user, "test@example.com", "validCode");
+
+    assertEquals("Reset code is expired.", result);
+  }
+
+  @Test
+  void shouldReturnNullWhenTokenIsValid() {
+    token.setCreatedAt(LocalDateTime.now().plusMinutes(2));
+    when(user.getToken()).thenReturn(token);
+    when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
+
+    final var result = tokenService.validateToken(user, "test@example.com", "validCode");
+
+    assertEquals(null, result);
+  }
 }

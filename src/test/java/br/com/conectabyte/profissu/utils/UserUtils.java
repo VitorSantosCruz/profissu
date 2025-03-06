@@ -7,8 +7,10 @@ public class UserUtils {
   public static User create() {
     var user = new User();
 
+    user.setId(0L);
     user.setName("Test Test");
-    user.setPassword("$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G"); // admin
+    user.setBio("Bio");
+    user.setPassword("@Admin123");
     user.setGender(GenderEnum.MALE);
 
     return user;

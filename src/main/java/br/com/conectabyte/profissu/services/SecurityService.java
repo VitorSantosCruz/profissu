@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityService {
   private final JwtService jwtService;
+  private final ContactService contactService;
+  private final AddressService addressService;
 
   public boolean isOwner(Long userId) {
     return this.jwtService.getClaims()
@@ -16,10 +18,27 @@ public class SecurityService {
         .orElse(false);
   }
 
+  public boolean isOwnerOfContact(Long id) {
+    try {
+      final var contact = contactService.findById(id);
+      return isOwner(contact.getUser().getId());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public boolean isOwnerOfAddress(Long id) {
+    try {
+      final var address = addressService.findById(id);
+      return isOwner(address.getUser().getId());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public boolean isAdmin() {
     return this.jwtService.getClaims()
         .map(claims -> String.valueOf(claims.get("ROLE")).contains(RoleEnum.ADMIN.name()))
         .orElse(false);
   }
-
 }
