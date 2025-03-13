@@ -3,6 +3,8 @@ package br.com.conectabyte.profissu.mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
@@ -23,4 +25,14 @@ public interface RequestedServiceMapper {
   @Mapping(source = "user", target = "requesterId", qualifiedByName = "matUserToId")
   RequestedServiceResponseDto requestedServiceToRequestedServiceResponseDto(
       RequestedService requestedServiceRequestDto);
+
+  default Page<RequestedServiceResponseDto> RequestedServicePageToRequestedServiceResponseDtoPage(
+      Page<RequestedService> requestedServicePage) {
+    final var requestedServiceResponseDtoPageContent = requestedServicePage.getContent().stream()
+        .map(this::requestedServiceToRequestedServiceResponseDto)
+        .toList();
+
+    return new PageImpl<>(requestedServiceResponseDtoPageContent, requestedServicePage.getPageable(),
+        requestedServicePage.getTotalElements());
+  }
 }

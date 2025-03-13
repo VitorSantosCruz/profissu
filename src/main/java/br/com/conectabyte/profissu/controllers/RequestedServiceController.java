@@ -1,7 +1,10 @@
 package br.com.conectabyte.profissu.controllers;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +22,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RequestedServiceController {
   private final RequestedServiceService requestedServiceService;
+
+  @GetMapping
+  public Page<RequestedServiceResponseDto> findByPage(Pageable pageable) {
+    return requestedServiceService.findByPage(pageable);
+  }
 
   @PostMapping("/{userId}")
   public ResponseEntity<RequestedServiceResponseDto> register(@PathVariable Long userId,
