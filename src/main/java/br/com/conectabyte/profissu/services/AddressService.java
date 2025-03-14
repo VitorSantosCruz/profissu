@@ -1,5 +1,7 @@
 package br.com.conectabyte.profissu.services;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.AddressRequestDto;
@@ -37,6 +39,7 @@ public class AddressService {
   public AddressResponseDto update(Long id, AddressRequestDto addressRequestDto) {
     final var address = findById(id);
 
+    address.setUpdatedAt(LocalDateTime.now());
     address.setStreet(addressRequestDto.street());
     address.setNumber(addressRequestDto.number());
     address.setCity(addressRequestDto.city());

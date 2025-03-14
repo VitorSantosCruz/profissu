@@ -8,6 +8,7 @@ import br.com.conectabyte.profissu.dtos.request.LoginRequestDto;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +20,7 @@ public class LoginService {
   private final UserService userService;
   private final BCryptPasswordEncoder passwordEncoder;
 
+  @Transactional
   public LoginResponseDto login(LoginRequestDto loginRequest) {
     final var user = this.validate(loginRequest);
 

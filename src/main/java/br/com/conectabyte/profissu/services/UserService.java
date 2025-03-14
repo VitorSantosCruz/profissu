@@ -173,7 +173,7 @@ public class UserService {
 
     optionalUser.ifPresent(user -> {
       user.setDeletedAt(LocalDateTime.now());
-      userRepository.save(user);
+      this.save(user);
     });
   }
 
@@ -186,6 +186,7 @@ public class UserService {
       throw new BadCredentialsException("Current password is not valid.");
     }
 
+    user.setUpdatedAt(LocalDateTime.now());
     user.setPassword(bCryptPasswordEncoder.encode(passwordRequestDto.newPassword()));
     this.save(user);
   }
@@ -194,6 +195,7 @@ public class UserService {
     final var optionalUser = this.userRepository.findById(id);
     final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
+    user.setUpdatedAt(LocalDateTime.now());
     user.setName(profileRequestDto.name());
     user.setBio(profileRequestDto.bio());
     user.setGender(profileRequestDto.gender());

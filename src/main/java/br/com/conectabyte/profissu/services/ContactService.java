@@ -75,8 +75,18 @@ public class ContactService {
       this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
     }
 
-    contact.setType(contactRequestDto.type());
+    contact.setUpdatedAt(LocalDateTime.now());
     contact.setValue(contactRequestDto.value());
+
+    if (!contact.isStandard() && contactRequestDto.standard()) {
+      contact.getUser().getContacts().stream()
+          .filter(Contact::isStandard)
+          .forEach(c -> {
+            c.setStandard(false);
+            contactRepository.save(c);
+          });
+    }
+
     contact.setStandard(contactRequestDto.standard());
 
     final var updatedContact = contactRepository.save(contact);
