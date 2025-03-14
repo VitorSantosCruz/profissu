@@ -2,6 +2,7 @@ package br.com.conectabyte.profissu.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
@@ -38,4 +39,9 @@ public interface UserMapper {
   User userResponseDtoToUser(UserResponseDto userResponseDto);
 
   UserResponseDto userToUserResponseDto(User user);
+
+  @Named("matUserToId")
+  default Long matUserToId(User user) {
+    return user.getId();
+  }
 }

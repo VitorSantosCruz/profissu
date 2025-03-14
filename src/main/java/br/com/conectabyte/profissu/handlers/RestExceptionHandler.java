@@ -2,6 +2,7 @@ package br.com.conectabyte.profissu.handlers;
 
 import java.util.ArrayList;
 
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class RestExceptionHandler {
-  @ExceptionHandler({ MethodArgumentNotValidException.class })
+  @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ExceptionDto> validationExceptionHandler(MethodArgumentNotValidException e) {
     log.error("Error: {}", e.getMessage());
     val errors = new ArrayList<String>();
@@ -30,13 +31,20 @@ public class RestExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionDto("All fields must be valid", errors));
   }
 
-  @ExceptionHandler({ HttpMessageNotReadableException.class })
+  @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ExceptionDto> malformedExceptionHandler(Exception e) {
     log.error("Error: {}", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionDto("Malformed json", null));
   }
 
-  @ExceptionHandler({ ValidationException.class })
+  @ExceptionHandler(PropertyReferenceException.class)
+  public ResponseEntity<ExceptionDto> handleInvalidSortField(PropertyReferenceException e) {
+    log.error("Error: {}", e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ExceptionDto("No property '" + e.getPropertyName() + "' found", null));
+  }
+
+  @ExceptionHandler(ValidationException.class)
   public ResponseEntity<ExceptionDto> validationExceptionHandler(Exception e) {
     log.error("Error: {}", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionDto(e.getMessage(), null));

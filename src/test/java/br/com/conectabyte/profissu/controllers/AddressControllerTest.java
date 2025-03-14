@@ -1,7 +1,6 @@
 package br.com.conectabyte.profissu.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -55,8 +54,8 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldRegisterAddressWhenUserIsOwnerOrAdmin() throws Exception {
-    when(addressService.register(anyLong(), any())).thenReturn(responseDto);
-    when(securityService.isOwner(anyLong())).thenReturn(true);
+    when(addressService.register(any(), any())).thenReturn(responseDto);
+    when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(post("/addresses/" + userId)
         .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +87,7 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    when(securityService.isOwner(anyLong())).thenReturn(false);
+    when(securityService.isOwner(any())).thenReturn(false);
     when(securityService.isAdmin()).thenReturn(false);
 
     mockMvc.perform(post("/addresses/" + userId)
@@ -101,8 +100,8 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldUpdateAddressWhenUserIsOwnerOrAdmin() throws Exception {
-    when(addressService.update(anyLong(), any())).thenReturn(responseDto);
-    when(securityService.isOwnerOfAddress(anyLong())).thenReturn(true);
+    when(addressService.update(any(), any())).thenReturn(responseDto);
+    when(securityService.isOwnerOfAddress(any())).thenReturn(true);
 
     mockMvc.perform(put("/addresses/" + addressId)
         .contentType(MediaType.APPLICATION_JSON)
@@ -114,8 +113,8 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnNotFoundWhenAddressDoesNotExist() throws Exception {
-    when(addressService.update(anyLong(), any())).thenThrow(new ResourceNotFoundException("Address not found"));
-    when(securityService.isOwnerOfAddress(anyLong())).thenReturn(true);
+    when(addressService.update(any(), any())).thenThrow(new ResourceNotFoundException("Address not found"));
+    when(securityService.isOwnerOfAddress(any())).thenReturn(true);
 
     mockMvc.perform(put("/addresses/" + addressId)
         .contentType(MediaType.APPLICATION_JSON)
