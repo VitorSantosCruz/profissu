@@ -33,6 +33,7 @@ public class ContactService {
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
 
+  @Transactional
   public ContactResponseDto register(Long userId, ContactRequestDto contactRequestDto) {
     final var contactToBeSaved = contactMapper.contactRequestDtoToContact(contactRequestDto);
     final var user = this.userService.findById(userId);
@@ -52,6 +53,7 @@ public class ContactService {
     return contactMapper.contactToContactResponseDto(savedContact);
   }
 
+  @Transactional
   public ContactResponseDto update(Long id, ContactRequestDto contactRequestDto) {
     final var contact = findById(id);
 

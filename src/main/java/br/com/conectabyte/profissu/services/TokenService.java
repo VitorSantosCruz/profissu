@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.repositories.TokenRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ public class TokenService {
     this.tokenRepository.delete(token);
   }
 
+  @Transactional
   public void deleteByUser(User user) {
     final var token = user.getToken();
 
@@ -39,6 +41,7 @@ public class TokenService {
     this.delete(token);
   }
 
+  @Transactional
   public void save(User user, String code, PasswordEncoder passwordEncoder) {
     final var token = Token.builder()
         .value(passwordEncoder.encode(code))

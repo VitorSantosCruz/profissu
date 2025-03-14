@@ -8,6 +8,7 @@ import br.com.conectabyte.profissu.entities.Address;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.repositories.AddressRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +21,7 @@ public class AddressService {
 
   private final AddressMapper addressMapper = AddressMapper.INSTANCE;
 
+  @Transactional
   public AddressResponseDto register(Long userId, AddressRequestDto addressRequestDto) {
     final var addressToBeSaved = addressMapper.addressRequestDtoToAddress(addressRequestDto);
     final var user = this.userService.findById(userId);
@@ -31,6 +33,7 @@ public class AddressService {
     return addressMapper.addressToAddressResponseDto(savedAddress);
   }
 
+  @Transactional
   public AddressResponseDto update(Long id, AddressRequestDto addressRequestDto) {
     final var address = findById(id);
 

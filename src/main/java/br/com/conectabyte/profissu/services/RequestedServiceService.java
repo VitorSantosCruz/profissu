@@ -9,6 +9,7 @@ import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.repositories.RequestedServiceRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,6 +25,7 @@ public class RequestedServiceService {
         .RequestedServicePageToRequestedServiceResponseDtoPage(requestedServiceRepository.findAll(pageable));
   }
 
+  @Transactional
   public RequestedServiceResponseDto register(Long userId, RequestedServiceRequestDto requestedServiceRequestDto) {
     final var user = userService.findById(userId);
     final var requestedServiceToBeSaved = requestedServiceMapper
