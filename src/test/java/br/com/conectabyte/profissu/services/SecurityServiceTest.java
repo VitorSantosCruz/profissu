@@ -2,6 +2,7 @@ package br.com.conectabyte.profissu.services;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -14,15 +15,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
-import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class SecurityServiceTest {
-  private UserMapper userMapper = UserMapper.INSTANCE;
-
   @Mock
   private ContactService contactService;
 
@@ -73,30 +71,27 @@ public class SecurityServiceTest {
 
   @Test
   void shouldReturnTrueWhenUserIsOwnerOfContact() {
-    final var userResponseDto = userMapper.userToUserResponseDto(UserUtils.create());
-    final var user = userMapper.userResponseDtoToUser(userResponseDto);
-    user.setId(1L);
-    final var contact = ContactUtils.createEmail(user);
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
 
-    when(contactService.findById(1L)).thenReturn(contact);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+    when(contactService.findById(any())).thenReturn(contact);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
 
-    boolean isOwner = securityService.isOwnerOfContact(1L);
+    boolean isOwner = securityService.isOwnerOfContact(user.getId());
 
     assertTrue(isOwner);
   }
 
   @Test
   void shouldReturnFalseWhenUserIsNotOwnerOfContact() {
-    final var userResponseDto = userMapper.userToUserResponseDto(UserUtils.create());
-    final var user = userMapper.userResponseDtoToUser(userResponseDto);
-    user.setId(2L);
-    final var contact = ContactUtils.createEmail(user);
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+    final var resourceUserId = user.getId() + 1;
 
-    when(contactService.findById(1L)).thenReturn(contact);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+    when(contactService.findById(any())).thenReturn(contact);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", resourceUserId)));
 
-    boolean isOwner = securityService.isOwnerOfContact(1L);
+    boolean isOwner = securityService.isOwnerOfContact(resourceUserId);
 
     assertFalse(isOwner);
   }
@@ -112,24 +107,20 @@ public class SecurityServiceTest {
 
   @Test
   void shouldReturnTrueWhenUserIsOwnerOfAddress() {
-    final var userResponseDto = userMapper.userToUserResponseDto(UserUtils.create());
-    final var user = userMapper.userResponseDtoToUser(userResponseDto);
-    user.setId(1L);
+    final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
 
-    when(addressService.findById(1L)).thenReturn(address);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+    when(addressService.findById(any())).thenReturn(address);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
 
-    final var isOwner = securityService.isOwnerOfAddress(1L);
+    final var isOwner = securityService.isOwnerOfAddress(user.getId());
 
     assertTrue(isOwner);
   }
 
   @Test
   void shouldReturnFalseWhenUserIsNotOwnerOfAddress() {
-    final var userResponseDto = userMapper.userToUserResponseDto(UserUtils.create());
-    final var user = userMapper.userResponseDtoToUser(userResponseDto);
-    user.setId(2L);
+    final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
 
     when(addressService.findById(1L)).thenReturn(address);

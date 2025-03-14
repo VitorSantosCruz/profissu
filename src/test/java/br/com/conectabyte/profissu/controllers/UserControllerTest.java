@@ -182,7 +182,7 @@ public class UserControllerTest {
     final var newBio = "New Bio";
     final var newGender = GenderEnum.FEMALE;
     final var profileRequestDto = new ProfileRequestDto(newName, newBio, newGender);
-    final var contacts = List.of(contactMapper.contactToContactResponseDto(ContactUtils.createEmail(user)));
+    final var contacts = List.of(contactMapper.contactToContactResponseDto(ContactUtils.create(user)));
     final var addresses = List.of(addressMapper.addressToAddressResponseDto(AddressUtils.create(user)));
     final var updatedUser = new UserResponseDto(userId, newName, newBio, newGender, contacts, addresses);
 

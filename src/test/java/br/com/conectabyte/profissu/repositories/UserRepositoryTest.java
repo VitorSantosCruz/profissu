@@ -11,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -26,13 +25,13 @@ public class UserRepositoryTest {
   void shouldReturnUserWhenEmailIsValid() {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     userRepository.save(user);
     final var optionalUser = userRepository.findByEmail(email);
 
     assertTrue(optionalUser.isPresent());
     assertTrue(optionalUser.get().getContacts().stream()
-        .filter(c -> c.getValue().equals(email) && c.getType().equals(ContactTypeEnum.EMAIL) && c.isStandard()
+        .filter(c -> c.getValue().equals(email) && c.isStandard()
             && c.getVerificationCompletedAt() != null)
         .findAny().isPresent());
   }
@@ -46,23 +45,10 @@ public class UserRepositoryTest {
   }
 
   @Test
-  void shouldNotFindUserWithoutEmailType() {
-    final var email = "test@conectabyte.com.br";
-    final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
-    contact.setType(ContactTypeEnum.PHONE);
-    user.setContacts(List.of(contact));
-    userRepository.save(user);
-    final var optionalUser = userRepository.findByEmail(email);
-
-    assertTrue(optionalUser.isEmpty());
-  }
-
-  @Test
   void shouldNotFindUserWithoutDefaultEmail() {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     contact.setStandard(false);
     user.setContacts(List.of(contact));
     userRepository.save(user);
@@ -74,7 +60,7 @@ public class UserRepositoryTest {
   @Test
   void shouldReturnUserWhenHaveAnUserWithInformedId() {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -85,7 +71,7 @@ public class UserRepositoryTest {
   void shouldNotFindUserWhenThenIsDeleted() {
     final var user = UserUtils.create();
     user.setDeletedAt(LocalDateTime.now());
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -109,21 +95,9 @@ public class UserRepositoryTest {
   }
 
   @Test
-  void shouldNotFindUserByIdWhenUserNotHaveEmailContact() {
-    final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
-    contact.setType(ContactTypeEnum.PHONE);
-    user.setContacts(List.of(contact));
-    final var savedUser = userRepository.save(user);
-    final var optionalUser = userRepository.findById(savedUser.getId());
-
-    assertTrue(optionalUser.isEmpty());
-  }
-
-  @Test
   void shouldNotFindUserByIdWhenUserNotHaveStandarnContact() {
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     contact.setStandard(false);
     user.setContacts(List.of(contact));
     final var savedUser = userRepository.save(user);
@@ -135,7 +109,7 @@ public class UserRepositoryTest {
   @Test
   void shouldNotFindUserByIdWhenUserNotHaveVerifiedContact() {
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
     final var savedUser = userRepository.save(user);
@@ -147,7 +121,7 @@ public class UserRepositoryTest {
   @Test
   void shouldNotFindUserByIdWhenUserContactWasDeleted() {
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     contact.setDeletedAt(LocalDateTime.now());
     user.setContacts(List.of(contact));
     final var savedUser = userRepository.save(user);

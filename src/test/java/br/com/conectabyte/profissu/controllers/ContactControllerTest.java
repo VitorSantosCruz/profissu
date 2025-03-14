@@ -51,7 +51,7 @@ class ContactControllerTest {
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
   private final Long userId = 1L;
   private final Long contactId = 1L;
-  private final Contact contact = ContactUtils.createEmail(UserUtils.create());
+  private final Contact contact = ContactUtils.create(UserUtils.create());
   private final ContactRequestDto validRequest = contactMapper.contactToContactRequestDto(contact);
   private final ContactResponseDto responseDto = contactMapper.contactToContactResponseDto(contact);
 
@@ -66,14 +66,13 @@ class ContactControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.value").value("test@conectabyte.com.br"))
-        .andExpect(jsonPath("$.type").value("EMAIL"));
+        .andExpect(jsonPath("$.value").value("test@conectabyte.com.br"));
   }
 
   @Test
   @WithMockUser
   void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
-    final var invalidRequest = new ContactRequestDto(null, "invalidEmail", false);
+    final var invalidRequest = new ContactRequestDto("invalidEmail", false);
     when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(post("/contacts/{userId}", userId)
@@ -115,8 +114,7 @@ class ContactControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.value").value("test@conectabyte.com.br"))
-        .andExpect(jsonPath("$.type").value("EMAIL"));
+        .andExpect(jsonPath("$.value").value("test@conectabyte.com.br"));
   }
 
   @Test

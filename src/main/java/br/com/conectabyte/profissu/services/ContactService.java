@@ -12,7 +12,6 @@ import br.com.conectabyte.profissu.dtos.request.ContactRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ContactResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
-import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
@@ -41,12 +40,10 @@ public class ContactService {
     contactToBeSaved.setVerificationRequestedAt(LocalDateTime.now());
     contactToBeSaved.setUser(user);
 
-    if (contactToBeSaved.getType().equals(ContactTypeEnum.EMAIL)) {
-      final var code = UUID.randomUUID().toString().split("-")[1];
+    final var code = UUID.randomUUID().toString().split("-")[1];
 
-      this.tokenService.save(user, code, bCryptPasswordEncoder);
-      this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
-    }
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
+    this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
 
     final var savedContact = contactRepository.save(contactToBeSaved);
 
@@ -64,8 +61,7 @@ public class ContactService {
           }
         });
 
-    if (!contact.getValue().equals(contactRequestDto.value())
-        && contactRequestDto.type().equals(ContactTypeEnum.EMAIL)) {
+    if (!contact.getValue().equals(contactRequestDto.value())) {
       final var code = UUID.randomUUID().toString().split("-")[1];
 
       contact.setVerificationRequestedAt(LocalDateTime.now());

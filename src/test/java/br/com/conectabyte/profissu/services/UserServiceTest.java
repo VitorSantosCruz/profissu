@@ -28,7 +28,6 @@ import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
 import br.com.conectabyte.profissu.entities.Token;
-import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
@@ -64,13 +63,13 @@ public class UserServiceTest {
   void shouldReturnUserWhenEmailIsValid() {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     final var findedUser = this.userService.findByEmail(email);
 
     assertTrue(findedUser.getContacts().stream()
-        .filter(c -> c.getValue().equals(email) && c.getType().equals(ContactTypeEnum.EMAIL) && c.isStandard()
+        .filter(c -> c.getValue().equals(email) && c.isStandard()
             && c.getVerificationCompletedAt() != null)
         .findAny().isPresent());
   }
@@ -88,7 +87,7 @@ public class UserServiceTest {
   @Test
   void shouldRegisterUserWhenUserDataIsValid() {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     when(this.userRepository.save(any())).thenReturn(user);
 
@@ -101,7 +100,7 @@ public class UserServiceTest {
   void shouldRecoverPasswordSucessfully() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
@@ -117,7 +116,7 @@ public class UserServiceTest {
   void shouldErrorWhenSendPasswordRecoveryEmailFail() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
@@ -133,7 +132,7 @@ public class UserServiceTest {
   void shouldErrorWhenUserWithThisEmailIsNotVerified() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
 
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of());
@@ -229,7 +228,7 @@ public class UserServiceTest {
   void shouldResendSignUpConfirmationSucessfully() throws MessagingException {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
 
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
@@ -249,7 +248,7 @@ public class UserServiceTest {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
 
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));

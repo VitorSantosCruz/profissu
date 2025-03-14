@@ -14,8 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.id = :id
         AND EXISTS (
           FROM u.contacts c
-            WHERE c.type = 'EMAIL'
-            AND c.standard
+            WHERE c.standard
             AND c.verificationCompletedAt IS NOT NULL
             AND c.deletedAt IS NULL
         )
@@ -28,7 +27,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE EXISTS (
           FROM u.contacts c
             WHERE c.value = :email
-            AND c.type = 'EMAIL'
             AND c.standard
             AND c.deletedAt IS NULL
         )

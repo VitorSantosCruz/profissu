@@ -23,13 +23,5 @@ public interface ContactMapper {
 
   ContactRequestDto contactToContactRequestDto(Contact contact);
 
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "deletedAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "user", ignore = true)
-  @Mapping(target = "verificationCompletedAt", ignore = true)
-  @Mapping(target = "verificationRequestedAt", ignore = true)
-  Contact contactResponseDtoToContact(ContactResponseDto contactResponseDto);
-
   ContactResponseDto contactToContactResponseDto(Contact contact);
 }
