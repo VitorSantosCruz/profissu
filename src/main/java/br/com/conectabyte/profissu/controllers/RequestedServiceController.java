@@ -56,6 +56,12 @@ public class RequestedServiceController {
         .body(this.requestedServiceService.register(userId, requestedServiceRequestDto));
   }
 
+  @Operation(summary = "Cancel a requested service", description = "Allows an authorized user to cancel a requested service.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Successfully canceled the requested service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RequestedServiceResponseDto.class))),
+      @ApiResponse(responseCode = "403", description = "User is not authorized to cancel this service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
   @PreAuthorize("@securityService.isOwnerOfRequestedService(#id) || @securityService.isAdmin()")
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<RequestedServiceResponseDto> cancel(@PathVariable Long id) {
