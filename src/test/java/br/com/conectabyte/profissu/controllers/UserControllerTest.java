@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -117,7 +118,7 @@ public class UserControllerTest {
     doNothing().when(userService).updatePassword(any(), any());
     when(securityService.isOwner(1L)).thenReturn(true);
 
-    mockMvc.perform(put("/users/1/password")
+    mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -132,7 +133,7 @@ public class UserControllerTest {
     doNothing().when(userService).updatePassword(any(), any());
     when(securityService.isAdmin()).thenReturn(true);
 
-    mockMvc.perform(put("/users/1/password")
+    mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -144,7 +145,7 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "@newPassword123";
 
-    mockMvc.perform(put("/users/1/password")
+    mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isForbidden());
@@ -155,7 +156,7 @@ public class UserControllerTest {
   void shouldRejectUpdatePasswordRequestWhenCurrentPasswordIsNotValid() throws Exception {
     final var newPassword = "newPassword";
 
-    mockMvc.perform(put("/users/1/password")
+    mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(null, newPassword))))
         .andExpect(status().isBadRequest());
@@ -167,7 +168,7 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "newPassword";
 
-    mockMvc.perform(put("/users/1/password")
+    mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isBadRequest());

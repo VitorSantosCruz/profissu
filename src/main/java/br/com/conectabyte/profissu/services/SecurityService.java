@@ -11,6 +11,7 @@ public class SecurityService {
   private final JwtService jwtService;
   private final ContactService contactService;
   private final AddressService addressService;
+  private final RequestedServiceService requestedServiceService;
 
   public boolean isOwner(Long userId) {
     return this.jwtService.getClaims()
@@ -31,6 +32,15 @@ public class SecurityService {
     try {
       final var address = addressService.findById(id);
       return isOwner(address.getUser().getId());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public boolean isOwnerOfRequestedService(Long id) {
+    try {
+      final var requestedService = requestedServiceService.findById(id);
+      return isOwner(requestedService.getUser().getId());
     } catch (Exception e) {
       return false;
     }

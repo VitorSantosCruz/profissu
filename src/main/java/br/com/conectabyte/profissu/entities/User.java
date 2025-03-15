@@ -65,6 +65,10 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private List<Address> addresses;
 
+  @Column(nullable = false)
+  @OneToMany(mappedBy = "user")
+  private List<RequestedService> requestedService;
+
   @OneToMany(mappedBy = "requester")
   private List<Conversation> conversationsAsARequester;
 

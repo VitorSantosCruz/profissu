@@ -2,7 +2,6 @@ package br.com.conectabyte.profissu.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import br.com.conectabyte.profissu.dtos.request.UserRequestDto;
@@ -23,14 +22,10 @@ public interface UserMapper {
   @Mapping(target = "roles", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "token", ignore = true)
+  @Mapping(target = "requestedService", ignore = true)
   User userRequestDtoToUser(UserRequestDto userRequestDto);
 
   UserRequestDto userToUserRequestDto(User user);
 
   UserResponseDto userToUserResponseDto(User user);
-
-  @Named("matUserToId")
-  default Long matUserToId(User user) {
-    return user.getId();
-  }
 }

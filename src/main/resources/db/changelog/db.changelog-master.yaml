@@ -281,10 +281,10 @@ databaseChangeLog:
                   name: updated_at
                   type: TIMESTAMP
               - column:
-                  name: is_active
-                  type: BOOLEAN
+                  name: offer_status
+                  type: ENUM('PENDING', 'ACCEPTED', 'CONFIRMED', 'REJECTED', 'CANCELLED')
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: requester_id
                   type: BIGINT
