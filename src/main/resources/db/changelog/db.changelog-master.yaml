@@ -282,7 +282,7 @@ databaseChangeLog:
                   type: TIMESTAMP
               - column:
                   name: offer_status
-                  type: ENUM('PENDING', 'ACCEPTED', 'CONFIRMED', 'REJECTED', 'CANCELLED')
+                  type: ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED')
                   constraints:
                     nullable: true
               - column:

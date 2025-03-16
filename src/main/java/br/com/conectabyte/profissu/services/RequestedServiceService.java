@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
+import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.RequestedService;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class RequestedServiceService {
   private final RequestedServiceRepository requestedServiceRepository;
   private final UserService userService;
+  private final EmailService emailService;
 
   private final RequestedServiceMapper requestedServiceMapper = RequestedServiceMapper.INSTANCE;
 
@@ -57,12 +59,17 @@ public class RequestedServiceService {
   public RequestedServiceResponseDto cancel(Long id) {
     final var requestedService = this.findById(id);
 
-    if(!requestedService.canBeCancelled()) {
+    if (!requestedService.canBeCancelled()) {
       throw new RequestedServiceCancellationException("Requested service can't be cancelled");
     }
 
     requestedService.setUpdatedAt(LocalDateTime.now());
     requestedService.setStatus(RequestedServiceStatusEnum.CANCELLED);
+    requestedService.getConversations().forEach(c -> c.getServiceProvider().getContacts().stream()
+        .filter(Contact::isStandard)
+        .forEach(contact -> emailService.sendRequestedServiceCancellationNotification(
+            requestedService.getTitle(),
+            contact.getValue())));
 
     final var updatedRequestedService = requestedServiceRepository.save(requestedService);
 

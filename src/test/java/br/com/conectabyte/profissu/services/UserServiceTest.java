@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -105,22 +104,6 @@ public class UserServiceTest {
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
     doNothing().when(this.emailService).sendPasswordRecoveryEmail(any(), any());
-
-    this.userService.recoverPassword(new EmailValueRequestDto(email));
-
-    verify(this.tokenService, times(1)).save(any(), any(), any());
-    verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
-  }
-
-  @Test
-  void shouldErrorWhenSendPasswordRecoveryEmailFail() throws MessagingException {
-    final var email = "test@conectabyte.com.br";
-    final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.create(user)));
-
-    when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
-    doNothing().when(this.tokenService).save(any(), any(), any());
-    doThrow(new MessagingException()).when(this.emailService).sendPasswordRecoveryEmail(any(), any());
 
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 

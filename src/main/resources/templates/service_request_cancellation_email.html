@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title th:text="${emailTitle}">Profisu Email</title>
+  <title th:text="${emailTitle}">Profisu Notification</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Quicksand:wght@500&display=swap"
     rel="stylesheet">
   <style>
@@ -25,17 +25,6 @@
       text-align: center;
     }
 
-    .code-container {
-      background-color: #f0f0f0;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      font-family: monospace;
-      font-size: 4em;
-      color: #333;
-      letter-spacing: 1em;
-    }
-
     .logo {
       width: 180px;
       margin-bottom: 20px;
@@ -43,8 +32,8 @@
 
     h1 {
       font-family: 'Quicksand', sans-serif;
-      color: #1A73E8;
-      font-size: 36px;
+      color: #E84545;
+      font-size: 32px;
       margin: 20px 0;
       letter-spacing: 1px;
     }
@@ -53,6 +42,15 @@
       font-size: 16px;
       color: #666;
       line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .alert {
+      background-color: #FFE5E5;
+      padding: 15px;
+      border-radius: 5px;
+      color: #E84545;
+      font-weight: bold;
       margin-bottom: 20px;
     }
 
@@ -76,13 +74,13 @@
 <body>
   <div class="container">
     <img th:src="${profissuLogoUrl}" alt="Profisu Logo" class="logo">
-    <h1 th:text="${emailTitle}"></h1>
+    <h1>Service Request Cancellation</h1>
     <p>Hello,</p>
-    <p th:text="${emailMessage}"></p>
-    <div class="code-container">
-      <span th:text="${code}"></span>
+    <p>The service request you made an offer for has been canceled.</p>
+    <div class="alert">
+      <p th:text="${serviceName}"></p>
     </div>
-    <p th:text="${footerMessage}"></p>
+    <p>We apologize for the inconvenience and hope to see you in future opportunities.</p>
     <div class="footer">
       <p>&copy; 2025 Conecta Byte. All rights reserved.</p>
       <p>Need help? <a href="mailto:support@conectabyte.com.br">Contact our support</a></p>

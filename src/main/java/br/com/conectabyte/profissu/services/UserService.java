@@ -24,7 +24,6 @@ import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -130,17 +129,12 @@ public class UserService {
     final var code = UUID.randomUUID().toString().split("-")[1];
     this.tokenService.save(user, code, bCryptPasswordEncoder);
 
-    try {
-      if (isSignUp) {
-        user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
-            .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
-        emailService.sendSignUpConfirmation(email, code);
-      } else {
-        emailService.sendPasswordRecoveryEmail(email, code);
-      }
-      log.info("E-mail successfully sent to {}", email);
-    } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
+    if (isSignUp) {
+      user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
+          .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
+      emailService.sendSignUpConfirmation(email, code);
+    } else {
+      emailService.sendPasswordRecoveryEmail(email, code);
     }
   }
 

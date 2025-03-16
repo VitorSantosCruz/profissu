@@ -3,7 +3,6 @@ package br.com.conectabyte.profissu.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -59,7 +58,6 @@ public class RequestedService {
   private List<Conversation> conversations;
 
   public boolean canBeCancelled() {
-    return this.status.equals(RequestedServiceStatusEnum.PENDING)
-        || this.conversations.stream().filter(c -> c.getOfferStatus().equals(OfferStatusEnum.CONFIRMED)).count() == 0;
+    return this.status.equals(RequestedServiceStatusEnum.PENDING);
   }
 }
