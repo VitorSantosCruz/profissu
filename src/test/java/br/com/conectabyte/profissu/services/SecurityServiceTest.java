@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
+import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +27,9 @@ public class SecurityServiceTest {
 
   @Mock
   private AddressService addressService;
+
+  @Mock
+  private RequestedServiceService requestedServiceService;
 
   @Mock
   private JwtService jwtService;
@@ -98,9 +102,9 @@ public class SecurityServiceTest {
 
   @Test
   void shouldReturnFalseWhenContactNotFound() {
-    when(contactService.findById(1L)).thenThrow(new ResourceNotFoundException("Contact not found"));
+    when(contactService.findById(any())).thenThrow(new ResourceNotFoundException("Contact not found"));
 
-    final var isOwner = securityService.isOwnerOfContact(1L);
+    final var isOwner = securityService.isOwnerOfContact(any());
 
     assertFalse(isOwner);
   }
@@ -123,19 +127,57 @@ public class SecurityServiceTest {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
 
-    when(addressService.findById(1L)).thenReturn(address);
+    when(addressService.findById(any())).thenReturn(address);
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
 
-    final var isOwner = securityService.isOwnerOfAddress(1L);
+    final var isOwner = securityService.isOwnerOfAddress(any());
 
     assertFalse(isOwner);
   }
 
   @Test
   void shouldReturnFalseWhenAddressNotFound() {
-    when(addressService.findById(1L)).thenThrow(new ResourceNotFoundException("Address not found"));
+    when(addressService.findById(any())).thenThrow(new ResourceNotFoundException("Address not found"));
 
-    final var isOwner = securityService.isOwnerOfAddress(1L);
+    final var isOwner = securityService.isOwnerOfAddress(any());
+
+    assertFalse(isOwner);
+  }
+
+  @Test
+  void shouldReturnTrueWhenUserIsOwnerOfRequestedService() {
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+
+    when(requestedServiceService.findById(any())).thenReturn(requestedService);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
+
+    final var isOwner = securityService.isOwnerOfRequestedService(user.getId());
+
+    assertTrue(isOwner);
+  }
+
+  @Test
+  void shouldReturnFalseWhenUserIsNotOwnerOfRequestedService() {
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+
+    when(requestedServiceService.findById(any())).thenReturn(requestedService);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+
+    final var isOwner = securityService.isOwnerOfRequestedService(any());
+
+    assertFalse(isOwner);
+  }
+
+  @Test
+  void shouldReturnFalseWhenRequestedServiceNotFound() {
+    when(requestedServiceService.findById(any()))
+        .thenThrow(new ResourceNotFoundException("Requested service not found"));
+
+    final var isOwner = securityService.isOwnerOfRequestedService(any());
 
     assertFalse(isOwner);
   }

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -94,7 +95,7 @@ public class ContactServiceTest {
 
   @Test
   void shouldRegisterContactEmailSuccessfully() {
-    when(userService.findById(1L)).thenReturn(user);
+    when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
     final var savedContact = contactService.register(1L, validRequest);
@@ -106,20 +107,17 @@ public class ContactServiceTest {
 
   @Test
   void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
-    when(userService.findById(1L)).thenThrow(new ResourceNotFoundException("User not found."));
+    when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
     assertThrows(ResourceNotFoundException.class, () -> contactService.register(1L, validRequest));
   }
 
   @Test
   void shouldUpdateContactSuccessfully() {
-    when(contactRepository.findById(1L)).thenReturn(Optional.of(contact));
+    when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
-    final var updatedRequest = new ContactRequestDto(
-        "updated@example.com",
-        false);
-
+    final var updatedRequest = new ContactRequestDto("updated@example.com", false);
     final var updatedContact = contactService.update(1L, updatedRequest);
 
     assertEquals("updated@example.com", updatedContact.value());
@@ -127,12 +125,59 @@ public class ContactServiceTest {
   }
 
   @Test
-  void shouldThrowResourceNotFoundExceptionWhenContactNotFound() {
-    when(contactRepository.findById(1L)).thenReturn(Optional.empty());
+  void shouldUpdateContactSuccessfullyWhenEmailValueNotChange() {
+    when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
+    when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
-    final var updatedRequest = new ContactRequestDto(
-        "updated@example.com",
-        false);
+    final var updatedRequest = new ContactRequestDto("test@conectabyte.com.br", false);
+    final var updatedContact = contactService.update(1L, updatedRequest);
+
+    assertEquals("test@conectabyte.com.br", updatedContact.value());
+    assertEquals(false, updatedContact.standard());
+  }
+
+  @Test
+  void shouldUpdateContactToStandardSuccessfullyWhenItWasNotStandardBefore() {
+    final var notStandardContact = ContactUtils.create(user);
+    notStandardContact.setStandard(false);
+    user.setContacts(List.of(contact, notStandardContact));
+    when(contactRepository.findById(any())).thenReturn(Optional.of(notStandardContact));
+    when(contactRepository.save(any(Contact.class))).thenReturn(notStandardContact);
+
+    final var updatedRequest = new ContactRequestDto("updated@example.com", true);
+    final var updatedContact = contactService.update(1L, updatedRequest);
+
+    assertEquals("updated@example.com", updatedContact.value());
+    assertEquals(true, updatedContact.standard());
+  }
+
+  @Test
+  void shouldUpdateContactSuccessfullyWhenStandardNotChange() {
+    when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
+    when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+
+    final var updatedRequestTrue = new ContactRequestDto("updated@example.com", true);
+    final var updatedContactTrue = contactService.update(1L, updatedRequestTrue);
+
+    assertEquals("updated@example.com", updatedContactTrue.value());
+    assertEquals(true, updatedContactTrue.standard());
+
+    contact.setStandard(false);
+    when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
+    when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+
+    final var updatedRequestFalse = new ContactRequestDto("updated@example.com", false);
+    final var updatedContactFalse = contactService.update(1L, updatedRequestFalse);
+
+    assertEquals("updated@example.com", updatedContactFalse.value());
+    assertEquals(false, updatedContactFalse.standard());
+  }
+
+  @Test
+  void shouldThrowResourceNotFoundExceptionWhenContactNotFound() {
+    when(contactRepository.findById(any())).thenReturn(Optional.empty());
+
+    final var updatedRequest = new ContactRequestDto("updated@example.com", false);
 
     assertThrows(ResourceNotFoundException.class, () -> contactService.update(1L, updatedRequest));
   }
@@ -163,9 +208,7 @@ public class ContactServiceTest {
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any())).thenReturn(contact);
 
-    final var updatedRequest = new ContactRequestDto(
-        "new@conectabyte.com.br",
-        true);
+    final var updatedRequest = new ContactRequestDto("new@conectabyte.com.br", true);
     final var updatedContact = contactService.update(contact.getId(), updatedRequest);
 
     assertEquals("new@conectabyte.com.br", updatedContact.value());

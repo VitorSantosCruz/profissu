@@ -46,6 +46,21 @@ class EmailServiceTest {
   }
 
   @Test
+  void shouldLogErrorSendPasswordRecoveryEmailWhenMessagingExceptionIsThrown() throws Exception {
+    final var mimeMessage = mock(MimeMessage.class);
+
+    doAnswer(invocation -> {
+      throw new MessagingException("Simulated MessagingException");
+    }).when(javaMailSender).createMimeMessage();
+
+    emailService.sendPasswordRecoveryEmail("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(0)).send(mimeMessage);
+    verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
+  }
+
+  @Test
   void shouldSendSignUpConfirmationEmailSuccessfully() throws MessagingException {
     final var htmlContent = "<html><body>Reset Code: 123456</body></html>";
     final var mimeMessage = mock(MimeMessage.class);
@@ -61,7 +76,7 @@ class EmailServiceTest {
   }
 
   @Test
-  void shouldLogErrorWhenMessagingExceptionIsThrown() throws Exception {
+  void shouldLogErrorSendSignUpConfirmationWhenMessagingExceptionIsThrown() throws Exception {
     final var mimeMessage = mock(MimeMessage.class);
 
     doAnswer(invocation -> {
@@ -99,6 +114,36 @@ class EmailServiceTest {
     }).when(javaMailSender).createMimeMessage();
 
     emailService.sendContactConfirmation("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(0)).send(mimeMessage);
+    verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
+  }
+
+  @Test
+  void shouldSendRequestedServiceCancellationNotificationSuccessfully() throws MessagingException {
+    final var htmlContent = "<html><body>Reset Code: 123456</body></html>";
+    final var mimeMessage = mock(MimeMessage.class);
+
+    when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+    when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
+
+    emailService.sendRequestedServiceCancellationNotification("test@conectabyte.com.br", "CODE");
+
+    verify(javaMailSender, times(1)).createMimeMessage();
+    verify(javaMailSender, times(1)).send(mimeMessage);
+    verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
+  }
+
+  @Test
+  void shouldLogErrorSendRequestedServiceCancellationNotificationWhenMessagingExceptionIsThrown() throws Exception {
+    final var mimeMessage = mock(MimeMessage.class);
+
+    doAnswer(invocation -> {
+      throw new MessagingException("Simulated MessagingException");
+    }).when(javaMailSender).createMimeMessage();
+
+    emailService.sendRequestedServiceCancellationNotification("test@conectabyte.com.br", "CODE");
 
     verify(javaMailSender, times(1)).createMimeMessage();
     verify(javaMailSender, times(0)).send(mimeMessage);

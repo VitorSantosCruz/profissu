@@ -48,7 +48,7 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
   @PostMapping("/{userId}")
   public ResponseEntity<RequestedServiceResponseDto> register(@PathVariable Long userId,
       @Valid @RequestBody RequestedServiceRequestDto requestedServiceRequestDto) {
