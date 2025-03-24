@@ -49,6 +49,10 @@ public class UserController {
     return ResponseEntity.ok().body(this.userService.findByIdAndReturnDto(id));
   }
 
+  @Operation(summary = "Retrieve requested services by user ID", description = "Fetches a paginated list of requested services associated with the provided user ID.", responses = {
+      @ApiResponse(responseCode = "200", description = "Successfully retrieved requested services", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
   @GetMapping("/{id}/requested-services")
   public Page<RequestedServiceResponseDto> findRequestedServiceByUserId(@PathVariable Long id,
       @ParameterObject Pageable pageable) {
