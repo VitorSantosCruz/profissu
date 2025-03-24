@@ -38,8 +38,8 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @GetMapping
-  public Page<RequestedServiceResponseDto> findByPage(@ParameterObject Pageable pageable) {
-    return requestedServiceService.findByPage(pageable);
+  public Page<RequestedServiceResponseDto> findAvailableServiceRequestsByPage(@ParameterObject Pageable pageable) {
+    return requestedServiceService.findAvailableServiceRequestsByPage(pageable);
   }
 
   @Operation(summary = "Register a requested service", description = "Allows a user to register a new requested service.")
