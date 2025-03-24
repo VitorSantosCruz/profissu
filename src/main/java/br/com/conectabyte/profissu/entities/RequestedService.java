@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import jakarta.persistence.CascadeType;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -51,4 +53,11 @@ public class RequestedService {
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
+
+  @OneToMany(mappedBy = "requestedService")
+  private List<Conversation> conversations;
+
+  public boolean canBeCancelled() {
+    return this.status.equals(RequestedServiceStatusEnum.PENDING);
+  }
 }

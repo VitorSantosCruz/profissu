@@ -15,6 +15,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
+import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import lombok.val;
@@ -38,7 +39,7 @@ public class RestExceptionHandler {
   }
 
   @ExceptionHandler(PropertyReferenceException.class)
-  public ResponseEntity<ExceptionDto> handleInvalidSortField(PropertyReferenceException e) {
+  public ResponseEntity<ExceptionDto> propertyReferenceExceptionHandler(PropertyReferenceException e) {
     log.error("Error: {}", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(new ExceptionDto("No property '" + e.getPropertyName() + "' found", null));
@@ -48,6 +49,12 @@ public class RestExceptionHandler {
   public ResponseEntity<ExceptionDto> validationExceptionHandler(Exception e) {
     log.error("Error: {}", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionDto(e.getMessage(), null));
+  }
+
+  @ExceptionHandler(RequestedServiceCancellationException.class)
+  public ResponseEntity<ExceptionDto> requestedServiceCancellationExceptionHandler(Exception e) {
+    log.error("Error: {}", e.getMessage());
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(new ExceptionDto(e.getMessage(), null));
   }
 
   @ExceptionHandler({ BadCredentialsException.class, EmailNotVerifiedException.class })

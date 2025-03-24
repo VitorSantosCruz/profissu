@@ -90,11 +90,6 @@ databaseChangeLog:
                   name: updated_at
                   type: TIMESTAMP
               - column:
-                  name: type
-                  type: ENUM('EMAIL', 'PHONE')
-                  constraints:
-                    nullable: false
-              - column:
                   name: value
                   type: VARCHAR(255)
                   constraints:
@@ -286,10 +281,10 @@ databaseChangeLog:
                   name: updated_at
                   type: TIMESTAMP
               - column:
-                  name: is_active
-                  type: BOOLEAN
+                  name: offer_status
+                  type: ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED')
                   constraints:
-                    nullable: false
+                    nullable: true
               - column:
                   name: requester_id
                   type: BIGINT
@@ -432,9 +427,6 @@ databaseChangeLog:
         - insert:
             tableName: contacts
             columns:
-              - column:
-                  name: type
-                  value: "EMAIL"
               - column:
                   name: value
                   value: "admin@conectabyte.com.br"

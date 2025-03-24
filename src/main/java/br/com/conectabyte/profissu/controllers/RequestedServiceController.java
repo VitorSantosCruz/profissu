@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,11 +48,23 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
   @PostMapping("/{userId}")
   public ResponseEntity<RequestedServiceResponseDto> register(@PathVariable Long userId,
       @Valid @RequestBody RequestedServiceRequestDto requestedServiceRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(this.requestedServiceService.register(userId, requestedServiceRequestDto));
+  }
+
+  @Operation(summary = "Cancel a requested service", description = "Allows an authorized user to cancel a requested service.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Successfully canceled the requested service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RequestedServiceResponseDto.class))),
+      @ApiResponse(responseCode = "403", description = "User is not authorized to cancel this service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
+  @PreAuthorize("@securityService.isOwnerOfRequestedService(#id) || @securityService.isAdmin()")
+  @PatchMapping("/{id}/cancel")
+  public ResponseEntity<RequestedServiceResponseDto> cancel(@PathVariable Long id) {
+    return ResponseEntity.ok(requestedServiceService.cancel(id));
   }
 }

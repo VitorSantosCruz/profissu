@@ -43,7 +43,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     user.setContacts(List.of(contact));
 
     when(jwtService.createJwtToken(any())).thenReturn(new LoginResponseDto(token, expiresIn));
@@ -81,7 +81,7 @@ public class LoginServiceTest {
     final var email = "test@conectabyte.com.br";
     final var password = "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G";
     final var user = UserUtils.create();
-    final var contact = ContactUtils.createEmail(user);
+    final var contact = ContactUtils.create(user);
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
 

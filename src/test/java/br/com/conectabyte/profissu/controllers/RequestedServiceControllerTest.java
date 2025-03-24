@@ -3,6 +3,7 @@ package br.com.conectabyte.profissu.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -29,6 +29,7 @@ import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
+import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
@@ -52,8 +53,12 @@ class RequestedServiceControllerTest {
   @Test
   @WithMockUser
   void shouldFindByPage() throws Exception {
-    Page<RequestedServiceResponseDto> expectedPage = new PageImpl<>(List.of(
-        new RequestedServiceResponseDto(1L, "Title", "Description", RequestedServiceStatusEnum.PENDING, null, 1L)));
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
+    final var userResponseDto = UserMapper.INSTANCE.userToUserResponseDto(user);
+    final var expectedPage = new PageImpl<>(List.of(new RequestedServiceResponseDto(1L, "Title",
+        "Description", RequestedServiceStatusEnum.PENDING, addressResponseDto, userResponseDto, null)));
 
     when(requestedServiceService.findByPage(any(Pageable.class))).thenReturn(expectedPage);
 
@@ -72,11 +77,9 @@ class RequestedServiceControllerTest {
     final var address = AddressUtils.create(user);
     final var addressRequestDto = AddressMapper.INSTANCE.addressToAddressRequestDto(address);
     final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
-    final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description",
-        addressRequestDto);
-    final var RequestedServiceResponseDto = new RequestedServiceResponseDto(1L, "Title",
-        "Description",
-        RequestedServiceStatusEnum.PENDING, addressResponseDto, user.getId());
+    final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description", addressRequestDto);
+    final var RequestedServiceResponseDto = new RequestedServiceResponseDto(1L, "Title", "Description",
+        RequestedServiceStatusEnum.PENDING, addressResponseDto, null, null);
 
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
@@ -94,8 +97,7 @@ class RequestedServiceControllerTest {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
     final var addressRequestDto = AddressMapper.INSTANCE.addressToAddressRequestDto(address);
-    final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description",
-        addressRequestDto);
+    final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description", addressRequestDto);
 
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenThrow(new ResourceNotFoundException("User not found."));
@@ -116,5 +118,46 @@ class RequestedServiceControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldReturnNotFoundWhenRequestedServiceNotFound() throws Exception {
+    when(securityService.isAdmin()).thenReturn(true);
+    when(requestedServiceService.cancel(any())).thenThrow(new ResourceNotFoundException("Requested service not found"));
+
+    mockMvc.perform(patch("/requested-services/{id}/cancel", 1L))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Requested service not found"));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldReturnForbiddenWhenUserNotAuthorizedToCancel() throws Exception {
+    final long serviceId = 1L;
+
+    mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Access denied."));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldCancelRequestedServiceSuccessfully() throws Exception {
+    final long serviceId = 1L;
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
+    final var userResponseDto = UserMapper.INSTANCE.userToUserResponseDto(user);
+    final var requestedServiceResponseDto = new RequestedServiceResponseDto(serviceId, "Title", "Description",
+        RequestedServiceStatusEnum.CANCELLED, addressResponseDto, userResponseDto, null);
+
+    when(securityService.isOwnerOfRequestedService(any())).thenReturn(true);
+    when(requestedServiceService.cancel(any())).thenReturn(requestedServiceResponseDto);
+
+    mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("CANCELLED"))
+        .andExpect(jsonPath("$.title").value("Title"));
   }
 }

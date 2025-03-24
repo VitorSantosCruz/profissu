@@ -20,9 +20,9 @@ public interface RequestedServiceMapper {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "user", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "conversations", ignore = true)
   RequestedService requestedServiceRequestDtoToRequestedService(RequestedServiceRequestDto requestedServiceRequestDto);
 
-  @Mapping(source = "user", target = "requesterId", qualifiedByName = "matUserToId")
   RequestedServiceResponseDto requestedServiceToRequestedServiceResponseDto(
       RequestedService requestedServiceRequestDto);
 

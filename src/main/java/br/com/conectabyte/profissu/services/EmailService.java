@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Async
 public class EmailService {
   private final JavaMailSender javaMailSender;
   private final TemplateEngine templateEngine;
@@ -45,7 +46,7 @@ public class EmailService {
     javaMailSender.send(message);
   }
 
-  public void sendPasswordRecoveryEmail(String email, String code) throws MessagingException {
+  public void sendPasswordRecoveryEmail(String email, String code) {
     final var variables = Map.of(
         "profissuLogoUrl", profissuUrl + LOGO_PATH,
         "code", code,
@@ -56,10 +57,13 @@ public class EmailService {
     final var sendEmailDto = new SendEmailDto(email, "Password Recovery - Profisu", "code-verification-email.html",
         variables);
 
-    sendEmail(sendEmailDto);
+    try {
+      sendEmail(sendEmailDto);
+    } catch (MessagingException e) {
+      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
+    }
   }
 
-  @Async
   public void sendSignUpConfirmation(String email, String code) {
     final var variables = Map.of(
         "profissuLogoUrl", profissuUrl + LOGO_PATH,
@@ -88,6 +92,20 @@ public class EmailService {
         "footerMessage", "If you did not request this confirmation, you can safely ignore this email.");
     final var sendEmailDto = new SendEmailDto(email, "Contact Confirmation - Profisu", "code-verification-email.html",
         variables);
+
+    try {
+      sendEmail(sendEmailDto);
+    } catch (MessagingException e) {
+      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
+    }
+  }
+
+  public void sendRequestedServiceCancellationNotification(String title, String email) {
+    final var variables = Map.of(
+        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "serviceName", title);
+    final var sendEmailDto = new SendEmailDto(email, "Service Request Cancellation - Profisu",
+        "service_request_cancellation_email.html", variables);
 
     try {
       sendEmail(sendEmailDto);

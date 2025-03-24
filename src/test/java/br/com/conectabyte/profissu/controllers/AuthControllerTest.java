@@ -138,7 +138,7 @@ public class AuthControllerTest {
   void shouldRegisterUserWhenDataIsValid() throws Exception {
     final var user = UserUtils.create();
 
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     user.setId(1L);
 
@@ -161,7 +161,7 @@ public class AuthControllerTest {
   @Test
   void shouldReturnBadRequestWhenEmailIsAlreadyRegistered() throws Exception {
     final var user = UserUtils.create();
-    user.setContacts(List.of(ContactUtils.createEmail(user)));
+    user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
     when(userService.findByEmail(any())).thenReturn(new User());
 

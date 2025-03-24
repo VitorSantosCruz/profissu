@@ -22,12 +22,5 @@ public interface AddressMapper {
 
   AddressRequestDto addressToAddressRequestDto(Address address);
 
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "deletedAt", ignore = true)
-  @Mapping(target = "requestedService", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "user", ignore = true)
-  Address addressResponseDtoToAddress(AddressResponseDto addressResponseDto);
-
   AddressResponseDto addressToAddressResponseDto(Address address);
 }

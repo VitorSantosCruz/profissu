@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -77,7 +78,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
-  @PutMapping("/{id}/password")
+  @PatchMapping("/{id}/password")
   public ResponseEntity<Void> updatePassword(@PathVariable Long id,
       @Valid @RequestBody PasswordRequestDto passwordRequestDto) {
     this.userService.updatePassword(id, passwordRequestDto);

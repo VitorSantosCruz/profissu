@@ -12,7 +12,6 @@ import br.com.conectabyte.profissu.dtos.request.ContactRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ContactResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
-import br.com.conectabyte.profissu.enums.ContactTypeEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
@@ -33,6 +32,7 @@ public class ContactService {
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
 
+  @Transactional
   public ContactResponseDto register(Long userId, ContactRequestDto contactRequestDto) {
     final var contactToBeSaved = contactMapper.contactRequestDtoToContact(contactRequestDto);
     final var user = this.userService.findById(userId);
@@ -40,18 +40,17 @@ public class ContactService {
     contactToBeSaved.setVerificationRequestedAt(LocalDateTime.now());
     contactToBeSaved.setUser(user);
 
-    if (contactToBeSaved.getType().equals(ContactTypeEnum.EMAIL)) {
-      final var code = UUID.randomUUID().toString().split("-")[1];
+    final var code = UUID.randomUUID().toString().split("-")[1];
 
-      this.tokenService.save(user, code, bCryptPasswordEncoder);
-      this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
-    }
+    this.tokenService.save(user, code, bCryptPasswordEncoder);
+    this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
 
     final var savedContact = contactRepository.save(contactToBeSaved);
 
     return contactMapper.contactToContactResponseDto(savedContact);
   }
 
+  @Transactional
   public ContactResponseDto update(Long id, ContactRequestDto contactRequestDto) {
     final var contact = findById(id);
 
@@ -62,8 +61,7 @@ public class ContactService {
           }
         });
 
-    if (!contact.getValue().equals(contactRequestDto.value())
-        && contactRequestDto.type().equals(ContactTypeEnum.EMAIL)) {
+    if (!contact.getValue().equals(contactRequestDto.value())) {
       final var code = UUID.randomUUID().toString().split("-")[1];
 
       contact.setVerificationRequestedAt(LocalDateTime.now());
@@ -73,8 +71,18 @@ public class ContactService {
       this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
     }
 
-    contact.setType(contactRequestDto.type());
+    contact.setUpdatedAt(LocalDateTime.now());
     contact.setValue(contactRequestDto.value());
+
+    if (!contact.isStandard() && contactRequestDto.standard()) {
+      contact.getUser().getContacts().stream()
+          .filter(Contact::isStandard)
+          .forEach(c -> {
+            c.setStandard(false);
+            contactRepository.save(c);
+          });
+    }
+
     contact.setStandard(contactRequestDto.standard());
 
     final var updatedContact = contactRepository.save(contact);
