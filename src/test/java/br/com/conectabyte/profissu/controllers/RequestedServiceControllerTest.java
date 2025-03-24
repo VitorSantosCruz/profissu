@@ -52,15 +52,15 @@ class RequestedServiceControllerTest {
 
   @Test
   @WithMockUser
-  void shouldFindByPage() throws Exception {
+  void shouldFindAvailableServiceRequestsWhenSuccessfully() throws Exception {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
     final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
     final var userResponseDto = UserMapper.INSTANCE.userToUserResponseDto(user);
     final var expectedPage = new PageImpl<>(List.of(new RequestedServiceResponseDto(1L, "Title",
-        "Description", RequestedServiceStatusEnum.PENDING, addressResponseDto, userResponseDto, null)));
+        "Description", RequestedServiceStatusEnum.PENDING, addressResponseDto, userResponseDto)));
 
-    when(requestedServiceService.findAvailableServiceRequestsByPage(any(Pageable.class))).thenReturn(expectedPage);
+    when(requestedServiceService.findAvailableServiceRequests(any(Pageable.class))).thenReturn(expectedPage);
 
     mockMvc.perform(get("/requested-services")
         .param("page", "0")
@@ -79,7 +79,7 @@ class RequestedServiceControllerTest {
     final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
     final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description", addressRequestDto);
     final var RequestedServiceResponseDto = new RequestedServiceResponseDto(1L, "Title", "Description",
-        RequestedServiceStatusEnum.PENDING, addressResponseDto, null, null);
+        RequestedServiceStatusEnum.PENDING, addressResponseDto, null);
 
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
@@ -150,7 +150,7 @@ class RequestedServiceControllerTest {
     final var addressResponseDto = AddressMapper.INSTANCE.addressToAddressResponseDto(address);
     final var userResponseDto = UserMapper.INSTANCE.userToUserResponseDto(user);
     final var requestedServiceResponseDto = new RequestedServiceResponseDto(serviceId, "Title", "Description",
-        RequestedServiceStatusEnum.CANCELLED, addressResponseDto, userResponseDto, null);
+        RequestedServiceStatusEnum.CANCELLED, addressResponseDto, userResponseDto);
 
     when(securityService.isOwnerOfRequestedService(any())).thenReturn(true);
     when(requestedServiceService.cancel(any())).thenReturn(requestedServiceResponseDto);

@@ -1,5 +1,8 @@
 package br.com.conectabyte.profissu.controllers;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,7 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
+import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.dtos.response.UserResponseDto;
+import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Users", description = "Operations related to managing users")
 public class UserController {
   private final UserService userService;
+  private final RequestedServiceService requestedServiceService;
 
   @Operation(summary = "Retrieve user by ID", description = "Fetches a user's details using the provided ID. Requires authentication.", responses = {
       @ApiResponse(responseCode = "200", description = "User successfully retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
@@ -41,6 +47,12 @@ public class UserController {
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
     return ResponseEntity.ok().body(this.userService.findByIdAndReturnDto(id));
+  }
+
+  @GetMapping("/{id}/requested-services")
+  public Page<RequestedServiceResponseDto> findRequestedServiceByUserId(@PathVariable Long id,
+      @ParameterObject Pageable pageable) {
+    return requestedServiceService.findByUserId(id, pageable);
   }
 
   @Operation(summary = "Soft delete user profile", description = "Marks the user profile as deleted (soft delete) using the provided ID. Requires authentication.", responses = {

@@ -36,9 +36,15 @@ public class RequestedServiceService {
   }
 
   @Transactional
-  public Page<RequestedServiceResponseDto> findAvailableServiceRequestsByPage(Pageable pageable) {
-    final var availableServiceRequests = requestedServiceRepository.findAvailableServiceRequestsByPage(pageable);
+  public Page<RequestedServiceResponseDto> findAvailableServiceRequests(Pageable pageable) {
+    final var availableServiceRequests = requestedServiceRepository.findAvailableServiceRequests(pageable);
     return requestedServiceMapper.RequestedServicePageToRequestedServiceResponseDtoPage(availableServiceRequests);
+  }
+
+  @Transactional
+  public Page<RequestedServiceResponseDto> findByUserId(Long userId, Pageable pageable) {
+    final var userServiceRequests = requestedServiceRepository.findByUserId(userId, pageable);
+    return requestedServiceMapper.RequestedServicePageToRequestedServiceResponseDtoPage(userServiceRequests);
   }
 
   @Transactional

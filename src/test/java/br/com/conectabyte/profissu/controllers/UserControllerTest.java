@@ -33,6 +33,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.SecurityService;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
@@ -48,6 +49,9 @@ public class UserControllerTest {
 
   @MockBean
   private UserService userService;
+
+  @MockBean
+  private RequestedServiceService requestedServiceService;
 
   @MockBean
   private SecurityService securityService;

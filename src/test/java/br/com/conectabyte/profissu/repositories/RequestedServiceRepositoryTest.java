@@ -42,7 +42,7 @@ public class RequestedServiceRepositoryTest {
 
     requestedServiceRepository.save(requestedService);
 
-    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequestsByPage(Pageable.ofSize(10));
+    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequests(Pageable.ofSize(10));
 
     assertTrue(requestedServicePage.getTotalElements() > 0);
   }
@@ -61,7 +61,7 @@ public class RequestedServiceRepositoryTest {
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
     requestedServiceRepository.save(requestedService);
 
-    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequestsByPage(Pageable.ofSize(10));
+    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequests(Pageable.ofSize(10));
 
     assertEquals(requestedServicePage.getTotalElements(), 0);
   }
@@ -80,7 +80,7 @@ public class RequestedServiceRepositoryTest {
     requestedService.setDeletedAt(LocalDateTime.now());
     requestedServiceRepository.save(requestedService);
 
-    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequestsByPage(Pageable.ofSize(10));
+    final var requestedServicePage = requestedServiceRepository.findAvailableServiceRequests(Pageable.ofSize(10));
 
     assertEquals(requestedServicePage.getTotalElements(), 0);
   }
