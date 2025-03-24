@@ -60,7 +60,7 @@ class RequestedServiceControllerTest {
     final var expectedPage = new PageImpl<>(List.of(new RequestedServiceResponseDto(1L, "Title",
         "Description", RequestedServiceStatusEnum.PENDING, addressResponseDto, userResponseDto, null)));
 
-    when(requestedServiceService.findByPage(any(Pageable.class))).thenReturn(expectedPage);
+    when(requestedServiceService.findAvailableServiceRequestsByPage(any(Pageable.class))).thenReturn(expectedPage);
 
     mockMvc.perform(get("/requested-services")
         .param("page", "0")

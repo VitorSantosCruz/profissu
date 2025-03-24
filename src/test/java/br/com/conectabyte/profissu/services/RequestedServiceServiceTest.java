@@ -61,7 +61,7 @@ class RequestedServiceServiceTest {
 
     when(requestedServiceRepository.findAll(pageable)).thenReturn(requestedServicePage);
 
-    Page<RequestedServiceResponseDto> result = requestedServiceService.findByPage(pageable);
+    Page<RequestedServiceResponseDto> result = requestedServiceService.findAvailableServiceRequestsByPage(pageable);
 
     assertNotNull(result);
     assertEquals(1, result.getTotalElements());
@@ -105,7 +105,7 @@ class RequestedServiceServiceTest {
 
     when(requestedServiceRepository.findAll(pageable)).thenReturn(emptyPage);
 
-    final var result = requestedServiceService.findByPage(pageable);
+    final var result = requestedServiceService.findAvailableServiceRequestsByPage(pageable);
 
     assertNotNull(result);
     assertEquals(0, result.getTotalElements());
