@@ -28,6 +28,7 @@ import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
+import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.repositories.RequestedServiceRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
@@ -119,7 +120,7 @@ class RequestedServiceServiceTest {
     final var address = AddressUtils.create(user);
     final var requestedService = RequestedServiceUtils.create(user, address);
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-    
+
     serviceProvider.setContacts(List.of(contact));
     requestedService.setConversations(List.of(conversation));
 
@@ -162,5 +163,40 @@ class RequestedServiceServiceTest {
 
     assertEquals("Requested service not found.", exception.getMessage());
     verify(requestedServiceRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldFindRequestedServiceByUserIdSuccessfully() {
+    final var pageable = PageRequest.of(0, 10);
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
+        .requestedServiceToRequestedServiceResponseDto(requestedService);
+    final var requestedServicePage = new PageImpl<>(List.of(requestedService), pageable, 1);
+    final var expectedResponsePage = new PageImpl<>(List.of(requestedServiceResponseDto), pageable, 1);
+
+    when(requestedServiceRepository.findByUserId(any(), any())).thenReturn(requestedServicePage);
+
+    final var result = requestedServiceService.findByUserId(1L, pageable);
+
+    assertNotNull(result);
+    assertEquals(1, result.getTotalElements());
+    assertEquals(expectedResponsePage, result);
+  }
+
+  @Test
+  void shouldReturnEmptyPageWhenNoRequestedServiceForUserFound() {
+    final var pageable = PageRequest.of(0, 10);
+    final Page<RequestedService> emptyPage = Page.empty(pageable);
+    final var expectedEmptyResponsePage = Page.empty(pageable);
+
+    when(requestedServiceRepository.findByUserId(0L, pageable)).thenReturn(emptyPage);
+
+    final var result = requestedServiceService.findByUserId(0L, pageable);
+
+    assertNotNull(result);
+    assertEquals(0, result.getTotalElements());
+    assertEquals(expectedEmptyResponsePage, result);
   }
 }
