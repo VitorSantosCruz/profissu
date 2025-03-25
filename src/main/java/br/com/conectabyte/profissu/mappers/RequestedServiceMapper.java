@@ -26,7 +26,7 @@ public interface RequestedServiceMapper {
   RequestedServiceResponseDto requestedServiceToRequestedServiceResponseDto(
       RequestedService requestedServiceRequestDto);
 
-  default Page<RequestedServiceResponseDto> RequestedServicePageToRequestedServiceResponseDtoPage(
+  default Page<RequestedServiceResponseDto> requestedServicePageToRequestedServiceResponseDtoPage(
       Page<RequestedService> requestedServicePage) {
     final var requestedServiceResponseDtoPageContent = requestedServicePage.getContent().stream()
         .map(this::requestedServiceToRequestedServiceResponseDto)
