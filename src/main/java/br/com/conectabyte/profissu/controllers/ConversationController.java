@@ -9,18 +9,34 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
+import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.services.ConversationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/conversations")
 @RequiredArgsConstructor
+@Tag(name = "Conversations", description = "Operations related to managing service offers and conversations")
 public class ConversationController {
   private final ConversationService conversationService;
 
+  @Operation(summary = "Make an offer for a requested service", description = "Allows a user to make an offer by opening a conversation related to a requested service.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Offer successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Requested service or user not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
   @PostMapping
-  public ResponseEntity<ConversationResponseDto> register(@Valid @RequestBody ConversationRequestDto conversationRequestDto) {
+  public ResponseEntity<ConversationResponseDto> register(
+      @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
   }
 }

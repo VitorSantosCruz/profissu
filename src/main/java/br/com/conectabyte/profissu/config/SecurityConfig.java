@@ -42,7 +42,8 @@ public class SecurityConfig {
       "/swagger-ui/swagger-initializer.js",
       "/v3/api-docs/swagger-config",
       "/swagger-ui/favicon-32x32.png",
-      "/v3/api-docs"
+      "/v3/api-docs",
+      "/swagger-ui.html"
   };
 
   private final String[] staticResources = {
