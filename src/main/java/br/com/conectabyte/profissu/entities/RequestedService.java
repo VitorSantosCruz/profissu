@@ -58,6 +58,6 @@ public class RequestedService {
   private List<Conversation> conversations;
 
   public boolean canBeCancelled() {
-    return this.status.equals(RequestedServiceStatusEnum.PENDING);
+    return this.status == RequestedServiceStatusEnum.PENDING;
   }
 }

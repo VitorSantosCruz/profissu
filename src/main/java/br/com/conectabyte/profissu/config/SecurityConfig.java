@@ -50,7 +50,7 @@ public class SecurityConfig {
   };
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
@@ -64,19 +64,19 @@ public class SecurityConfig {
   }
 
   @Bean
-  public JwtDecoder jwtDecoder() {
+  JwtDecoder jwtDecoder() {
     return NimbusJwtDecoder.withPublicKey(this.publicKey).build();
   }
 
   @Bean
-  public JwtEncoder jwtEncoder() {
+  JwtEncoder jwtEncoder() {
     var jwk = new RSAKey.Builder(this.publicKey).privateKey(this.privateKey).build();
     var jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
     return new NimbusJwtEncoder(jwks);
   }
 
   @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder() {
+  BCryptPasswordEncoder bCryptPasswordEncoder() {
     return new BCryptPasswordEncoder();
   }
 }

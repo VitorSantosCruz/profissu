@@ -18,7 +18,6 @@ import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,7 +26,7 @@ public class RestExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ExceptionDto> validationExceptionHandler(MethodArgumentNotValidException e) {
     log.error("Error: {}", e.getMessage());
-    val errors = new ArrayList<String>();
+      final var errors = new ArrayList<String>();
     e.getAllErrors().forEach(err -> errors.add(err.getDefaultMessage()));
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionDto("All fields must be valid", errors));
   }

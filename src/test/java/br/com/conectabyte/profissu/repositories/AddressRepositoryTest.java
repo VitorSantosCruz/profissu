@@ -13,9 +13,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
+import jakarta.transaction.Transactional;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class AddressRepositoryTest {
   @Autowired
@@ -28,7 +30,6 @@ public class AddressRepositoryTest {
   public void shouldReturnAddressByIdWhenIsNotDeletedAndExists() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    address.setId(1L);
 
     user.setAddresses(List.of(address));
     userRepository.save(user);
@@ -42,15 +43,15 @@ public class AddressRepositoryTest {
   public void shouldReturnEmptyWhenAddressIsDeleted() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    address.setId(1L);
 
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
+    final var savedAddress = savedUser.getAddresses().get(0);
 
-    savedUser.getAddresses().get(0).setDeletedAt(LocalDateTime.now());
+    savedAddress.setDeletedAt(LocalDateTime.now());
 
-    final var findedAddress = addressRepository.findById(1L);
+    final var findedAddress = addressRepository.findById(savedAddress.getId());
 
     assertTrue(findedAddress.isEmpty());
   }
@@ -59,7 +60,6 @@ public class AddressRepositoryTest {
   public void shouldReturnEmptyWhenAddressNotFound() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    address.setId(1L);
 
     user.setAddresses(List.of(address));
     userRepository.save(user);

@@ -9,7 +9,6 @@ public class ContactUtils {
   public static Contact create(User user) {
     final var contact = new Contact();
 
-    contact.setId(0L);
     contact.setValue("test@conectabyte.com.br");
     contact.setStandard(true);
     contact.setVerificationRequestedAt(LocalDateTime.now());

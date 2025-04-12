@@ -17,29 +17,29 @@
 Profissu is built with modern and robust technologies, ensuring high performance, scalability, and maintainability:
 
 * **Backend:**
-    * **Spring Boot:** A powerful Java framework for building microservices and web applications, offering features like dependency injection, auto-configuration, and embedded servers.
-    * **Spring REST:** Simplifies the creation of RESTful APIs, enabling efficient communication between the frontend and backend.
-    * **Spring Security:** Ensures application security with comprehensive authentication, authorization, and protection against common vulnerabilities.
-    * **Spring Data JPA:** Abstracts database access, simplifying persistence operations and reducing boilerplate code.
+  * **Spring Boot:** A powerful Java framework for building microservices and web applications, offering features like dependency injection, auto-configuration, and embedded servers.
+  * **Spring REST:** Simplifies the creation of RESTful APIs, enabling efficient communication between the frontend and backend.
+  * **Spring Security:** Ensures application security with comprehensive authentication, authorization, and protection against common vulnerabilities.
+  * **Spring Data JPA:** Abstracts database access, simplifying persistence operations and reducing boilerplate code.
 
 * **Database:**
-    * **MySQL:** A reliable and widely used relational database for persistent data storage.
-    * **Liquibase:** A database migration management tool that provides flexibility and control over schema changes.
+  * **MySQL:** A reliable and widely used relational database for persistent data storage.
+  * **Liquibase:** A database migration management tool that provides flexibility and control over schema changes.
 
 * **Infrastructure:**
-    * **Docker:** A containerization platform that packages the application and its dependencies into isolated containers, ensuring deployment consistency across different environments.
-    * **Docker Compose:** A tool for defining and running multi-container Docker applications, simplifying the management of Profissu and its dependencies.
+  * **Docker:** A containerization platform that packages the application and its dependencies into isolated containers, ensuring deployment consistency across different environments.
+  * **Docker Compose:** A tool for defining and running multi-container Docker applications, simplifying the management of Profissu and its dependencies.
 
 * **API Documentation:**
-    * **OpenAPI/Swagger:** Provides interactive API documentation, making it easier to understand and integrate with the Profissu platform.
+  * **OpenAPI/Swagger:** Provides interactive API documentation, making it easier to understand and integrate with the Profissu platform.
 
 * **Testing:**
-    * **JUnit:** A widely used testing framework for writing and running unit tests.
-    * **Mockito:** A mocking framework for creating mock objects in tests.
+  * **JUnit:** A widely used testing framework for writing and running unit tests.
+  * **Mockito:** A mocking framework for creating mock objects in tests.
 
 * **Logging and Monitoring:**
-    * **Logback:** A flexible and configurable logging framework for capturing application events and errors.
-    * **Spring Boot Actuator:** Provides monitoring and management features for production applications, including health checks, metrics, and logging.
+  * **Logback:** A flexible and configurable logging framework for capturing application events and errors.
+  * **Spring Boot Actuator:** Provides monitoring and management features for production applications, including health checks, metrics, and logging.
 
 ## **System Architecture**
 
@@ -58,16 +58,19 @@ Profissu follows a layered architecture, promoting maintainability, scalability,
 ## **How to Run the Application**
 
 1. **Clone the Repository:**
+
    ```bash
    git clone https://github.com/VitorSantosCruz/profissu.git
    ```
 
 2. **Navigate to the Project Directory:**
+
    ```bash
    cd profissu
    ```
 
 3. **Start the Application with Docker Compose:**
+
    ```bash
    docker compose up -d
    ```

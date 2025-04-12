@@ -13,7 +13,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Configuration
 public class SwaggerConfig {
   @Bean
-  public OpenAPI customOpenAPI() {
+  OpenAPI customOpenAPI() {
     return new OpenAPI()
         .info(new Info()
             .title("PROFISU API")

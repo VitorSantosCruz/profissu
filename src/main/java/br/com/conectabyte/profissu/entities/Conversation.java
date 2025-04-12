@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,7 +34,7 @@ public class Conversation {
 
   @Column(name = "offer_status", nullable = false)
   @Enumerated(EnumType.STRING)
-  private OfferStatusEnum offerStatus;
+  private OfferStatusEnum offerStatus = OfferStatusEnum.PENDING;
 
   @ManyToOne
   @JoinColumn(name = "requester_id", nullable = false)
@@ -47,6 +48,6 @@ public class Conversation {
   @JoinColumn(name = "requested_service_id", nullable = false)
   private RequestedService requestedService;
 
-  @OneToMany(mappedBy = "conversation")
+  @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
   private List<Message> messages;
 }

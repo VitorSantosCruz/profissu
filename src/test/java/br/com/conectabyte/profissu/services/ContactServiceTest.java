@@ -20,7 +20,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import br.com.conectabyte.profissu.dtos.request.ContactConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ContactRequestDto;
 import br.com.conectabyte.profissu.entities.Contact;
-import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
@@ -49,12 +48,10 @@ public class ContactServiceTest {
   private ContactService contactService;
 
   private ContactMapper contactMapper = ContactMapper.INSTANCE;
-  private final User user = UserUtils.create();
-  private final Contact contact = ContactUtils.create(user);
-  private final ContactRequestDto validRequest = contactMapper.contactToContactRequestDto(contact);
 
   @Test
   void shouldReturnOkRequestWhenSignUpWasConfirmed() {
+    final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
 
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
@@ -81,6 +78,7 @@ public class ContactServiceTest {
 
   @Test
   void shouldReturnBadRequestWhenMissingCodeForUserWithThisEmail() {
+    final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
 
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
@@ -95,6 +93,10 @@ public class ContactServiceTest {
 
   @Test
   void shouldRegisterContactEmailSuccessfully() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+    final var validRequest = contactMapper.contactToContactRequestDto(contact);
+
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
@@ -107,6 +109,9 @@ public class ContactServiceTest {
 
   @Test
   void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
+    final var user = UserUtils.create();
+    final var validRequest = contactMapper.contactToContactRequestDto(ContactUtils.create(user));
+
     when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
     assertThrows(ResourceNotFoundException.class, () -> contactService.register(1L, validRequest));
@@ -114,6 +119,9 @@ public class ContactServiceTest {
 
   @Test
   void shouldUpdateContactSuccessfully() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
@@ -126,6 +134,9 @@ public class ContactServiceTest {
 
   @Test
   void shouldUpdateContactSuccessfullyWhenEmailValueNotChange() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
@@ -138,7 +149,10 @@ public class ContactServiceTest {
 
   @Test
   void shouldUpdateContactToStandardSuccessfullyWhenItWasNotStandardBefore() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
     final var notStandardContact = ContactUtils.create(user);
+
     notStandardContact.setStandard(false);
     user.setContacts(List.of(contact, notStandardContact));
     when(contactRepository.findById(any())).thenReturn(Optional.of(notStandardContact));
@@ -153,6 +167,9 @@ public class ContactServiceTest {
 
   @Test
   void shouldUpdateContactSuccessfullyWhenStandardNotChange() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
@@ -184,6 +201,10 @@ public class ContactServiceTest {
 
   @Test
   void shouldRegisterContactWithEmailAndSendConfirmation() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+    final var validRequest = contactMapper.contactToContactRequestDto(contact);
+
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any())).thenReturn(contact);
 
@@ -196,6 +217,11 @@ public class ContactServiceTest {
 
   @Test
   void shouldThrowValidationExceptionWhenContactValueIsNotUnique() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+    final var validRequest = contactMapper.contactToContactRequestDto(contact);
+    
+    contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
 
@@ -204,6 +230,10 @@ public class ContactServiceTest {
 
   @Test
   void shouldUpdateContactAndSendVerificationEmailWhenValueIsChangedToEmail() {
+    final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+    
+    contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any())).thenReturn(contact);

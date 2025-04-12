@@ -25,8 +25,10 @@ public class UserRepositoryTest {
   void shouldReturnUserWhenEmailIsValid() {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
+
     user.setContacts(List.of(ContactUtils.create(user)));
     userRepository.save(user);
+
     final var optionalUser = userRepository.findByEmail(email);
 
     assertTrue(optionalUser.isPresent());
@@ -49,9 +51,11 @@ public class UserRepositoryTest {
     final var email = "test@conectabyte.com.br";
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
+
     contact.setStandard(false);
     user.setContacts(List.of(contact));
     userRepository.save(user);
+
     final var optionalUser = userRepository.findByEmail(email);
 
     assertTrue(optionalUser.isEmpty());
@@ -60,7 +64,9 @@ public class UserRepositoryTest {
   @Test
   void shouldReturnUserWhenHaveAnUserWithInformedId() {
     final var user = UserUtils.create();
+
     user.setContacts(List.of(ContactUtils.create(user)));
+
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -70,8 +76,10 @@ public class UserRepositoryTest {
   @Test
   void shouldNotFindUserWhenThenIsDeleted() {
     final var user = UserUtils.create();
+
     user.setDeletedAt(LocalDateTime.now());
     user.setContacts(List.of(ContactUtils.create(user)));
+
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -98,8 +106,10 @@ public class UserRepositoryTest {
   void shouldNotFindUserByIdWhenUserNotHaveStandarnContact() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
+
     contact.setStandard(false);
     user.setContacts(List.of(contact));
+
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -110,8 +120,10 @@ public class UserRepositoryTest {
   void shouldNotFindUserByIdWhenUserNotHaveVerifiedContact() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
+
     contact.setVerificationCompletedAt(null);
     user.setContacts(List.of(contact));
+
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
@@ -122,8 +134,10 @@ public class UserRepositoryTest {
   void shouldNotFindUserByIdWhenUserContactWasDeleted() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
+
     contact.setDeletedAt(LocalDateTime.now());
     user.setContacts(List.of(contact));
+
     final var savedUser = userRepository.save(user);
     final var optionalUser = userRepository.findById(savedUser.getId());
 
