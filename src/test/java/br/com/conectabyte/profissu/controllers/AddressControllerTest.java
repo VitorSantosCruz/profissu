@@ -87,9 +87,6 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    when(securityService.isOwner(any())).thenReturn(false);
-    when(securityService.isAdmin()).thenReturn(false);
-
     mockMvc.perform(post("/addresses/" + userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))

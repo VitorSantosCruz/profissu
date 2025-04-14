@@ -1,5 +1,7 @@
 package br.com.conectabyte.profissu.utils;
 
+import java.util.List;
+
 import br.com.conectabyte.profissu.entities.Address;
 import br.com.conectabyte.profissu.entities.RequestedService;
 import br.com.conectabyte.profissu.entities.User;
@@ -14,6 +16,7 @@ public class RequestedServiceUtils {
     requestedService.setStatus(RequestedServiceStatusEnum.PENDING);
     requestedService.setAddress(address);
     requestedService.setUser(user);
+    requestedService.setConversations(List.of());
 
     return requestedService;
   }

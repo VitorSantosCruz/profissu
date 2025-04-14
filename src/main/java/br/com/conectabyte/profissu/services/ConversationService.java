@@ -38,8 +38,8 @@ public class ConversationService {
     final var conversation = conversationMapper.conversationRequestDtoToConversation(conversationRequestDto);
     final var message = this.createMessage(conversationRequestDto.message(), conversation, serviceProvider);
     final var alreadySubmittedAnOffer = requestedService.getConversations().stream()
-        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING
-            && c.getServiceProvider().getId().equals(serviceProviderId))
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
+        .filter(c -> c.getServiceProvider().getId().equals(serviceProviderId))
         .findFirst()
         .isPresent();
 
