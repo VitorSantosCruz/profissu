@@ -78,6 +78,7 @@ public class SecurityServiceTest {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
 
+    user.setId(0L);
     when(contactService.findById(any())).thenReturn(contact);
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
 
@@ -90,6 +91,9 @@ public class SecurityServiceTest {
   void shouldReturnFalseWhenUserIsNotOwnerOfContact() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
+
+    user.setId(0L);
+
     final var resourceUserId = user.getId() + 1;
 
     when(contactService.findById(any())).thenReturn(contact);
@@ -114,6 +118,7 @@ public class SecurityServiceTest {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
 
+    user.setId(0L);
     when(addressService.findById(any())).thenReturn(address);
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
 
@@ -150,6 +155,7 @@ public class SecurityServiceTest {
     final var address = AddressUtils.create(user);
     final var requestedService = RequestedServiceUtils.create(user, address);
 
+    user.setId(0L);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
 

@@ -10,8 +10,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
-    @Bean
-    public Executor taskExecutor() {
-        return new ThreadPoolTaskExecutor();
-    }
+	@Bean
+	Executor taskExecutor() {
+		return new ThreadPoolTaskExecutor();
+	}
 }

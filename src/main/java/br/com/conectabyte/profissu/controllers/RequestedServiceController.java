@@ -23,18 +23,21 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/requested-services")
 @RequiredArgsConstructor
+@Tag(name = "Requested services", description = "Operations related to managing requested services")
 public class RequestedServiceController {
   private final RequestedServiceService requestedServiceService;
 
   @Operation(summary = "List requested services with pagination", description = "Retrieve a paginated list of requested services.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Successful retrieval of requested services", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @GetMapping
@@ -46,6 +49,8 @@ public class RequestedServiceController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Successfully created requested service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RequestedServiceResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
@@ -59,7 +64,8 @@ public class RequestedServiceController {
   @Operation(summary = "Cancel a requested service", description = "Allows an authorized user to cancel a requested service.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Successfully canceled the requested service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RequestedServiceResponseDto.class))),
-      @ApiResponse(responseCode = "403", description = "User is not authorized to cancel this service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @PreAuthorize("@securityService.isOwnerOfRequestedService(#id) || @securityService.isAdmin()")

@@ -7,7 +7,6 @@ public class UserUtils {
   public static User create() {
     var user = new User();
 
-    user.setId(0L);
     user.setName("Test Test");
     user.setBio("Bio");
     user.setPassword("@Admin123");

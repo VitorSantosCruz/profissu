@@ -42,7 +42,8 @@ public class SecurityConfig {
       "/swagger-ui/swagger-initializer.js",
       "/v3/api-docs/swagger-config",
       "/swagger-ui/favicon-32x32.png",
-      "/v3/api-docs"
+      "/v3/api-docs",
+      "/swagger-ui.html"
   };
 
   private final String[] staticResources = {
@@ -50,7 +51,7 @@ public class SecurityConfig {
   };
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
@@ -64,19 +65,19 @@ public class SecurityConfig {
   }
 
   @Bean
-  public JwtDecoder jwtDecoder() {
+  JwtDecoder jwtDecoder() {
     return NimbusJwtDecoder.withPublicKey(this.publicKey).build();
   }
 
   @Bean
-  public JwtEncoder jwtEncoder() {
+  JwtEncoder jwtEncoder() {
     var jwk = new RSAKey.Builder(this.publicKey).privateKey(this.privateKey).build();
     var jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
     return new NimbusJwtEncoder(jwks);
   }
 
   @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder() {
+  BCryptPasswordEncoder bCryptPasswordEncoder() {
     return new BCryptPasswordEncoder();
   }
 }

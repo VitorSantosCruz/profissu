@@ -13,7 +13,6 @@ public class ConversationUtils {
       List<Message> messages) {
     var conversation = new Conversation();
 
-    conversation.setId(0L);
     conversation.setOfferStatus(OfferStatusEnum.PENDING);
     conversation.setRequester(requester);
     conversation.setServiceProvider(serviceProvider);

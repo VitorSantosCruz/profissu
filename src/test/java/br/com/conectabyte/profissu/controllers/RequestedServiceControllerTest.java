@@ -13,12 +13,12 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,10 +38,10 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 @WebMvcTest({ RequestedServiceController.class, SecurityService.class })
 @Import(SecurityConfig.class)
 class RequestedServiceControllerTest {
-  @MockBean
+  @MockitoBean
   private RequestedServiceService requestedServiceService;
 
-  @MockBean
+  @MockitoBean
   private SecurityService securityService;
 
   @Autowired
@@ -84,7 +84,7 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
 
-    mockMvc.perform(post("/requested-services/{userId}", user.getId())
+    mockMvc.perform(post("/requested-services/{userId}", 0)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isCreated())
@@ -102,7 +102,7 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenThrow(new ResourceNotFoundException("User not found."));
 
-    mockMvc.perform(post("/requested-services/{userId}", user.getId())
+    mockMvc.perform(post("/requested-services/{userId}", 0)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isNotFound())

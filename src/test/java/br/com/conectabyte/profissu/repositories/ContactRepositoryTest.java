@@ -28,7 +28,6 @@ public class ContactRepositoryTest {
   public void shouldReturnContactByIdWhenIsNotDeletedAndExists() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
     userRepository.save(user);
@@ -42,15 +41,15 @@ public class ContactRepositoryTest {
   public void shouldReturnEmptyByIdWhenContactIsDeleted() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
 
     final var savedUser = userRepository.save(user);
+    final var savedContact = savedUser.getContacts().get(0);
 
-    savedUser.getContacts().get(0).setDeletedAt(LocalDateTime.now());
+    savedContact.setDeletedAt(LocalDateTime.now());
 
-    final var findedContact = contactRepository.findById(1L);
+    final var findedContact = contactRepository.findById(savedContact.getId());
 
     assertTrue(findedContact.isEmpty());
   }
@@ -59,7 +58,6 @@ public class ContactRepositoryTest {
   public void shouldReturnEmptyByIdWhenContactNotFound() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
     userRepository.save(user);
@@ -73,7 +71,6 @@ public class ContactRepositoryTest {
   public void shouldReturnContactByValueWhenIsNotDeletedAndExists() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
     userRepository.save(user);
@@ -87,7 +84,6 @@ public class ContactRepositoryTest {
   public void shouldReturnEmptyByValueWhenContactIsDeleted() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
 
@@ -104,7 +100,6 @@ public class ContactRepositoryTest {
   public void shouldReturnEmptyByValueWhenContactNotFound() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    contact.setId(1L);
 
     user.setContacts(List.of(contact));
     userRepository.save(user);

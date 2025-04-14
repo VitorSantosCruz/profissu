@@ -52,6 +52,7 @@ public class UserController {
   @Operation(summary = "Retrieve requested services by user ID", description = "Fetches a paginated list of requested services associated with the provided user ID.", responses = {
       @ApiResponse(responseCode = "200", description = "Successfully retrieved requested services", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
       @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @GetMapping("/{id}/requested-services")
   public Page<RequestedServiceResponseDto> findRequestedServiceByUserId(@PathVariable Long id,
