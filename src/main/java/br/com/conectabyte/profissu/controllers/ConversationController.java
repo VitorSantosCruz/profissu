@@ -2,6 +2,9 @@ package br.com.conectabyte.profissu.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,8 +38,15 @@ public class ConversationController {
       @ApiResponse(responseCode = "404", description = "Requested service or user not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @PostMapping
-  public ResponseEntity<ConversationResponseDto> register(
+  public ResponseEntity<ConversationResponseDto> start(
       @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
+  }
+
+
+  @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityService.isAdmin()")
+  @PatchMapping("/{id}")
+  public ResponseEntity<ConversationResponseDto> cancel(@PathVariable Long id) {
+    return ResponseEntity.status(HttpStatus.OK).body(this.conversationService.cancel(id));
   }
 }

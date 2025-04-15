@@ -25,11 +25,12 @@ import br.com.conectabyte.profissu.entities.Address;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.services.AddressService;
-import br.com.conectabyte.profissu.services.SecurityService;
+import br.com.conectabyte.profissu.services.security.SecurityAddressService;
+import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ AddressController.class, SecurityService.class })
+@WebMvcTest({ AddressController.class, SecurityService.class, SecurityAddressService.class })
 @Import(SecurityConfig.class)
 class AddressControllerTest {
   @Autowired
@@ -40,6 +41,9 @@ class AddressControllerTest {
 
   @MockitoBean
   private SecurityService securityService;
+
+  @MockitoBean
+  private SecurityAddressService securityAddressService;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -98,7 +102,7 @@ class AddressControllerTest {
   @WithMockUser
   void shouldUpdateAddressWhenUserIsOwnerOrAdmin() throws Exception {
     when(addressService.update(any(), any())).thenReturn(responseDto);
-    when(securityService.isOwnerOfAddress(any())).thenReturn(true);
+    when(securityAddressService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(put("/addresses/" + addressId)
         .contentType(MediaType.APPLICATION_JSON)
@@ -111,7 +115,7 @@ class AddressControllerTest {
   @WithMockUser
   void shouldReturnNotFoundWhenAddressDoesNotExist() throws Exception {
     when(addressService.update(any(), any())).thenThrow(new ResourceNotFoundException("Address not found"));
-    when(securityService.isOwnerOfAddress(any())).thenReturn(true);
+    when(securityAddressService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(put("/addresses/" + addressId)
         .contentType(MediaType.APPLICATION_JSON)

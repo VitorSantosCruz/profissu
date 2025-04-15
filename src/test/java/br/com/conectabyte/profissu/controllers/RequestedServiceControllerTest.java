@@ -31,11 +31,12 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
-import br.com.conectabyte.profissu.services.SecurityService;
+import br.com.conectabyte.profissu.services.security.SecurityRequestedServiceService;
+import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ RequestedServiceController.class, SecurityService.class })
+@WebMvcTest({ RequestedServiceController.class, SecurityService.class, SecurityRequestedServiceService.class })
 @Import(SecurityConfig.class)
 class RequestedServiceControllerTest {
   @MockitoBean
@@ -43,6 +44,9 @@ class RequestedServiceControllerTest {
 
   @MockitoBean
   private SecurityService securityService;
+
+  @MockitoBean
+  private SecurityRequestedServiceService securityRequestedServiceService;
 
   @Autowired
   private MockMvc mockMvc;
@@ -152,7 +156,7 @@ class RequestedServiceControllerTest {
     final var requestedServiceResponseDto = new RequestedServiceResponseDto(serviceId, "Title", "Description",
         RequestedServiceStatusEnum.CANCELLED, addressResponseDto, userResponseDto);
 
-    when(securityService.isOwnerOfRequestedService(any())).thenReturn(true);
+    when(securityRequestedServiceService.ownershipCheck(any())).thenReturn(true);
     when(requestedServiceService.cancel(any())).thenReturn(requestedServiceResponseDto);
 
     mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))

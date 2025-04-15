@@ -50,7 +50,7 @@ public class AddressController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Address not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityService.isOwnerOfAddress(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityAddressService.ownershipCheck(#id) || @securityService.isAdmin()")
   @PutMapping("/{id}")
   public ResponseEntity<AddressResponseDto> update(@PathVariable Long id,
       @Valid @RequestBody AddressRequestDto addressRequestDto) {

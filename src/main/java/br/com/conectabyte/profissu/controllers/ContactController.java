@@ -51,7 +51,7 @@ public class ContactController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Contact not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityService.isOwnerOfContact(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityContactService.ownershipCheck(#id) || @securityService.isAdmin()")
   @PutMapping("/{id}")
   public ResponseEntity<ContactResponseDto> update(@PathVariable Long id,
       @Validated @RequestBody ContactRequestDto contactRequestDto) {

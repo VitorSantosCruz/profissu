@@ -15,6 +15,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
+import br.com.conectabyte.profissu.services.security.SecurityAddressService;
+import br.com.conectabyte.profissu.services.security.SecurityContactService;
+import br.com.conectabyte.profissu.services.security.SecurityRequestedServiceService;
+import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
@@ -34,8 +38,20 @@ public class SecurityServiceTest {
   @Mock
   private JwtService jwtService;
 
+  @Mock
+  private SecurityService mockedSecurityService;
+
   @InjectMocks
   private SecurityService securityService;
+
+  @InjectMocks
+  private SecurityContactService securityContactService;
+
+  @InjectMocks
+  private SecurityAddressService securityAddressService;
+
+  @InjectMocks
+  private SecurityRequestedServiceService securityRequestedServiceService;
 
   @Test
   void shouldReturnTrueWhenInformetedIDIsSameThenToken() {
@@ -80,9 +96,9 @@ public class SecurityServiceTest {
 
     user.setId(0L);
     when(contactService.findById(any())).thenReturn(contact);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
+    when(mockedSecurityService.isOwner(any())).thenReturn(true);
 
-    boolean isOwner = securityService.isOwnerOfContact(user.getId());
+    boolean isOwner = securityContactService.ownershipCheck(user.getId());
 
     assertTrue(isOwner);
   }
@@ -97,9 +113,8 @@ public class SecurityServiceTest {
     final var resourceUserId = user.getId() + 1;
 
     when(contactService.findById(any())).thenReturn(contact);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", resourceUserId)));
 
-    boolean isOwner = securityService.isOwnerOfContact(resourceUserId);
+    boolean isOwner = securityContactService.ownershipCheck(resourceUserId);
 
     assertFalse(isOwner);
   }
@@ -108,7 +123,7 @@ public class SecurityServiceTest {
   void shouldReturnFalseWhenContactNotFound() {
     when(contactService.findById(any())).thenThrow(new ResourceNotFoundException("Contact not found"));
 
-    final var isOwner = securityService.isOwnerOfContact(any());
+    final var isOwner = securityContactService.ownershipCheck(any());
 
     assertFalse(isOwner);
   }
@@ -120,9 +135,9 @@ public class SecurityServiceTest {
 
     user.setId(0L);
     when(addressService.findById(any())).thenReturn(address);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
+    when(mockedSecurityService.isOwner(any())).thenReturn(true);
 
-    final var isOwner = securityService.isOwnerOfAddress(user.getId());
+    final var isOwner = securityAddressService.ownershipCheck(user.getId());
 
     assertTrue(isOwner);
   }
@@ -133,9 +148,8 @@ public class SecurityServiceTest {
     final var address = AddressUtils.create(user);
 
     when(addressService.findById(any())).thenReturn(address);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
 
-    final var isOwner = securityService.isOwnerOfAddress(any());
+    final var isOwner = securityAddressService.ownershipCheck(any());
 
     assertFalse(isOwner);
   }
@@ -144,7 +158,7 @@ public class SecurityServiceTest {
   void shouldReturnFalseWhenAddressNotFound() {
     when(addressService.findById(any())).thenThrow(new ResourceNotFoundException("Address not found"));
 
-    final var isOwner = securityService.isOwnerOfAddress(any());
+    final var isOwner = securityAddressService.ownershipCheck(any());
 
     assertFalse(isOwner);
   }
@@ -157,9 +171,9 @@ public class SecurityServiceTest {
 
     user.setId(0L);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", user.getId())));
+    when(mockedSecurityService.isOwner(any())).thenReturn(true);
 
-    final var isOwner = securityService.isOwnerOfRequestedService(user.getId());
+    final var isOwner = securityRequestedServiceService.ownershipCheck(user.getId());
 
     assertTrue(isOwner);
   }
@@ -171,9 +185,8 @@ public class SecurityServiceTest {
     final var requestedService = RequestedServiceUtils.create(user, address);
 
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
-    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
 
-    final var isOwner = securityService.isOwnerOfRequestedService(any());
+    final var isOwner = securityRequestedServiceService.ownershipCheck(any());
 
     assertFalse(isOwner);
   }
@@ -183,7 +196,7 @@ public class SecurityServiceTest {
     when(requestedServiceService.findById(any()))
         .thenThrow(new ResourceNotFoundException("Requested service not found"));
 
-    final var isOwner = securityService.isOwnerOfRequestedService(any());
+    final var isOwner = securityRequestedServiceService.ownershipCheck(any());
 
     assertFalse(isOwner);
   }
