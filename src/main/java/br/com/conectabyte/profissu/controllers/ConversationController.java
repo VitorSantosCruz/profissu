@@ -55,12 +55,21 @@ public class ConversationController {
   @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityService.isAdmin()")
   @PatchMapping("/{id}")
   public ResponseEntity<ConversationResponseDto> cancel(@PathVariable Long id) {
-    return ResponseEntity.status(HttpStatus.OK).body(this.conversationService.cancel(id));
+    return ResponseEntity.ok(this.conversationService.cancel(id));
   }
 
+  @Operation(summary = "Accept or reject a service offer", description = "Allows the user who owns the requested service or an admin to accept or reject a pending offer.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Offer successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or offer status", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
   @PreAuthorize("@securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
   @PatchMapping("/{id}/{offerStatus}")
-  public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id, @PathVariable OfferStatusEnum offerStatus) {
-    return ResponseEntity.status(HttpStatus.OK).body(this.conversationService.acceptOrRejectOffer(id, offerStatus));
+  public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id,
+      @PathVariable OfferStatusEnum offerStatus) {
+    return ResponseEntity.ok(this.conversationService.acceptOrRejectOffer(id, offerStatus));
   }
 }
