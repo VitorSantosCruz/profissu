@@ -2,9 +2,12 @@ package br.com.conectabyte.profissu.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +23,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.conectabyte.profissu.config.SecurityConfig;
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
+import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.services.ConversationService;
+import br.com.conectabyte.profissu.services.security.SecurityConversationService;
+import br.com.conectabyte.profissu.services.security.SecurityService;
+import br.com.conectabyte.profissu.utils.AddressUtils;
+import br.com.conectabyte.profissu.utils.ConversationUtils;
+import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
+import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ ConversationController.class })
+@WebMvcTest({ ConversationController.class, SecurityService.class, SecurityConversationService.class })
 @Import(SecurityConfig.class)
 class ConversationControllerTest {
-
   @Autowired
   private MockMvc mockMvc;
 
@@ -34,6 +44,12 @@ class ConversationControllerTest {
 
   @MockitoBean
   private ConversationService conversationService;
+
+  @MockitoBean
+  private SecurityService securityService;
+
+  @MockitoBean
+  private SecurityConversationService securityConversationService;
 
   @Test
   @WithMockUser
@@ -60,5 +76,21 @@ class ConversationControllerTest {
         .content(objectMapper.writeValueAsString(conversationRequestDto)))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("All fields must be valid"));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldCancelAConversation() throws Exception {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
+
+    when(conversationService.cancel(any())).thenReturn(conversationResponseDto);
+    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
+
+    mockMvc.perform(patch("/conversations/1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.PENDING.toString()));
   }
 }

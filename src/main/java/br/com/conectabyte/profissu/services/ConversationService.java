@@ -12,6 +12,7 @@ import br.com.conectabyte.profissu.entities.RequestedService;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
@@ -27,6 +28,14 @@ public class ConversationService {
   private final UserService userService;
 
   private final ConversationMapper conversationMapper = ConversationMapper.INSTANCE;
+
+  public Conversation findById(Long id) {
+    final var optionalConversation = conversationRepository.findById(id);
+    final var conversation = optionalConversation
+        .orElseThrow(() -> new ResourceNotFoundException("Conversation not found."));
+
+    return conversation;
+  }
 
   @Transactional
   public ConversationResponseDto start(ConversationRequestDto conversationRequestDto) {
@@ -48,6 +57,29 @@ public class ConversationService {
     conversation.setRequester(requestedService.getUser());
     conversation.setRequestedService(requestedService);
     conversation.setMessages(List.of(message));
+
+    return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
+  }
+
+  @Transactional
+  public ConversationResponseDto cancel(Long id) {
+    final var serviceProviderId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
+    final var serviceProvider = userService.findById(serviceProviderId);
+    final var optionalConversation = serviceProvider.getConversationsAsAServiceProvider().stream()
+        .filter(c -> c.getId().equals(id))
+        .findFirst();
+
+    optionalConversation.orElseThrow(() -> new ResourceNotFoundException("Conversation not found."));
+
+    final var conversation = optionalConversation
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
+        .map(c -> {
+          c.setOfferStatus(OfferStatusEnum.CANCELLED);
+          return c;
+        })
+        .orElseThrow(() -> new ValidationException("Conversation cannot be canceled."));
 
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
   }

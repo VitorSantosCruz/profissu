@@ -25,12 +25,13 @@ import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.services.ContactService;
-import br.com.conectabyte.profissu.services.SecurityService;
 import br.com.conectabyte.profissu.services.UserService;
+import br.com.conectabyte.profissu.services.security.SecurityContactService;
+import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ ContactController.class, SecurityService.class })
+@WebMvcTest({ ContactController.class, SecurityService.class, SecurityContactService.class })
 @Import(SecurityConfig.class)
 class ContactControllerTest {
   @Autowired
@@ -44,6 +45,9 @@ class ContactControllerTest {
 
   @MockitoBean
   private SecurityService securityService;
+
+  @MockitoBean
+  private SecurityContactService securityContactService;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -108,7 +112,7 @@ class ContactControllerTest {
   @WithMockUser
   void shouldUpdateContactWhenUserIsOwnerOrAdmin() throws Exception {
     when(contactService.update(any(), any())).thenReturn(responseDto);
-    when(securityService.isOwnerOfContact(any())).thenReturn(true);
+    when(securityContactService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(put("/contacts/{id}", contactId)
         .contentType(MediaType.APPLICATION_JSON)
@@ -121,7 +125,7 @@ class ContactControllerTest {
   @WithMockUser
   void shouldReturnNotFoundWhenContactDoesNotExist() throws Exception {
     when(contactService.update(any(), any())).thenThrow(new ResourceNotFoundException("Contact not found"));
-    when(securityService.isOwnerOfContact(any())).thenReturn(true);
+    when(securityContactService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(put("/contacts/{id}", contactId)
         .contentType(MediaType.APPLICATION_JSON)
