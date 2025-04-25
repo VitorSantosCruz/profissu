@@ -63,6 +63,11 @@ public class UserController {
     return requestedServiceService.findByUserId(id, pageable);
   }
 
+  @Operation(summary = "Retrieve conversations by user ID", description = "Fetches a paginated list of conversations where the specified user is the requester.", responses = {
+      @ApiResponse(responseCode = "200", description = "Successfully retrieved conversations", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @GetMapping("/{id}/conversations")
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   public Page<ConversationResponseDto> findConversationByUserId(@PathVariable Long id,
