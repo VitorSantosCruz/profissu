@@ -166,8 +166,7 @@ class ConversationServiceTest {
     conversation.setId(1L);
     serviceProvider.setConversationsAsAServiceProvider(List.of(conversation));
 
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(any())).thenReturn(serviceProvider);
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
     when(conversationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     final var response = conversationService.cancel(1L);
@@ -182,8 +181,7 @@ class ConversationServiceTest {
 
     serviceProvider.setConversationsAsAServiceProvider(List.of());
 
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(any())).thenReturn(serviceProvider);
+    when(conversationRepository.findById(any())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
         () -> conversationService.cancel(1L));
@@ -199,11 +197,8 @@ class ConversationServiceTest {
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
-    conversation.setId(1L);
-    serviceProvider.setConversationsAsAServiceProvider(List.of(conversation));
 
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(1L)).thenReturn(serviceProvider);
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
 
     ValidationException exception = assertThrows(ValidationException.class,
         () -> conversationService.cancel(1L));

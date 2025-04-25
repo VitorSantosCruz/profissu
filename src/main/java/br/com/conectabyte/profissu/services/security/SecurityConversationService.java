@@ -20,4 +20,13 @@ public class SecurityConversationService implements OwnerCheck {
       return false;
     }
   }
+
+  public boolean requestedServiceOwner(Long id) {
+    try {
+      final var conversation = conversationService.findById(id);
+      return securityService.isOwner(conversation.getRequester().getId());
+    } catch (Exception e) {
+      return false;
+    }
+  }
 }

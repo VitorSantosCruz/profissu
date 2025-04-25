@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.services.ConversationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -55,5 +56,11 @@ public class ConversationController {
   @PatchMapping("/{id}")
   public ResponseEntity<ConversationResponseDto> cancel(@PathVariable Long id) {
     return ResponseEntity.status(HttpStatus.OK).body(this.conversationService.cancel(id));
+  }
+
+  @PreAuthorize("@securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PatchMapping("/{id}/{offerStatus}")
+  public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id, @PathVariable OfferStatusEnum offerStatus) {
+    return ResponseEntity.status(HttpStatus.OK).body(this.conversationService.acceptOrRejectOffer(id, offerStatus));
   }
 }
