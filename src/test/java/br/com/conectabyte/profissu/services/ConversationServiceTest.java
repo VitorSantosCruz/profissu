@@ -17,6 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
 import br.com.conectabyte.profissu.entities.Conversation;
@@ -24,6 +27,7 @@ import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
+import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ConversationUtils;
@@ -205,5 +209,41 @@ class ConversationServiceTest {
         () -> conversationService.cancel(1L));
 
     assertEquals("Conversation cannot be canceled.", exception.getMessage());
+  }
+
+  @Test
+  void shouldFindRequestedServiceByUserIdSuccessfully() {
+    final var pageable = PageRequest.of(0, 10);
+    final var serviceProvider = UserUtils.create();
+    final var requester = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
+    final var conversationResponseDto = ConversationMapper.INSTANCE
+        .conversationToConversationResponseDto(conversation);
+    final var conversationPage = new PageImpl<>(List.of(conversation), pageable, 1);
+    final var expectedResponsePage = new PageImpl<>(List.of(conversationResponseDto), pageable, 1);
+
+    when(conversationRepository.findByUserId(any(), any())).thenReturn(conversationPage);
+
+    final var result = conversationService.findByUserId(1L, pageable);
+
+    assertNotNull(result);
+    assertEquals(1, result.getTotalElements());
+    assertEquals(expectedResponsePage, result);
+  }
+
+  @Test
+  void shouldReturnEmptyPageWhenNoRequestedServiceForUserFound() {
+    final var pageable = PageRequest.of(0, 10);
+    final Page<Conversation> emptyPage = Page.empty(pageable);
+    final var expectedEmptyResponsePage = Page.empty(pageable);
+
+    when(conversationRepository.findByUserId(0L, pageable)).thenReturn(emptyPage);
+
+    final var result = conversationService.findByUserId(0L, pageable);
+
+    assertNotNull(result);
+    assertEquals(0, result.getTotalElements());
+    assertEquals(expectedEmptyResponsePage, result);
   }
 }
