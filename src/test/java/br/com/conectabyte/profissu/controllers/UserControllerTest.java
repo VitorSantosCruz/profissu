@@ -33,13 +33,16 @@ import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
+import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.services.ConversationService;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
+import br.com.conectabyte.profissu.utils.ConversationUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -55,6 +58,9 @@ public class UserControllerTest {
 
   @MockitoBean
   private RequestedServiceService requestedServiceService;
+
+  @MockitoBean
+  private ConversationService conversationService;
 
   @MockitoBean
   private SecurityService securityService;
@@ -90,7 +96,7 @@ public class UserControllerTest {
   @WithMockUser
   void shouldAllowProfileDeletionWhenUserIsOwner() throws Exception {
     doNothing().when(userService).deleteById(any());
-    when(securityService.isOwner(1L)).thenReturn(true);
+    when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(delete("/users/1"))
         .andExpect(status().isAccepted());
@@ -123,7 +129,7 @@ public class UserControllerTest {
     final var newPassword = "@newPassword123";
 
     doNothing().when(userService).updatePassword(any(), any());
-    when(securityService.isOwner(1L)).thenReturn(true);
+    when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(patch("/users/1/password")
         .contentType(MediaType.APPLICATION_JSON)
@@ -261,13 +267,12 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenUserIsNotOwnerOrAdmin() throws Exception {
-    final var userId = 1L;
     final var validProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", GenderEnum.FEMALE);
 
-    when(securityService.isOwner(userId)).thenReturn(false);
+    when(securityService.isOwner(any())).thenReturn(false);
     when(securityService.isAdmin()).thenReturn(false);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validProfileRequestDto)))
         .andExpect(status().isForbidden())
@@ -298,6 +303,25 @@ public class UserControllerTest {
     when(requestedServiceService.findByUserId(any(), any())).thenReturn(page);
 
     mockMvc.perform(get("/users/1/requested-services")
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[0]").exists());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldFindConversationsByUserId() throws Exception {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
+    final var page = new PageImpl<>(List.of(conversationResponseDto));
+
+    when(conversationService.findByUserId(any(), any())).thenReturn(page);
+    when(securityService.isOwner(any())).thenReturn(true);
+
+    mockMvc.perform(get("/users/1/conversations")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())

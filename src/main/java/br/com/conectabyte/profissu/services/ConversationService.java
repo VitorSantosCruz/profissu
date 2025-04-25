@@ -2,6 +2,8 @@ package br.com.conectabyte.profissu.services;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
@@ -106,5 +108,11 @@ public class ConversationService {
     if (alreadySubmittedAnOffer) {
       throw new ValidationException("You have already submitted an offer for this requested service.");
     }
+  }
+
+  @Transactional
+  public Page<ConversationResponseDto> findByUserId(Long userId, Pageable pageable) {
+    final var conversations = conversationRepository.findByUserId(userId, pageable);
+    return conversationMapper.conversationPageToConversationResponseDtoPage(conversations);
   }
 }
