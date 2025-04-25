@@ -36,7 +36,7 @@ public class SecurityContactServiceTest {
     when(contactService.findById(any())).thenReturn(contact);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    boolean isOwner = securityContactService.ownershipCheck(user.getId());
+    final var isOwner = securityContactService.ownershipCheck(user.getId());
 
     assertTrue(isOwner);
   }
@@ -52,7 +52,7 @@ public class SecurityContactServiceTest {
 
     when(contactService.findById(any())).thenReturn(contact);
 
-    boolean isOwner = securityContactService.ownershipCheck(resourceUserId);
+    final var isOwner = securityContactService.ownershipCheck(resourceUserId);
 
     assertFalse(isOwner);
   }

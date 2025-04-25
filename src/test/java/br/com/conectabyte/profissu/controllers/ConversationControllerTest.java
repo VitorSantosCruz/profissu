@@ -93,4 +93,42 @@ class ConversationControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.PENDING.toString()));
   }
+
+  @Test
+  @WithMockUser
+  void shouldAcceptAConversation() throws Exception {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+
+    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
+
+    when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
+    when(securityConversationService.requestedServiceOwner(any())).thenReturn(true);
+
+    mockMvc.perform(patch("/conversations/1/ACCEPTED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.ACCEPTED.toString()));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldRejectAConversation() throws Exception {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.REJECTED);
+
+    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
+
+    when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
+    when(securityConversationService.requestedServiceOwner(any())).thenReturn(true);
+
+    mockMvc.perform(patch("/conversations/1/REJECTED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.REJECTED.toString()));
+  }
 }

@@ -34,7 +34,6 @@ public class SecurityRequestedServiceServiceTest {
     final var address = AddressUtils.create(user);
     final var requestedService = RequestedServiceUtils.create(user, address);
 
-    user.setId(0L);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
     when(mockedSecurityService.isOwner(any())).thenReturn(true);
 

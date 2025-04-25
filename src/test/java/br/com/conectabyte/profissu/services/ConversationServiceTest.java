@@ -176,7 +176,7 @@ class ConversationServiceTest {
   }
 
   @Test
-  void shouldThrowWhenConversationNotFound() {
+  void shouldThrowIfConversationDoesNotExistOnCancel() {
     final var serviceProvider = UserUtils.create();
 
     serviceProvider.setConversationsAsAServiceProvider(List.of());
@@ -190,7 +190,7 @@ class ConversationServiceTest {
   }
 
   @Test
-  void shouldThrowWhenConversationIsNotPending() {
+  void shouldThrowWhenCancelingNonExistentConversation() {
     final var serviceProvider = UserUtils.create();
     final var requester = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
@@ -240,5 +240,124 @@ class ConversationServiceTest {
     assertNotNull(result);
     assertEquals(0, result.getTotalElements());
     assertEquals(expectedEmptyResponsePage, result);
+  }
+
+  @Test
+  void shouldAcceptPendingConversation() {
+    final var serviceProvider = UserUtils.create();
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+
+    conversation.setId(1L);
+    serviceProvider.setConversationsAsAServiceProvider(List.of(conversation));
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+    when(conversationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    final var response = conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.ACCEPTED);
+
+    assertNotNull(response);
+    assertEquals(OfferStatusEnum.ACCEPTED, response.offerStatus());
+  }
+
+  @Test
+  void shouldThrowIfConversationDoesNotExistOnAccept() {
+    final var serviceProvider = UserUtils.create();
+
+    serviceProvider.setConversationsAsAServiceProvider(List.of());
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.ACCEPTED));
+
+    assertEquals("Conversation not found.", exception.getMessage());
+  }
+
+  @Test
+  void shouldThrowWhenAcceptingNonPendingConversation() {
+    final var serviceProvider = UserUtils.create();
+    final var requester = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+
+    ValidationException exception = assertThrows(ValidationException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.ACCEPTED));
+
+    assertEquals("Conversation cannot be accepted/rejected.", exception.getMessage());
+  }
+
+  @Test
+  void shouldRejectPendingConversation() {
+    final var serviceProvider = UserUtils.create();
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+
+    conversation.setId(1L);
+    serviceProvider.setConversationsAsAServiceProvider(List.of(conversation));
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+    when(conversationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    final var response = conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.REJECTED);
+
+    assertNotNull(response);
+    assertEquals(OfferStatusEnum.REJECTED, response.offerStatus());
+  }
+
+  @Test
+  void shouldThrowIfConversationDoesNotExistOnReject() {
+    final var serviceProvider = UserUtils.create();
+
+    serviceProvider.setConversationsAsAServiceProvider(List.of());
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.REJECTED));
+
+    assertEquals("Conversation not found.", exception.getMessage());
+  }
+
+  @Test
+  void shouldThrowWhenRejectingNonPendingConversation() {
+    final var serviceProvider = UserUtils.create();
+    final var requester = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+
+    ValidationException exception = assertThrows(ValidationException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.REJECTED));
+
+    assertEquals("Conversation cannot be accepted/rejected.", exception.getMessage());
+  }
+
+  @Test
+  void shouldThrowWhenAcceptOrRejectConversationWithInvalidStatus() {
+    final var serviceProvider = UserUtils.create();
+    final var requester = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+
+    ValidationException exception1 = assertThrows(ValidationException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.CANCELLED));
+
+    ValidationException exception2 = assertThrows(ValidationException.class,
+        () -> conversationService.acceptOrRejectOffer(1L, OfferStatusEnum.PENDING));
+
+    assertEquals("Offer status is invalid.", exception1.getMessage());
+    assertEquals("Offer status is invalid.", exception2.getMessage());
   }
 }
