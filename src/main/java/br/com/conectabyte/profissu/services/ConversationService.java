@@ -40,6 +40,12 @@ public class ConversationService {
   }
 
   @Transactional
+  public Page<ConversationResponseDto> findByUserId(Long userId, Pageable pageable) {
+    final var conversations = conversationRepository.findByUserId(userId, pageable);
+    return conversationMapper.conversationPageToConversationResponseDtoPage(conversations);
+  }
+
+  @Transactional
   public ConversationResponseDto start(ConversationRequestDto conversationRequestDto) {
     final var requestedService = requestedServiceService.findById(conversationRequestDto.requestedServiceId());
     final var serviceProviderId = this.jwtService.getClaims()
@@ -65,23 +71,30 @@ public class ConversationService {
 
   @Transactional
   public ConversationResponseDto cancel(Long id) {
-    final var serviceProviderId = this.jwtService.getClaims()
-        .map(claims -> Long.valueOf(claims.get("sub").toString()))
-        .orElseThrow();
-    final var serviceProvider = userService.findById(serviceProviderId);
-    final var optionalConversation = serviceProvider.getConversationsAsAServiceProvider().stream()
-        .filter(c -> c.getId().equals(id))
-        .findFirst();
+    final var conversation = findById(id);
 
-    optionalConversation.orElseThrow(() -> new ResourceNotFoundException("Conversation not found."));
+    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
+      throw new ValidationException("Conversation cannot be canceled.");
+    }
 
-    final var conversation = optionalConversation
-        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
-        .map(c -> {
-          c.setOfferStatus(OfferStatusEnum.CANCELLED);
-          return c;
-        })
-        .orElseThrow(() -> new ValidationException("Conversation cannot be canceled."));
+    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+
+    return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
+  }
+
+  @Transactional
+  public ConversationResponseDto acceptOrRejectOffer(Long id, OfferStatusEnum offerStatus) {
+    final var conversation = findById(id);
+
+    if (offerStatus != OfferStatusEnum.ACCEPTED && offerStatus != OfferStatusEnum.REJECTED) {
+      throw new ValidationException("Offer status is invalid.");
+    }
+
+    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
+      throw new ValidationException("Conversation cannot be accepted/rejected.");
+    }
+
+    conversation.setOfferStatus(offerStatus);
 
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
   }
@@ -108,11 +121,5 @@ public class ConversationService {
     if (alreadySubmittedAnOffer) {
       throw new ValidationException("You have already submitted an offer for this requested service.");
     }
-  }
-
-  @Transactional
-  public Page<ConversationResponseDto> findByUserId(Long userId, Pageable pageable) {
-    final var conversations = conversationRepository.findByUserId(userId, pageable);
-    return conversationMapper.conversationPageToConversationResponseDtoPage(conversations);
   }
 }

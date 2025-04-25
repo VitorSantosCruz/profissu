@@ -32,7 +32,6 @@ public class SecurityAddressServiceTest {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
 
-    user.setId(0L);
     when(addressService.findById(any())).thenReturn(address);
     when(securityService.isOwner(any())).thenReturn(true);
 

@@ -32,42 +32,73 @@ public class SecurityConversationServiceTest {
   private SecurityConversationService securityConversationService;
 
   @Test
-  void shouldReturnTrueWhenUserIsOwnerOfContact() {
+  void shouldReturnTrueWhenUserIsOwnerOfConversation() {
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
-    user.setId(0L);
     when(conversationService.findById(any())).thenReturn(conversation);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    boolean isOwner = securityConversationService.ownershipCheck(user.getId());
+    final var isOwner = securityConversationService.ownershipCheck(user.getId());
 
     assertTrue(isOwner);
   }
 
   @Test
-  void shouldReturnFalseWhenUserIsNotOwnerOfContact() {
+  void shouldReturnFalseWhenUserIsNotOwnerOfConversation() {
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
-    user.setId(0L);
-
-    final var resourceUserId = user.getId() + 1;
-
     when(conversationService.findById(any())).thenReturn(conversation);
 
-    boolean isOwner = securityConversationService.ownershipCheck(resourceUserId);
+    final var isOwner = securityConversationService.ownershipCheck(0L);
 
     assertFalse(isOwner);
   }
 
   @Test
-  void shouldReturnFalseWhenContactNotFound() {
-    when(conversationService.findById(any())).thenThrow(new ResourceNotFoundException("Contact not found"));
+  void shouldReturnFalseWhenConversationNotFound() {
+    when(conversationService.findById(any())).thenThrow(new ResourceNotFoundException("Conversation not found"));
 
     final var isOwner = securityConversationService.ownershipCheck(any());
+
+    assertFalse(isOwner);
+  }
+
+  @Test
+  void shouldReturnTrueWhenUserIsOwnerOfRequestedService() {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+
+    when(conversationService.findById(any())).thenReturn(conversation);
+    when(securityService.isOwner(any())).thenReturn(true);
+
+    final var isOwner = securityConversationService.requestedServiceOwner(conversation.getId());
+
+    assertTrue(isOwner);
+  }
+
+  @Test
+  void shouldReturnFalseWhenUserIsNotOwnerOfRequestedService() {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+
+    when(conversationService.findById(any())).thenReturn(conversation);
+
+    final var isOwner = securityConversationService.requestedServiceOwner(0L);
+
+    assertFalse(isOwner);
+  }
+
+  @Test
+  void shouldReturnFalseWhenConversationNotFounda() {
+    when(conversationService.findById(any())).thenThrow(new ResourceNotFoundException("Conversation not found"));
+
+    final var isOwner = securityConversationService.requestedServiceOwner(any());
 
     assertFalse(isOwner);
   }
