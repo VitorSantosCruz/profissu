@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +17,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
+import br.com.conectabyte.profissu.utils.PropertiesLoader;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -27,8 +30,18 @@ class EmailServiceTest {
   @Mock
   private TemplateEngine templateEngine;
 
+  @Mock
+  private ProfissuProperties profissuProperties;
+
   @InjectMocks
   private EmailService emailService;
+
+  @BeforeEach
+  void before() throws Exception {
+    final var loadedProfissuProperties = new PropertiesLoader().loadProperties();
+
+    when(profissuProperties.getProfissu()).thenReturn(loadedProfissuProperties.getProfissu());
+  }
 
   @Test
   void shouldSendPasswordRecoveryEmailSuccessfully() throws MessagingException {

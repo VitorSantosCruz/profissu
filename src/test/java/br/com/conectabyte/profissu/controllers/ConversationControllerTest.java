@@ -22,9 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.conectabyte.profissu.config.SecurityConfig;
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
+import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ConversationService;
 import br.com.conectabyte.profissu.services.security.SecurityConversationService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
@@ -33,7 +36,8 @@ import br.com.conectabyte.profissu.utils.ConversationUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ ConversationController.class, SecurityService.class, SecurityConversationService.class })
+@WebMvcTest({ ConversationController.class, SecurityService.class, SecurityConversationService.class,
+    ProfissuProperties.class })
 @Import(SecurityConfig.class)
 class ConversationControllerTest {
   @Autowired
@@ -130,5 +134,21 @@ class ConversationControllerTest {
     mockMvc.perform(patch("/conversations/1/REJECTED"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.REJECTED.toString()));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldSendMessageSuccessfully() throws Exception {
+    final var messageResponseDto = new MessageResponseDto(null, "Teste", false, null);
+    final var messageRequestDto = new MessageRequestDto("Teste");
+
+    when(conversationService.sendMessage(any(), any())).thenReturn(messageResponseDto);
+    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
+
+    mockMvc.perform(post("/conversations/1/messages")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(messageRequestDto)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.message").value("Teste"));
   }
 }

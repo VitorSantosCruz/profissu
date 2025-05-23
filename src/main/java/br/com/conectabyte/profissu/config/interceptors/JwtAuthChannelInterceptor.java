@@ -30,6 +30,10 @@ public class JwtAuthChannelInterceptor implements ChannelInterceptor {
     final var token = accessor.getFirstNativeHeader("token");
     final var decodedToken = validateToken(token);
 
+    if (decodedToken == null) {
+      return null;
+    }
+
     if (StompCommand.SUBSCRIBE.equals(accessor.getCommand()) || StompCommand.SEND.equals(accessor.getCommand())) {
       final var destination = accessor.getDestination();
       final var conversationId = extractConversationId(destination);
@@ -38,7 +42,7 @@ public class JwtAuthChannelInterceptor implements ChannelInterceptor {
           .map(Long::valueOf)
           .orElseThrow();
 
-      if (decodedToken == null || conversationId == null) {
+      if (conversationId == null) {
         return null;
       }
 
