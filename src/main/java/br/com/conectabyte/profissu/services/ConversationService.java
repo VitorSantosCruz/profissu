@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
+import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.entities.RequestedService;
@@ -17,7 +20,9 @@ import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
+import br.com.conectabyte.profissu.mappers.MessageMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
+import br.com.conectabyte.profissu.repositories.MessageRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -25,11 +30,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConversationService {
   private final ConversationRepository conversationRepository;
+  private final MessageRepository messageRepository;
   private final RequestedServiceService requestedServiceService;
   private final JwtService jwtService;
   private final UserService userService;
+  private final SimpMessagingTemplate simpMessagingTemplate;
 
   private final ConversationMapper conversationMapper = ConversationMapper.INSTANCE;
+  private final MessageMapper messageMapper = MessageMapper.INSTANCE;
 
   public Conversation findById(Long id) {
     final var optionalConversation = conversationRepository.findById(id);
@@ -53,7 +61,11 @@ public class ConversationService {
         .orElseThrow();
     final var serviceProvider = userService.findById(serviceProviderId);
     final var conversation = conversationMapper.conversationRequestDtoToConversation(conversationRequestDto);
-    final var message = this.createMessage(conversationRequestDto.message(), conversation, serviceProvider);
+    final var message = Message.builder()
+        .message(conversationRequestDto.message())
+        .conversation(conversation)
+        .user(serviceProvider)
+        .build();
     final var alreadySubmittedAnOffer = requestedService.getConversations().stream()
         .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
         .filter(c -> c.getServiceProvider().getId().equals(serviceProviderId))
@@ -67,6 +79,25 @@ public class ConversationService {
     conversation.setMessages(List.of(message));
 
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
+  }
+
+  @Transactional
+  public MessageResponseDto sendMessage(Long id, MessageRequestDto messageRequestDto) {
+    final var conversation = this.findById(id);
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
+    final var user = userService.findById(userId);
+    final var message = Message.builder()
+        .message(messageRequestDto.message())
+        .conversation(conversation)
+        .user(user)
+        .build();
+    final var messageResponseDto = messageMapper.messageToMessageResponseDto(messageRepository.save(message));
+
+    simpMessagingTemplate.convertAndSend("/topic/conversations/" + id + "/messages", messageResponseDto);
+
+    return messageResponseDto;
   }
 
   @Transactional
@@ -97,16 +128,6 @@ public class ConversationService {
     conversation.setOfferStatus(offerStatus);
 
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
-  }
-
-  private Message createMessage(String messageValue, Conversation conversation, User serviceProvider) {
-    final var message = new Message();
-
-    message.setMessage(messageValue);
-    message.setConversation(conversation);
-    message.setUser(serviceProvider);
-
-    return message;
   }
 
   private void validate(RequestedService requestedService, User serviceProvider, boolean alreadySubmittedAnOffer) {

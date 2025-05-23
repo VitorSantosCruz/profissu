@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -16,24 +15,23 @@ import org.springframework.stereotype.Service;
 import br.com.conectabyte.profissu.dtos.response.LoginResponseDto;
 import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-  @Value("${spring.application.name}")
-  private String issuer;
-
   private final JwtEncoder jwtEncoder;
+  private final ProfissuProperties profissuProperties;
 
   public LoginResponseDto createJwtToken(User user) {
     final var now = Instant.now();
-    final var expiresIn = 300L;
+    final var expiresIn = profissuProperties.getProfissu().getJwt().getExpiresIn();
     final var scopes = user.getRoles().stream()
         .map(Role::getName)
         .collect(Collectors.joining(" "));
     final var claims = JwtClaimsSet.builder()
-        .issuer(issuer)
+        .issuer(profissuProperties.getSpring().getApplication().getName())
         .subject(user.getId().toString())
         .issuedAt(now)
         .expiresAt(now.plusSeconds(expiresIn))

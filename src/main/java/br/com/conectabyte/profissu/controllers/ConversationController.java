@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
+import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.services.ConversationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +44,13 @@ public class ConversationController {
   public ResponseEntity<ConversationResponseDto> start(
       @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
+  }
+
+  @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PostMapping("/{id}/messages")
+  public ResponseEntity<MessageResponseDto> sendMessage(@PathVariable Long id,
+      @Valid @RequestBody MessageRequestDto messageRequestDto) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.sendMessage(id, messageRequestDto));
   }
 
   @Operation(summary = "Cancel a service offer", description = "Allows the user who created the conversation or an admin to cancel an existing offer.")

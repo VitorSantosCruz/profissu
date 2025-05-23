@@ -2,7 +2,6 @@ package br.com.conectabyte.profissu.services;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailService {
   private final JavaMailSender javaMailSender;
   private final TemplateEngine templateEngine;
-
-  @Value("${profissu.url}")
-  private String profissuUrl;
+  private final ProfissuProperties profissuProperties;
 
   private final String LOGO_PATH = "/images/profissu.jpeg";
 
@@ -48,7 +46,7 @@ public class EmailService {
 
   public void sendPasswordRecoveryEmail(String email, String code) {
     final var variables = Map.of(
-        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "code", code,
         "emailTitle", "Password Recovery",
         "emailMessage",
@@ -66,7 +64,7 @@ public class EmailService {
 
   public void sendSignUpConfirmation(String email, String code) {
     final var variables = Map.of(
-        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "code", code,
         "emailTitle", "Sign Up Confirmation",
         "emailMessage", "Thank you for signing up for Profisu! Please use the code below to confirm your registration:",
@@ -85,7 +83,7 @@ public class EmailService {
       String email,
       String code) {
     final var variables = Map.of(
-        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "code", code,
         "emailTitle", "Contact Confirmation",
         "emailMessage", "We received your contact request. Please use the code below to confirm your e-mail address:",
@@ -102,7 +100,7 @@ public class EmailService {
 
   public void sendRequestedServiceCancellationNotification(String title, String email) {
     final var variables = Map.of(
-        "profissuLogoUrl", profissuUrl + LOGO_PATH,
+        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "serviceName", title);
     final var sendEmailDto = new SendEmailDto(email, "Service Request Cancellation - Profisu",
         "service_request_cancellation_email.html", variables);
