@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +24,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
+import br.com.conectabyte.profissu.utils.PropertiesLoader;
 import br.com.conectabyte.profissu.utils.RoleUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -33,14 +34,17 @@ public class JwtServiceTest {
   @Mock
   private JwtEncoder jwtEncoder;
 
+  @Mock
+  private ProfissuProperties profissuProperties;
+
   @InjectMocks
   private JwtService jwtService;
 
-  @BeforeEach
   void setUp() throws Exception {
-    var issuerField = JwtService.class.getDeclaredField("issuer");
-    issuerField.setAccessible(true);
-    issuerField.set(jwtService, "profissu");
+    final var loadedProfissuProperties = new PropertiesLoader().loadProperties();
+
+    when(profissuProperties.getProfissu()).thenReturn(loadedProfissuProperties.getProfissu());
+    when(profissuProperties.getSpring()).thenReturn(loadedProfissuProperties.getSpring());
   }
 
   @AfterEach
@@ -49,7 +53,8 @@ public class JwtServiceTest {
   }
 
   @Test
-  void shouldReturnTokenWhenSuccess() {
+  void shouldReturnTokenWhenSuccess() throws Exception {
+    setUp();
     final var user = UserUtils.create();
     final var now = Instant.now();
     final var map = Map.of("key", new Object());
@@ -68,7 +73,8 @@ public class JwtServiceTest {
   }
 
   @Test
-  void shouldContainCorrectClaims() {
+  void shouldContainCorrectClaims() throws Exception {
+    setUp();
     final var user = UserUtils.create();
     final var now = Instant.now();
     final var map = Map.of("key", new Object());

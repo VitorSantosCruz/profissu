@@ -24,13 +24,14 @@ import br.com.conectabyte.profissu.dtos.response.AddressResponseDto;
 import br.com.conectabyte.profissu.entities.Address;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.AddressService;
 import br.com.conectabyte.profissu.services.security.SecurityAddressService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ AddressController.class, SecurityService.class, SecurityAddressService.class })
+@WebMvcTest({ AddressController.class, SecurityService.class, SecurityAddressService.class, ProfissuProperties.class })
 @Import(SecurityConfig.class)
 class AddressControllerTest {
   @Autowired

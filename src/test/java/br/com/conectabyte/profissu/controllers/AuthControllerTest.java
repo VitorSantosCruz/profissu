@@ -33,6 +33,7 @@ import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ContactService;
 import br.com.conectabyte.profissu.services.LoginService;
 import br.com.conectabyte.profissu.services.UserService;
@@ -40,7 +41,7 @@ import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest({ AuthController.class, ProfissuProperties.class })
 @Import(SecurityConfig.class)
 public class AuthControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;

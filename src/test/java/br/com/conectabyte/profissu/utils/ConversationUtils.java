@@ -11,7 +11,7 @@ import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 public class ConversationUtils {
   public static Conversation create(User requester, User serviceProvider, RequestedService requestedService,
       List<Message> messages) {
-    var conversation = new Conversation();
+    final var conversation = new Conversation();
 
     conversation.setOfferStatus(OfferStatusEnum.PENDING);
     conversation.setRequester(requester);

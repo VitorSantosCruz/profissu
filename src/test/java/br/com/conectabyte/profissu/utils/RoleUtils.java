@@ -8,7 +8,7 @@ public class RoleUtils {
   }
 
   public static Role create(String name) {
-    var role = new Role();
+    final var role = new Role();
 
     role.setName(name);
 

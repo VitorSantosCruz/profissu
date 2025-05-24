@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
+import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
+import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.services.ConversationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +44,21 @@ public class ConversationController {
   public ResponseEntity<ConversationResponseDto> start(
       @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
+  }
+
+  @Operation(summary = "Send a message in a conversation", description = "Allows the user who is part of the conversation or an admin to send a message within an existing conversation.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Message successfully sent", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+  })
+  @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PostMapping("/{id}/messages")
+  public ResponseEntity<MessageResponseDto> sendMessage(@PathVariable Long id,
+      @Valid @RequestBody MessageRequestDto messageRequestDto) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.sendMessage(id, messageRequestDto));
   }
 
   @Operation(summary = "Cancel a service offer", description = "Allows the user who created the conversation or an admin to cancel an existing offer.")

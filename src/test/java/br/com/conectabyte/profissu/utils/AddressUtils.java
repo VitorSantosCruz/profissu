@@ -5,7 +5,7 @@ import br.com.conectabyte.profissu.entities.User;
 
 public class AddressUtils {
   public static Address create(User user) {
-    var address = new Address();
+    final var address = new Address();
 
     address.setStreet("123 Main St");
     address.setNumber("101");
