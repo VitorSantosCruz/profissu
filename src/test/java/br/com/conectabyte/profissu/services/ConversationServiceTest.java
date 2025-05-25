@@ -30,10 +30,12 @@ import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
+import br.com.conectabyte.profissu.mappers.MessageMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
 import br.com.conectabyte.profissu.repositories.MessageRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ConversationUtils;
+import br.com.conectabyte.profissu.utils.MessageUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -410,5 +412,24 @@ class ConversationServiceTest {
 
     assertThrows(ResourceNotFoundException.class,
         () -> conversationService.sendMessage(1L, new MessageRequestDto("Teste")));
+  }
+
+  @Test
+  void shouldListMessagesSuccessfully() {
+    final var conversationId = 1L;
+    final var pageable = PageRequest.of(0, 10);
+    final var message = MessageUtils.create(null, null);
+    final var messagePage = new PageImpl<>(List.of(message), pageable, 1);
+    final var messageResponseDtoPage = MessageMapper.INSTANCE.messagePageToMessageResponseDtoPage(messagePage);
+
+    when(messageRepository.listMessages(conversationId, pageable)).thenReturn(messagePage);
+
+    final var result = conversationService.listMessages(conversationId, pageable);
+
+    assertNotNull(result);
+    assertEquals(1, result.getTotalElements());
+    assertEquals(messageResponseDtoPage, result);
+
+    verify(messageRepository).listMessages(conversationId, pageable);
   }
 }

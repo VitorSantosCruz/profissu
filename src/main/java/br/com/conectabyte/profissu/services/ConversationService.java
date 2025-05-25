@@ -82,25 +82,6 @@ public class ConversationService {
   }
 
   @Transactional
-  public MessageResponseDto sendMessage(Long id, MessageRequestDto messageRequestDto) {
-    final var conversation = this.findById(id);
-    final var userId = this.jwtService.getClaims()
-        .map(claims -> Long.valueOf(claims.get("sub").toString()))
-        .orElseThrow();
-    final var user = userService.findById(userId);
-    final var message = Message.builder()
-        .message(messageRequestDto.message())
-        .conversation(conversation)
-        .user(user)
-        .build();
-    final var messageResponseDto = messageMapper.messageToMessageResponseDto(messageRepository.save(message));
-
-    simpMessagingTemplate.convertAndSend("/topic/conversations/" + id + "/messages", messageResponseDto);
-
-    return messageResponseDto;
-  }
-
-  @Transactional
   public ConversationResponseDto cancel(Long id) {
     final var conversation = findById(id);
 
@@ -128,6 +109,31 @@ public class ConversationService {
     conversation.setOfferStatus(offerStatus);
 
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
+  }
+
+  @Transactional
+  public Page<MessageResponseDto> listMessages(Long id, Pageable pageable) {
+    final var messages = messageRepository.listMessages(id, pageable);
+    return messageMapper.messagePageToMessageResponseDtoPage(messages);
+  }
+
+  @Transactional
+  public MessageResponseDto sendMessage(Long id, MessageRequestDto messageRequestDto) {
+    final var conversation = this.findById(id);
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
+    final var user = userService.findById(userId);
+    final var message = Message.builder()
+        .message(messageRequestDto.message())
+        .conversation(conversation)
+        .user(user)
+        .build();
+    final var messageResponseDto = messageMapper.messageToMessageResponseDto(messageRepository.save(message));
+
+    simpMessagingTemplate.convertAndSend("/topic/conversations/" + id + "/messages", messageResponseDto);
+
+    return messageResponseDto;
   }
 
   private void validate(RequestedService requestedService, User serviceProvider, boolean alreadySubmittedAnOffer) {

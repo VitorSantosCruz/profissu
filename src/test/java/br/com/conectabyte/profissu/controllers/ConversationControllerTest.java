@@ -2,6 +2,7 @@ package br.com.conectabyte.profissu.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -150,5 +152,26 @@ class ConversationControllerTest {
         .content(objectMapper.writeValueAsString(messageRequestDto)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.message").value("Teste"));
+  }
+
+  @Test
+  @WithMockUser
+  void shouldListMessagesSuccessfully() throws Exception {
+    final var message1 = new MessageResponseDto(1L, "Teste 1", false, null);
+    final var message2 = new MessageResponseDto(2L, "Teste 2", false, null);
+    final var messages = new PageImpl<>(List.of(message1, message2));
+
+    when(conversationService.listMessages(any(), any())).thenReturn(messages);
+    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
+
+    mockMvc.perform(get("/conversations/1/messages")
+        .param("page", "0")
+        .param("size", "10")
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.content[0].message").value("Teste 1"))
+        .andExpect(jsonPath("$.content[1].message").value("Teste 2"));
   }
 }
