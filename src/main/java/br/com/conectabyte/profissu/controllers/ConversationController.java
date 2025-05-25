@@ -1,8 +1,12 @@
 package br.com.conectabyte.profissu.controllers;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +36,12 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Conversations", description = "Operations related to managing service offers and conversations")
 public class ConversationController {
   private final ConversationService conversationService;
+
+  @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @GetMapping("/{id}/messages")
+  public Page<MessageResponseDto> listMessages(@PathVariable Long id, @ParameterObject Pageable pageable) {
+    return this.conversationService.listMessages(id, pageable);
+  }
 
   @Operation(summary = "Make an offer for a requested service", description = "Allows a user to make an offer by opening a conversation related to a requested service.")
   @ApiResponses(value = {
