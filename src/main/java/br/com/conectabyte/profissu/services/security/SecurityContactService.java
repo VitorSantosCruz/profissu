@@ -15,6 +15,7 @@ public class SecurityContactService implements OwnerCheck {
   public boolean ownershipCheck(Long id) {
     try {
       final var contact = contactService.findById(id);
+
       return securityService.isOwner(contact.getUser().getId());
     } catch (Exception e) {
       return false;

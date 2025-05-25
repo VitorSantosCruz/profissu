@@ -15,6 +15,7 @@ public class SecurityRequestedServiceService implements OwnerCheck {
   public boolean ownershipCheck(Long id) {
     try {
       final var requestedService = requestedServiceService.findById(id);
+
       return securityService.isOwner(requestedService.getUser().getId());
     } catch (Exception e) {
       return false;
