@@ -15,6 +15,7 @@ public class SecurityConversationService implements OwnerCheck {
   public boolean ownershipCheck(Long id) {
     try {
       final var conversation = conversationService.findById(id);
+
       return securityService.isOwner(conversation.getServiceProvider().getId());
     } catch (Exception e) {
       return false;
@@ -24,6 +25,7 @@ public class SecurityConversationService implements OwnerCheck {
   public boolean requestedServiceOwner(Long id) {
     try {
       final var conversation = conversationService.findById(id);
+
       return securityService.isOwner(conversation.getRequester().getId());
     } catch (Exception e) {
       return false;

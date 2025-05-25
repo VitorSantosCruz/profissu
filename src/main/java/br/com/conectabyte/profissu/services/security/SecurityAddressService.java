@@ -15,6 +15,7 @@ public class SecurityAddressService implements OwnerCheck {
   public boolean ownershipCheck(Long id) {
     try {
       final var address = addressService.findById(id);
+
       return securityService.isOwner(address.getUser().getId());
     } catch (Exception e) {
       return false;
