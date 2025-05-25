@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,9 +36,6 @@ public class UserService {
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
   private final EmailService emailService;
   private final TokenService tokenService;
-
-  @Value("${profissu.url}")
-  private String profissuUrl;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
 

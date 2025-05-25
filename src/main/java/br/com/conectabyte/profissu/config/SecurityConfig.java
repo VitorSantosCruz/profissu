@@ -1,9 +1,7 @@
 package br.com.conectabyte.profissu.config;
 
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,20 +16,23 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-  @Value("${profissu.jwt.public-key-location}")
-  private RSAPublicKey publicKey;
-
-  @Value("${profissu.jwt.private-key-location}")
-  private RSAPrivateKey privateKey;
+  private final ProfissuProperties profissuProperties;
 
   private final String[] swaggerEndpoints = {
       "/swagger-ui/index.html",
@@ -53,11 +54,13 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
+        .cors(cors -> cors.configurationSource(this.corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
             .requestMatchers(HttpMethod.GET, swaggerEndpoints).permitAll()
             .requestMatchers(HttpMethod.GET, staticResources).permitAll()
+            .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -65,13 +68,26 @@ public class SecurityConfig {
   }
 
   @Bean
+  CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(profissuProperties.getProfissu().getAllowedOrigins());
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+  }
+
+  @Bean
   JwtDecoder jwtDecoder() {
-    return NimbusJwtDecoder.withPublicKey(this.publicKey).build();
+    return NimbusJwtDecoder.withPublicKey(profissuProperties.getProfissu().getJwt().getPublicKey()).build();
   }
 
   @Bean
   JwtEncoder jwtEncoder() {
-    var jwk = new RSAKey.Builder(this.publicKey).privateKey(this.privateKey).build();
+    var jwk = new RSAKey.Builder(profissuProperties.getProfissu().getJwt().getPublicKey())
+        .privateKey(profissuProperties.getProfissu().getJwt().getPrivateKey()).build();
     var jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
     return new NimbusJwtEncoder(jwks);
   }

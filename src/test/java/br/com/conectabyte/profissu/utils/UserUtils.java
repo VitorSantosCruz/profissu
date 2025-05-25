@@ -5,7 +5,7 @@ import br.com.conectabyte.profissu.enums.GenderEnum;
 
 public class UserUtils {
   public static User create() {
-    var user = new User();
+    final var user = new User();
 
     user.setName("Test Test");
     user.setBio("Bio");

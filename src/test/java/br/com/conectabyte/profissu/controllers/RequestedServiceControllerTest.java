@@ -30,13 +30,15 @@ import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.security.SecurityRequestedServiceService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ RequestedServiceController.class, SecurityService.class, SecurityRequestedServiceService.class })
+@WebMvcTest({ RequestedServiceController.class, SecurityService.class, SecurityRequestedServiceService.class,
+    ProfissuProperties.class })
 @Import(SecurityConfig.class)
 class RequestedServiceControllerTest {
   @MockitoBean

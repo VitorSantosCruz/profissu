@@ -24,6 +24,7 @@ import br.com.conectabyte.profissu.dtos.response.ContactResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ContactService;
 import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.services.security.SecurityContactService;
@@ -31,7 +32,7 @@ import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ ContactController.class, SecurityService.class, SecurityContactService.class })
+@WebMvcTest({ ContactController.class, SecurityService.class, SecurityContactService.class, ProfissuProperties.class })
 @Import(SecurityConfig.class)
 class ContactControllerTest {
   @Autowired

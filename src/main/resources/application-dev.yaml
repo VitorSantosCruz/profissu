@@ -10,4 +10,9 @@ server:
   port: 8081
 
 profissu:
+  jwt:
+    expires-in: 3600
   url: http://localhost:8081
+  allowed-origins:
+    - http://127.0.0.1:3000
+    - http://127.0.0.1:5500

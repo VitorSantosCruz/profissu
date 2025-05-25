@@ -36,6 +36,7 @@ import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ConversationService;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.UserService;
@@ -46,7 +47,7 @@ import br.com.conectabyte.profissu.utils.ConversationUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
-@WebMvcTest({ UserController.class, SecurityService.class })
+@WebMvcTest({ UserController.class, SecurityService.class, ProfissuProperties.class })
 @Import(SecurityConfig.class)
 public class UserControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
