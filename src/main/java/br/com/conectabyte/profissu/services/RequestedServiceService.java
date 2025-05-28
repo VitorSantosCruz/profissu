@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
+import br.com.conectabyte.profissu.dtos.request.TitleEmailDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.RequestedService;
@@ -15,6 +16,7 @@ import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationExcept
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.repositories.RequestedServiceRepository;
+import br.com.conectabyte.profissu.services.email.RequestedServiceCancellationNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class RequestedServiceService {
   private final RequestedServiceRepository requestedServiceRepository;
   private final UserService userService;
-  private final EmailService emailService;
+  private final RequestedServiceCancellationNotificationService requestedServiceCancellationNotificationService;
 
   private final RequestedServiceMapper requestedServiceMapper = RequestedServiceMapper.INSTANCE;
 
@@ -73,9 +75,8 @@ public class RequestedServiceService {
     requestedService.setStatus(RequestedServiceStatusEnum.CANCELLED);
     requestedService.getConversations().forEach(c -> c.getServiceProvider().getContacts().stream()
         .filter(Contact::isStandard)
-        .forEach(contact -> emailService.sendRequestedServiceCancellationNotification(
-            requestedService.getTitle(),
-            contact.getValue())));
+        .forEach(contact -> requestedServiceCancellationNotificationService
+            .send(new TitleEmailDto(requestedService.getTitle(), contact.getValue()))));
 
     final var updatedRequestedService = requestedServiceRepository.save(requestedService);
 

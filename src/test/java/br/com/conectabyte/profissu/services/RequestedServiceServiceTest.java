@@ -30,6 +30,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.repositories.RequestedServiceRepository;
+import br.com.conectabyte.profissu.services.email.RequestedServiceCancellationNotificationService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.ConversationUtils;
@@ -45,7 +46,7 @@ class RequestedServiceServiceTest {
   private UserService userService;
 
   @Mock
-  private EmailService emailService;
+  private RequestedServiceCancellationNotificationService requestedServiceCancellationNotificationService;
 
   @InjectMocks
   private RequestedServiceService requestedServiceService;
@@ -133,8 +134,8 @@ class RequestedServiceServiceTest {
     assertEquals(RequestedServiceStatusEnum.CANCELLED, result.status());
 
     verify(requestedServiceRepository).save(any());
-    verify(emailService, times(requestedService.getConversations().size()))
-        .sendRequestedServiceCancellationNotification(any(), any());
+    verify(requestedServiceCancellationNotificationService, times(requestedService.getConversations().size()))
+        .send(any());
   }
 
   @Test

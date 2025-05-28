@@ -24,6 +24,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.repositories.ContactRepository;
+import br.com.conectabyte.profissu.services.email.ContactConfirmationService;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -39,7 +40,7 @@ public class ContactServiceTest {
   private TokenService tokenService;
 
   @Mock
-  private EmailService emailService;
+  private ContactConfirmationService contactConfirmationService;
 
   @Mock
   private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -212,7 +213,7 @@ public class ContactServiceTest {
 
     assertEquals(savedContact.value(), "test@conectabyte.com.br");
 
-    verify(emailService).sendContactConfirmation(any(), any());
+    verify(contactConfirmationService).send(any());
   }
 
   @Test
@@ -220,7 +221,7 @@ public class ContactServiceTest {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
     final var validRequest = contactMapper.contactToContactRequestDto(contact);
-    
+
     contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
@@ -232,7 +233,7 @@ public class ContactServiceTest {
   void shouldUpdateContactAndSendVerificationEmailWhenValueIsChangedToEmail() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    
+
     contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
@@ -245,6 +246,6 @@ public class ContactServiceTest {
     assertEquals(true, updatedContact.standard());
 
     verify(tokenService).save(any(), any(), any());
-    verify(emailService).sendContactConfirmation(any(), any());
+    verify(contactConfirmationService).send(any());
   }
 }

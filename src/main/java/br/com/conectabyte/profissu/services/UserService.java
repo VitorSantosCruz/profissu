@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.dtos.request.EmailCodeDto;
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
@@ -23,6 +24,8 @@ import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
+import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
+import br.com.conectabyte.profissu.services.email.SignUpConfirmationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +37,8 @@ public class UserService {
   private final UserRepository userRepository;
   private final RoleService roleService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
-  private final EmailService emailService;
+  private final PasswordRecoveryEmailService passwordRecoveryEmailService;
+  private final SignUpConfirmationService signUpConfirmationService;
   private final TokenService tokenService;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
@@ -79,7 +83,7 @@ public class UserService {
     final var code = UUID.randomUUID().toString().split("-")[1];
 
     this.tokenService.save(savedUser, code, bCryptPasswordEncoder);
-    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), code);
+    this.signUpConfirmationService.send(new EmailCodeDto(userDto.contacts().get(0).value(), code));
 
     return userMapper.userToUserResponseDto(savedUser);
   }
@@ -128,9 +132,9 @@ public class UserService {
     if (isSignUp) {
       user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
           .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
-      emailService.sendSignUpConfirmation(email, code);
+      signUpConfirmationService.send(new EmailCodeDto(email, code));
     } else {
-      emailService.sendPasswordRecoveryEmail(email, code);
+      passwordRecoveryEmailService.send(new EmailCodeDto(email, code));
     }
   }
 
