@@ -1,8 +1,12 @@
 package br.com.conectabyte.profissu.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.repositories.MessageRepository;
@@ -26,5 +30,9 @@ public class MessageService {
 
     message.setRead(true);
     messageRepository.save(message);
+  }
+
+  public List<Conversation> findConversationsWithUnreadMessages(LocalDateTime thresholdDate) {
+    return messageRepository.findConversationsWithUnreadMessages(thresholdDate);
   }
 }
