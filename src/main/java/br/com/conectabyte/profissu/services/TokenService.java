@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.repositories.TokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TokenService {
   private final TokenRepository tokenRepository;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final ProfissuProperties profissuProperties;
 
   public Token save(Token token) {
     return this.tokenRepository.save(token);
@@ -66,7 +68,8 @@ public class TokenService {
       return "Reset code is invalid.";
     }
 
-    final var isExpiredToken = token.getCreatedAt().plusMinutes(1).isBefore(LocalDateTime.now());
+    final var expiresIn = profissuProperties.getProfissu().getToken().getExpiresIn();
+    final var isExpiredToken = token.getCreatedAt().plusMinutes(expiresIn).isBefore(LocalDateTime.now());
 
     if (isExpiredToken) {
       log.warn("Reset code is expired.");

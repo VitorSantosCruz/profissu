@@ -111,7 +111,7 @@ public class UserService {
     }
 
     final var userIsVerified = user.getContacts().stream()
-        .filter(c -> c.isStandard())
+        .filter(c -> c.getValue().equals(email))
         .filter(c -> c.getVerificationCompletedAt() != null)
         .findFirst()
         .isPresent();
@@ -130,8 +130,6 @@ public class UserService {
     this.tokenService.save(user, code, bCryptPasswordEncoder);
 
     if (isSignUp) {
-      user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
-          .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
       signUpConfirmationService.send(new EmailCodeDto(email, code));
     } else {
       passwordRecoveryEmailService.send(new EmailCodeDto(email, code));

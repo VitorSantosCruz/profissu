@@ -54,6 +54,8 @@ profissu:
     expires-in: 300
     private-key-location: classpath:profissu.key
     public-key-location: classpath:profissu.pub
+  token:
+    expires-in: 60
   url: https://profissu-api.conectabyte.com.br
   allowed-origins:
     - https://conectabyte.com.br
