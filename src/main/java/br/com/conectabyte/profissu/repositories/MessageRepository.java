@@ -18,7 +18,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
   @Query("""
       SELECT m.conversation
       FROM Message m
-      WHERE m.read IS FALSE AND m.createdAt < :thresholdDate
+      WHERE m.read IS FALSE AND m.notificationSent IS FALSE AND m.createdAt < :thresholdDate
       """)
   List<Conversation> findConversationsWithUnreadMessages(LocalDateTime thresholdDate);
 }

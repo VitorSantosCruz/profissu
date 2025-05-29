@@ -44,7 +44,7 @@ public class MessageScheduler {
       LocalDateTime thresholdDate) {
     final var messagesReaded = messages.stream()
         .filter(m -> conversation.getId() == m.getConversation().getId())
-        .filter(m -> !m.isRead())
+        .filter(m -> !m.isRead() && !m.isNotificationSent())
         .filter(m -> m.getCreatedAt().isBefore(thresholdDate))
         .map(m -> {
           m.setNotificationSent(true);
