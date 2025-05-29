@@ -21,7 +21,7 @@ public class MessageScheduler {
 
   @Scheduled(initialDelay = 0, fixedRate = 600000)
   @Transactional
-  public void teste() {
+  public void notifyUnreadMessages() {
     final var thresholdDate = LocalDateTime.now().minusMinutes(5);
     final var conversationsWithUnreadMessages = messageService.findConversationsWithUnreadMessages(thresholdDate);
 
@@ -43,7 +43,7 @@ public class MessageScheduler {
         .filter(m -> !m.isRead())
         .filter(m -> m.getCreatedAt().isBefore(thresholdDate))
         .map(m -> {
-          m.setRead(true);
+          m.setNotificationSent(true);
           return m;
         })
         .collect(Collectors.toList());

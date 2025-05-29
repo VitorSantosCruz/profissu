@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: "202502160302"
+      author: VCruz
+      changes:
+        - createTable:
+            tableName: contacts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: value
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: standard
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verification_requested_at
+                  type: TIMESTAMP
+              - column:
+                  name: verification_completed_at
+                  type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_contacts_user_id
+                    foreignKey: true
+                    references: users(id)

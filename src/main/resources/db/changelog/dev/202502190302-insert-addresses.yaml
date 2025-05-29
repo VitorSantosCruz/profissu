@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: "202502190302"
+      author: VCruz
+      context: dev
+      changes:
+        - insert:
+            tableName: addresses
+            columns:
+              - column:
+                  name: street
+                  value: "123 Main St"
+              - column:
+                  name: number
+                  value: "101"
+              - column:
+                  name: city
+                  value: "Springfield"
+              - column:
+                  name: state
+                  value: "IL"
+              - column:
+                  name: zip_code
+                  value: "62701"
+              - column:
+                  name: user_id
+                  value: "1"
