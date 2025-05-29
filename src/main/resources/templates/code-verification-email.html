@@ -79,7 +79,7 @@
     <h1 th:text="${emailTitle}"></h1>
     <p>Hello,</p>
     <p th:text="${emailMessage}"></p>
-    <div class="code-container">
+    <div class="code-container" th:if="${code != null}">
       <span th:text="${code}"></span>
     </div>
     <p th:text="${footerMessage}"></p>

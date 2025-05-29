@@ -32,7 +32,7 @@
 
     h1 {
       font-family: 'Quicksand', sans-serif;
-      color: #E84545;
+      color: #e8b445;
       font-size: 36px;
       margin: 20px 0;
       letter-spacing: 1px;
@@ -46,10 +46,10 @@
     }
 
     .alert {
-      background-color: #FFE5E5;
+      background-color: #ffe9ba;
       padding: 15px;
       border-radius: 5px;
-      color: #E84545;
+      color: #e8b445;
       font-weight: bold;
       margin-bottom: 20px;
     }
@@ -74,13 +74,14 @@
 <body>
   <div class="container">
     <img th:src="${profissuLogoUrl}" alt="Profisu Logo" class="logo">
-    <h1>Service Request Cancellation</h1>
+    <h1>Notification</h1>
     <p>Hello,</p>
-    <p>The service request you made an offer for has been canceled.</p>
-    <div class="alert" th:if="${serviceName != null}">
-      <p th:text="${serviceName}"></p>
+    <p>
+      This is a notification regarding your recent activity on Profisu.
+    </p>
+    <div class="alert" th:if="${notification != null}">
+      <p th:text="${notification}"></p>
     </div>
-    <p>We apologize for the inconvenience and hope to see you in future opportunities.</p>
     <div class="footer">
       <p>&copy; 2025 Conecta Byte. All rights reserved.</p>
       <p>Need help? <a href="mailto:support@conectabyte.com.br">Contact our support</a></p>
