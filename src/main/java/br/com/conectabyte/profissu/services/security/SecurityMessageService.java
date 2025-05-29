@@ -32,7 +32,7 @@ public class SecurityMessageService implements OwnerCheck {
     }
   }
 
-  public boolean messageReciver(Long id) {
+  public boolean messageReceiver(Long id) {
     try {
       final var message = messageService.findById(id);
 

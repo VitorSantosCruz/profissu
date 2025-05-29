@@ -7,10 +7,13 @@ import java.util.stream.Collectors;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.dtos.request.NotificationEmailDto;
+import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.services.MessageService;
+import br.com.conectabyte.profissu.services.email.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MessageScheduler {
   private final MessageService messageService;
+  private final NotificationService notificationService;
 
   @Scheduled(initialDelay = 0, fixedRate = 600000)
   @Transactional
@@ -26,7 +30,7 @@ public class MessageScheduler {
     final var conversationsWithUnreadMessages = messageService.findConversationsWithUnreadMessages(thresholdDate);
 
     conversationsWithUnreadMessages.forEach(c -> {
-      final var requester = c.getRequestedService().getUser();
+      final var requester = c.getRequester();
       final var serviceProvider = c.getServiceProvider();
       final var requesterMessages = requester.getMessages();
       final var serviceProviderMessages = serviceProvider.getMessages();
@@ -36,7 +40,7 @@ public class MessageScheduler {
     });
   }
 
-  private void proprocessMessages(List<Message> messages, Conversation conversation, User reciver,
+  private void proprocessMessages(List<Message> messages, Conversation conversation, User receiver,
       LocalDateTime thresholdDate) {
     final var messagesReaded = messages.stream()
         .filter(m -> conversation.getId() == m.getConversation().getId())
@@ -48,7 +52,18 @@ public class MessageScheduler {
         })
         .collect(Collectors.toList());
 
-    System.out.println(messagesReaded.size() > 0 ? reciver.getName() + ", " + messages.get(0).getUser().getName()
-        + " te enviou uma mensagem sobre " + conversation.getRequestedService().getTitle() : "Olá");
+    if (messagesReaded.size() > 0) {
+      receiver.getContacts().stream()
+          .filter(Contact::isStandard)
+          .forEach(contact -> {
+            String notification = String.format(
+                "%s, %s sent you a message about %s.",
+                receiver.getName(),
+                messages.get(0).getUser().getName(),
+                conversation.getRequestedService().getTitle());
+
+            notificationService.send(new NotificationEmailDto(notification, contact.getValue()));
+          });
+    }
   }
 }
