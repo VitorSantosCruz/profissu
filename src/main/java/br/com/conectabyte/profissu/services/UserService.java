@@ -26,6 +26,7 @@ import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
 import br.com.conectabyte.profissu.services.email.SignUpConfirmationService;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class UserService {
   private final PasswordRecoveryEmailService passwordRecoveryEmailService;
   private final SignUpConfirmationService signUpConfirmationService;
   private final TokenService tokenService;
+  private final EntityManager entityManager;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
@@ -127,6 +129,9 @@ public class UserService {
     }
 
     final var code = UUID.randomUUID().toString().split("-")[1];
+
+    this.tokenService.deleteByUser(user);
+    entityManager.flush();
     this.tokenService.save(user, code, bCryptPasswordEncoder);
 
     if (isSignUp) {
@@ -136,6 +141,7 @@ public class UserService {
     }
   }
 
+  @Transactional
   public MessageValueResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
     final var email = resetPasswordRequestDto.email();
     User user = null;
@@ -160,6 +166,7 @@ public class UserService {
   }
 
   @Async
+  @Transactional
   public void deleteById(Long id) {
     final var optionalUser = this.userRepository.findById(id);
 

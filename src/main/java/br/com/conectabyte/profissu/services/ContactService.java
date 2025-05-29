@@ -18,6 +18,7 @@ import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.repositories.ContactRepository;
 import br.com.conectabyte.profissu.services.email.ContactConfirmationService;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class ContactService {
   private final TokenService tokenService;
   private final ContactConfirmationService contactConfirmationService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final EntityManager entityManager;
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
 
@@ -44,6 +46,8 @@ public class ContactService {
 
     final var code = UUID.randomUUID().toString().split("-")[1];
 
+    this.tokenService.deleteByUser(user);
+    entityManager.flush();
     this.tokenService.save(user, code, bCryptPasswordEncoder);
     this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
 
@@ -69,6 +73,8 @@ public class ContactService {
       contact.setVerificationRequestedAt(LocalDateTime.now());
       contact.setVerificationCompletedAt(null);
 
+      this.tokenService.deleteByUser(contact.getUser());
+      entityManager.flush();
       this.tokenService.save(contact.getUser(), code, bCryptPasswordEncoder);
       this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
     }
