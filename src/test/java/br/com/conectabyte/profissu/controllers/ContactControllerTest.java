@@ -54,8 +54,6 @@ class ContactControllerTest {
   private ObjectMapper objectMapper;
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
-  private final Long userId = 1L;
-  private final Long contactId = 1L;
   private final Contact contact = ContactUtils.create(UserUtils.create());
   private final ContactRequestDto validRequest = contactMapper.contactToContactRequestDto(contact);
   private final ContactResponseDto responseDto = contactMapper.contactToContactResponseDto(contact);
@@ -67,7 +65,8 @@ class ContactControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
-    mockMvc.perform(post("/contacts?userId={userId}", userId)
+    mockMvc.perform(post("/contacts")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isCreated())
@@ -80,7 +79,8 @@ class ContactControllerTest {
     final var invalidRequest = new ContactRequestDto("invalidEmail", false);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(post("/contacts?userId={userId}", userId)
+    mockMvc.perform(post("/contacts")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidRequest)))
         .andExpect(status().isBadRequest())
@@ -89,7 +89,8 @@ class ContactControllerTest {
 
   @Test
   void shouldReturnUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
-    mockMvc.perform(post("/contacts?userId={userId}", userId)
+    mockMvc.perform(post("/contacts")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isUnauthorized());
@@ -102,7 +103,8 @@ class ContactControllerTest {
     when(securityService.isAdmin()).thenReturn(false);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
-    mockMvc.perform(post("/contacts?userId={userId}", userId)
+    mockMvc.perform(post("/contacts")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isForbidden())
@@ -115,7 +117,7 @@ class ContactControllerTest {
     when(contactService.update(any(), any())).thenReturn(responseDto);
     when(securityContactService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(put("/contacts/{id}", contactId)
+    mockMvc.perform(put("/contacts/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isOk())
@@ -128,7 +130,7 @@ class ContactControllerTest {
     when(contactService.update(any(), any())).thenThrow(new ResourceNotFoundException("Contact not found"));
     when(securityContactService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(put("/contacts/{id}", contactId)
+    mockMvc.perform(put("/contacts/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isNotFound())
@@ -138,7 +140,8 @@ class ContactControllerTest {
   @Test
   @WithMockUser
   void shouldReturnBadRequestForMalformedJson() throws Exception {
-    mockMvc.perform(post("/contacts?userId={userId}", userId)
+    mockMvc.perform(post("/contacts")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content("{invalidJson}"))
         .andExpect(status().isBadRequest())

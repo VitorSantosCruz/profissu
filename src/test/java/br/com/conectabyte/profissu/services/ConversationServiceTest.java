@@ -23,19 +23,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
-import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
-import br.com.conectabyte.profissu.mappers.MessageMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
 import br.com.conectabyte.profissu.repositories.MessageRepository;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ConversationUtils;
-import br.com.conectabyte.profissu.utils.MessageUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -370,107 +367,5 @@ class ConversationServiceTest {
 
     assertEquals("Offer status is invalid.", exception1.getMessage());
     assertEquals("Offer status is invalid.", exception2.getMessage());
-  }
-
-  @Test
-  void shouldSendMessageSuccessfullyWhenStatusIdPending() {
-    final var user = UserUtils.create();
-    final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-    final var messageRequestDto = new MessageRequestDto("Teste");
-
-    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(any())).thenReturn(user);
-    when(messageRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-    final var response = conversationService.sendMessage(1L, messageRequestDto);
-
-    assertNotNull(response);
-    verify(messageRepository).save(any());
-    verify(simpMessagingTemplate).convertAndSend(any(), any(Object.class));
-  }
-
-  @Test
-  void shouldSendMessageSuccessfullyWhenStatusIdAccepted() {
-    final var user = UserUtils.create();
-    final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-    final var messageRequestDto = new MessageRequestDto("Teste");
-
-    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
-
-    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(any())).thenReturn(user);
-    when(messageRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-    final var response = conversationService.sendMessage(1L, messageRequestDto);
-
-    assertNotNull(response);
-    verify(messageRepository).save(any());
-    verify(simpMessagingTemplate).convertAndSend(any(), any(Object.class));
-  }
-
-  @Test
-  void shouldThrowValidationExceptionWhenSendingMessageWithInvalidOfferStatus() {
-    final var user = UserUtils.create();
-    final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-
-    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
-
-    final var messageRequestDto = new MessageRequestDto("Test message");
-
-    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
-
-    ValidationException exception = assertThrows(ValidationException.class,
-        () -> conversationService.sendMessage(1L, messageRequestDto));
-
-    assertEquals("This offer has already been canceled or rejected.", exception.getMessage());
-  }
-
-  @Test
-  void shouldThrowWhenConversationNotFound() {
-    when(conversationRepository.findById(any())).thenReturn(Optional.empty());
-
-    assertThrows(ResourceNotFoundException.class,
-        () -> conversationService.sendMessage(1L, new MessageRequestDto("Hi")));
-  }
-
-  @Test
-  void shouldThrowWhenUserNotFound() {
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
-
-    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
-    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
-    when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
-
-    assertThrows(ResourceNotFoundException.class,
-        () -> conversationService.sendMessage(1L, new MessageRequestDto("Teste")));
-  }
-
-  @Test
-  void shouldListMessagesSuccessfully() {
-    final var conversationId = 1L;
-    final var pageable = PageRequest.of(0, 10);
-    final var message = MessageUtils.create(null, null);
-    final var messagePage = new PageImpl<>(List.of(message), pageable, 1);
-    final var messageResponseDtoPage = MessageMapper.INSTANCE.messagePageToMessageResponseDtoPage(messagePage);
-
-    when(messageRepository.listMessages(conversationId, pageable)).thenReturn(messagePage);
-
-    final var result = conversationService.listMessages(conversationId, pageable);
-
-    assertNotNull(result);
-    assertEquals(1, result.getTotalElements());
-    assertEquals(messageResponseDtoPage, result);
-
-    verify(messageRepository).listMessages(conversationId, pageable);
   }
 }

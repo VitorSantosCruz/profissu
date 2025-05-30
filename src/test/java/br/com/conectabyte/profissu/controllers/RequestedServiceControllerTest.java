@@ -70,7 +70,8 @@ class RequestedServiceControllerTest {
 
     when(requestedServiceService.findByUserId(any(), any())).thenReturn(page);
 
-    mockMvc.perform(get("/requested-services/by-user?userId={userId}", 1L)
+    mockMvc.perform(get("/requested-services/by-user")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())
@@ -111,7 +112,8 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
 
-    mockMvc.perform(post("/requested-services?userId={userId}", 0)
+    mockMvc.perform(post("/requested-services")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isCreated())
@@ -129,7 +131,8 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenThrow(new ResourceNotFoundException("User not found."));
 
-    mockMvc.perform(post("/requested-services?userId={userId}", 0)
+    mockMvc.perform(post("/requested-services")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isNotFound())
@@ -141,7 +144,8 @@ class RequestedServiceControllerTest {
   void shouldReturnBadRequestForInvalidInput() throws Exception {
     final var requestedServiceRequestDto = new RequestedServiceRequestDto("", "", null);
 
-    mockMvc.perform(post("/requested-services?userId={userId}", 1L)
+    mockMvc.perform(post("/requested-services")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isBadRequest());

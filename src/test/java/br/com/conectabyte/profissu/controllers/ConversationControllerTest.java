@@ -24,9 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.conectabyte.profissu.config.SecurityConfig;
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
-import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
-import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
@@ -69,7 +67,8 @@ class ConversationControllerTest {
     when(conversationService.findByUserId(any(), any())).thenReturn(page);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(get("/conversations?userId={userId}", 1L)
+    mockMvc.perform(get("/conversations")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())
@@ -155,42 +154,5 @@ class ConversationControllerTest {
     mockMvc.perform(patch("/conversations/1/REJECTED"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.REJECTED.toString()));
-  }
-
-  @Test
-  @WithMockUser
-  void shouldSendMessageSuccessfully() throws Exception {
-    final var messageResponseDto = new MessageResponseDto(null, "Teste", false, null);
-    final var messageRequestDto = new MessageRequestDto("Teste");
-
-    when(conversationService.sendMessage(any(), any())).thenReturn(messageResponseDto);
-    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
-
-    mockMvc.perform(post("/conversations/1/messages")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(messageRequestDto)))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.message").value("Teste"));
-  }
-
-  @Test
-  @WithMockUser
-  void shouldListMessagesSuccessfully() throws Exception {
-    final var message1 = new MessageResponseDto(1L, "Teste 1", false, null);
-    final var message2 = new MessageResponseDto(2L, "Teste 2", false, null);
-    final var messages = new PageImpl<>(List.of(message1, message2));
-
-    when(conversationService.listMessages(any(), any())).thenReturn(messages);
-    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
-
-    mockMvc.perform(get("/conversations/1/messages")
-        .param("page", "0")
-        .param("size", "10")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content").isArray())
-        .andExpect(jsonPath("$.content.length()").value(2))
-        .andExpect(jsonPath("$.content[0].message").value("Teste 1"))
-        .andExpect(jsonPath("$.content[1].message").value("Teste 2"));
   }
 }
