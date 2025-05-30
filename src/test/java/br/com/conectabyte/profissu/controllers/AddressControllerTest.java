@@ -56,7 +56,7 @@ class AddressControllerTest {
 
   @Test
   @WithMockUser
-  void shouldRegisterAddressWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldRegisterAddressWhenUserIsOwner() throws Exception {
     when(addressService.register(any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
 
@@ -91,7 +91,7 @@ class AddressControllerTest {
 
   @Test
   @WithMockUser
-  void shouldUpdateAddressWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldUpdateAddressWhenUserIsOwner() throws Exception {
     when(addressService.update(any(), any())).thenReturn(responseDto);
     when(securityAddressService.ownershipCheck(any())).thenReturn(true);
 

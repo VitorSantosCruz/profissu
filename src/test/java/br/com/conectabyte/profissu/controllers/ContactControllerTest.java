@@ -60,7 +60,7 @@ class ContactControllerTest {
 
   @Test
   @WithMockUser
-  void shouldRegisterContactWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldRegisterContactWhenUserIsOwner() throws Exception {
     when(contactService.register(any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
@@ -98,7 +98,7 @@ class ContactControllerTest {
 
   @Test
   @WithMockUser
-  void shouldUpdateContactWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldUpdateContactWhenUserIsOwner() throws Exception {
     when(contactService.update(any(), any())).thenReturn(responseDto);
     when(securityContactService.ownershipCheck(any())).thenReturn(true);
 

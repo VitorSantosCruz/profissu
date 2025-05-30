@@ -80,7 +80,7 @@ public class ConversationController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityConversationService.requestedServiceOwner(#id)")
+  @PreAuthorize("@securityConversationService.isRequestedServiceOwner(#id)")
   @PatchMapping("/{id}/{offerStatus}")
   public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id,
       @PathVariable OfferStatusEnum offerStatus) {

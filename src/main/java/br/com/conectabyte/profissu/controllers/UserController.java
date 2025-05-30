@@ -70,7 +70,7 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PatchMapping("/{id}/password")
+  @PatchMapping("/password")
   public ResponseEntity<Void> updatePassword(@Valid @RequestBody PasswordRequestDto passwordRequestDto) {
     this.userService.updatePassword(passwordRequestDto);
     return ResponseEntity.noContent().build();

@@ -130,7 +130,7 @@ class ConversationControllerTest {
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
     when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.requestedServiceOwner(any())).thenReturn(true);
+    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/ACCEPTED"))
         .andExpect(status().isOk())
@@ -149,7 +149,7 @@ class ConversationControllerTest {
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
     when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.requestedServiceOwner(any())).thenReturn(true);
+    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/REJECTED"))
         .andExpect(status().isOk())

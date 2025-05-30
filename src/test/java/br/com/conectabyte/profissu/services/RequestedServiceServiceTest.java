@@ -9,7 +9,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,9 @@ class RequestedServiceServiceTest {
   @Mock
   private RequestedServiceCancellationNotificationService requestedServiceCancellationNotificationService;
 
+  @Mock
+  private JwtService jwtService;
+
   @InjectMocks
   private RequestedServiceService requestedServiceService;
 
@@ -79,10 +84,11 @@ class RequestedServiceServiceTest {
 
     requestedService.setUser(user);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(any())).thenReturn(user);
     when(requestedServiceRepository.save(any())).thenReturn(requestedService);
 
-    final var result = requestedServiceService.register(user.getId(), requestedServiceRequestDto);
+    final var result = requestedServiceService.register(requestedServiceRequestDto);
 
     assertNotNull(result);
     assertEquals("Title", result.title());
@@ -90,13 +96,13 @@ class RequestedServiceServiceTest {
 
   @Test
   void shouldThrowExceptionWhenUserNotFound() {
-    final var userId = 1L;
     final var requestDto = new RequestedServiceRequestDto("Title", "Description", null);
 
-    when(userService.findById(userId)).thenThrow(new ResourceNotFoundException("User not found."));
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
+    when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
     Exception exception = assertThrows(ResourceNotFoundException.class,
-        () -> requestedServiceService.register(userId, requestDto));
+        () -> requestedServiceService.register(requestDto));
     assertEquals("User not found.", exception.getMessage());
   }
 

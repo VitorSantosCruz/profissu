@@ -30,13 +30,13 @@ class SecurityMessageServiceTest {
   private SecurityMessageService securityMessageService;
 
   @Test
-  void shouldReturnTrueWhenUserIsOwnerOfServiceProvider() {
+  void shouldReturnTrueWhenUserIsOwnerOfMessage() {
     final var user = UserUtils.create();
 
     user.setId(1L);
 
-    final var conversation = ConversationUtils.create(null, user, null, null);
-    final var message = MessageUtils.create(null, conversation);
+    final var conversation = ConversationUtils.create(null, null, null, null);
+    final var message = MessageUtils.create(user, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(true);
@@ -47,13 +47,13 @@ class SecurityMessageServiceTest {
   }
 
   @Test
-  void shouldReturnFalseWhenUserIsNotOwnerOfServiceProvider() {
+  void shouldReturnFalseWhenUserIsNotOwnerOfMessage() {
     final var user = UserUtils.create();
 
     user.setId(1L);
 
-    final var conversation = ConversationUtils.create(user, null, null, null);
-    final var message = MessageUtils.create(null, conversation);
+    final var conversation = ConversationUtils.create(null, null, null, null);
+    final var message = MessageUtils.create(user, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
 
@@ -72,76 +72,39 @@ class SecurityMessageServiceTest {
   }
 
   @Test
-  void shouldReturnTrueWhenUserIsOwnerOfRequestedService() {
-    final var user = UserUtils.create();
+  void shouldReturnTrueWhenUserIsNotTheMessageOwner() {
+    final var messageOwner = UserUtils.create();
+    final var messageReciver = UserUtils.create();
 
-    user.setId(1L);
+    messageOwner.setId(1L);
+    messageReciver.setId(2L);
 
-    final var conversation = ConversationUtils.create(user, null, null, null);
-    final var message = MessageUtils.create(null, conversation);
-
-    when(messageService.findById(any())).thenReturn(message);
-    when(securityService.isOwner(any())).thenReturn(true);
-
-    final var isOwner = securityMessageService.requestedServiceOwner(1L);
-
-    assertTrue(isOwner);
-  }
-
-  @Test
-  void shouldReturnFalseWhenUserIsNotOwnerOfRequestedService() {
-    final var user = UserUtils.create();
-
-    user.setId(1L);
-
-    final var conversation = ConversationUtils.create(user, null, null, null);
-    final var message = MessageUtils.create(null, conversation);
+    final var conversation = ConversationUtils.create(messageOwner, messageReciver, null, null);
+    final var message = MessageUtils.create(messageOwner, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(false);
 
-    final var isOwner = securityMessageService.requestedServiceOwner(1L);
-
-    assertFalse(isOwner);
-  }
-
-  @Test
-  void shouldReturnFalseWhenMessageNotFoundInRequestedServiceOwner() {
-    when(messageService.findById(any())).thenThrow(new ResourceNotFoundException("Message not found"));
-
-    final var isOwner = securityMessageService.requestedServiceOwner(1L);
-
-    assertFalse(isOwner);
-  }
-
-  @Test
-  void shouldReturnTrueWhenUserIsNotTheMessageReceiver() {
-    final var user = UserUtils.create();
-
-    user.setId(1L);
-
-    final var message = MessageUtils.create(user, null);
-
-    when(messageService.findById(any())).thenReturn(message);
-    when(securityService.isOwner(any())).thenReturn(false);
-
-    final var isReceiver = securityMessageService.messageReceiver(1L);
+    final var isReceiver = securityMessageService.isMessageReceiver(1L);
 
     assertTrue(isReceiver);
   }
 
   @Test
   void shouldReturnFalseWhenUserIsTheMessageReceiver() {
-    final var user = UserUtils.create();
+    final var messageOwner = UserUtils.create();
+    final var messageReciver = UserUtils.create();
 
-    user.setId(1L);
+    messageOwner.setId(1L);
+    messageReciver.setId(2L);
 
-    final var message = MessageUtils.create(user, null);
+    final var conversation = ConversationUtils.create(messageOwner, messageReciver, null, null);
+    final var message = MessageUtils.create(messageOwner, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    final var isReceiver = securityMessageService.messageReceiver(1L);
+    final var isReceiver = securityMessageService.isMessageReceiver(1L);
 
     assertFalse(isReceiver);
   }
@@ -150,7 +113,7 @@ class SecurityMessageServiceTest {
   void shouldReturnFalseWhenMessageNotFoundInMessageReceiver() {
     when(messageService.findById(any())).thenThrow(new ResourceNotFoundException("Message not found"));
 
-    final var isReceiver = securityMessageService.messageReceiver(1L);
+    final var isReceiver = securityMessageService.isMessageReceiver(1L);
 
     assertFalse(isReceiver);
   }

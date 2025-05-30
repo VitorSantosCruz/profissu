@@ -10,7 +10,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,9 @@ public class UserServiceTest {
 
   @Mock
   private RoleService roleService;
+
+  @Mock
+  private JwtService jwtService;
 
   @InjectMocks
   private UserService userService;
@@ -278,12 +283,13 @@ public class UserServiceTest {
   void shouldUpdatePasswordWhenDataIsValid() {
     final var user = UserUtils.create();
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userRepository.findById(any())).thenReturn(Optional.of(user));
     when(this.userRepository.save(any())).thenReturn(user);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
     when(bCryptPasswordEncoder.encode(any())).thenReturn("encoded");
 
-    userService.updatePassword(1L, new PasswordRequestDto("currentPassword", "newPassword"));
+    userService.updatePassword(new PasswordRequestDto("currentPassword", "newPassword"));
 
     verify(userRepository, times(1)).save(user);
   }
@@ -291,10 +297,12 @@ public class UserServiceTest {
   @Test
   void shouldThrowsExceptionWhenUserNotFound() {
     final var passwordRequestDto = new PasswordRequestDto("currentPassword", "newPassword");
+
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userRepository.findById(any())).thenReturn(Optional.empty());
 
     final var exceptionMessage = assertThrows(ResourceNotFoundException.class,
-        () -> userService.updatePassword(1L, passwordRequestDto));
+        () -> userService.updatePassword(passwordRequestDto));
 
     assertEquals("User not found.", exceptionMessage.getMessage());
 
@@ -307,11 +315,12 @@ public class UserServiceTest {
   void shouldThrowsExceptionWhenCurrentPasswordNotMatches() {
     final var passwordRequestDto = new PasswordRequestDto("currentPassword", "newPassword");
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userRepository.findById(any())).thenReturn(Optional.of(UserUtils.create()));
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
 
     final var exceptionMessage = assertThrows(BadCredentialsException.class,
-        () -> userService.updatePassword(1L, passwordRequestDto));
+        () -> userService.updatePassword(passwordRequestDto));
 
     assertEquals("Current password is not valid.", exceptionMessage.getMessage());
 
@@ -350,10 +359,11 @@ public class UserServiceTest {
     final var newGender = GenderEnum.FEMALE;
     final var profileRequestDto = new ProfileRequestDto(newName, newBio, newGender);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(userRepository.save(user)).thenReturn(user);
 
-    final var result = userService.update(1L, profileRequestDto);
+    final var result = userService.update(profileRequestDto);
 
     assertEquals(userMapper.userToUserResponseDto(user), result);
 
@@ -362,15 +372,16 @@ public class UserServiceTest {
 
   @Test
   void shouldBeThrowResourceNotFoundExceptionWhenUserNotExists() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
     final var newName = "New Name";
     final var newBio = "New Bio";
     final var newGender = GenderEnum.FEMALE;
     final var profileRequestDto = new ProfileRequestDto(newName, newBio, newGender);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
     final var exception = assertThrows(ResourceNotFoundException.class, () -> {
-      userService.update(1L, profileRequestDto);
+      userService.update(profileRequestDto);
     });
 
     assertEquals("User not found.", exception.getMessage());

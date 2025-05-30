@@ -124,10 +124,10 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "@newPassword123";
 
-    doNothing().when(userService).updatePassword(any(), any());
+    doNothing().when(userService).updatePassword(any());
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -139,10 +139,10 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "@newPassword123";
 
-    doNothing().when(userService).updatePassword(any(), any());
+    doNothing().when(userService).updatePassword(any());
     when(securityService.isAdmin()).thenReturn(true);
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -150,22 +150,10 @@ public class UserControllerTest {
 
   @Test
   @WithMockUser
-  void shouldRejectUpdatePasswordRequestWhenUserIsNeitherAdminNorOwner() throws Exception {
-    final var currentPassword = "currentPassword";
-    final var newPassword = "@newPassword123";
-
-    mockMvc.perform(patch("/users/1/password")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  @WithMockUser
   void shouldRejectUpdatePasswordRequestWhenCurrentPasswordIsNotValid() throws Exception {
     final var newPassword = "newPassword";
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(null, newPassword))))
         .andExpect(status().isBadRequest());
@@ -177,7 +165,7 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "newPassword";
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isBadRequest());
@@ -185,7 +173,7 @@ public class UserControllerTest {
 
   @Test
   @WithMockUser
-  void shouldUpdateUserProfileWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldUpdateUserProfileWhenUserIsOwner() throws Exception {
     final var userId = 1L;
     final var user = UserUtils.create();
     final var newName = "New Name";
@@ -196,10 +184,10 @@ public class UserControllerTest {
     final var addresses = List.of(addressMapper.addressToAddressResponseDto(AddressUtils.create(user)));
     final var updatedUser = new UserResponseDto(userId, newName, newBio, newGender, contacts, addresses);
 
-    when(userService.update(any(), any())).thenReturn(updatedUser);
+    when(userService.update(any())).thenReturn(updatedUser);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(profileRequestDto)))
         .andExpect(status().isOk())
@@ -211,10 +199,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenNameIsInvalid() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto("Abc", "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -224,10 +211,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenNameIsEmpty() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto(null, "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -237,10 +223,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenGenderIsNull() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", null);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -250,10 +235,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenJsonIsMalformed() throws Exception {
-    final var userId = 1L;
     final var malformedJson = "{ \"name\": \"Valid Name\", \"bio\": \"Valid bio\", \"gender\": }";
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(malformedJson))
         .andExpect(status().isBadRequest())
@@ -261,26 +245,10 @@ public class UserControllerTest {
   }
 
   @Test
-  @WithMockUser
-  void shouldRejectProfileUpdateWhenUserIsNotOwnerOrAdmin() throws Exception {
-    final var validProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", GenderEnum.FEMALE);
-
-    when(securityService.isOwner(any())).thenReturn(false);
-    when(securityService.isAdmin()).thenReturn(false);
-
-    mockMvc.perform(put("/users/1")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(validProfileRequestDto)))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("Access denied."));
-  }
-
-  @Test
   void shouldRejectProfileUpdateWhenUserIsNotAuthenticated() throws Exception {
-    final var userId = 1L;
     final var validProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validProfileRequestDto)))
         .andExpect(status().isUnauthorized());

@@ -22,7 +22,7 @@ public class SecurityConversationService implements OwnerCheck {
     }
   }
 
-  public boolean requestedServiceOwner(Long id) {
+  public boolean isRequestedServiceOwner(Long id) {
     try {
       final var conversation = conversationService.findById(id);
 

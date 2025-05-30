@@ -110,10 +110,9 @@ class RequestedServiceControllerTest {
         RequestedServiceStatusEnum.PENDING, addressResponseDto, null);
 
     when(securityService.isOwner(any())).thenReturn(true);
-    when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
+    when(requestedServiceService.register(any())).thenReturn(RequestedServiceResponseDto);
 
     mockMvc.perform(post("/requested-services")
-        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isCreated())
@@ -129,7 +128,7 @@ class RequestedServiceControllerTest {
     final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description", addressRequestDto);
 
     when(securityService.isOwner(any())).thenReturn(true);
-    when(requestedServiceService.register(any(), any())).thenThrow(new ResourceNotFoundException("User not found."));
+    when(requestedServiceService.register(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
     mockMvc.perform(post("/requested-services")
         .param("userId", "1")
@@ -154,7 +153,7 @@ class RequestedServiceControllerTest {
   @Test
   @WithMockUser
   void shouldReturnNotFoundWhenRequestedServiceNotFound() throws Exception {
-    when(securityService.isAdmin()).thenReturn(true);
+    when(securityRequestedServiceService.ownershipCheck(any())).thenReturn(true);
     when(requestedServiceService.cancel(any())).thenThrow(new ResourceNotFoundException("Requested service not found"));
 
     mockMvc.perform(patch("/requested-services/{id}/cancel", 1L))
