@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class MessageController {
   private final MessageService messageService;
 
-  @Operation(summary = "List conversation messages", description = "Allows a participant of the conversation or an admin to retrieve the list of messages within an existing conversation, supporting pagination.")
+  @Operation(summary = "List conversation messages", description = "Allows a participant of the conversation to retrieve the list of messages within an existing conversation, supporting pagination.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Messages successfully retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
@@ -43,13 +43,13 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Forbidden - access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId) || @securityService.isAdmin()")
+  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId)")
   @GetMapping
   public Page<MessageResponseDto> listMessages(@RequestParam Long conversationId, @ParameterObject Pageable pageable) {
     return this.messageService.listMessages(conversationId, pageable);
   }
 
-  @Operation(summary = "Send a message in a conversation", description = "Allows the user who is part of the conversation or an admin to send a message within an existing conversation.")
+  @Operation(summary = "Send a message in a conversation", description = "Allows the user who is part of the conversation to send a message within an existing conversation.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Message successfully sent", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
@@ -57,7 +57,7 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId) || @securityService.isAdmin()")
+  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId)")
   @PostMapping
   public ResponseEntity<MessageResponseDto> sendMessage(@RequestParam Long conversationId,
       @Valid @RequestBody MessageRequestDto messageRequestDto) {
@@ -73,7 +73,7 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Forbidden - access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Message not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("((@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id)) && @securityMessageService.messageReceiver(#id)) || @securityService.isAdmin()")
+  @PreAuthorize("((@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id)) && @securityMessageService.messageReceiver(#id))")
   @PatchMapping("/{id}/read")
   public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
     messageService.markAsRead(id);

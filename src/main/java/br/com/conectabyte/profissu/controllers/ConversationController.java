@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class ConversationController {
   private final ConversationService conversationService;
 
-  @Operation(summary = "Retrieve conversations by user ID", description = "Fetches a paginated list of conversations where the specified user is the requester.", responses = {
+  @Operation(summary = "Retrieve user conversations", description = "Fetches a paginated list of conversations of the current user.", responses = {
       @ApiResponse(responseCode = "200", description = "Successfully retrieved conversations", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
       @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
@@ -50,7 +50,7 @@ public class ConversationController {
       @ApiResponse(responseCode = "201", description = "Offer successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "Requested service or user not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @PostMapping
   public ResponseEntity<ConversationResponseDto> start(
@@ -72,7 +72,7 @@ public class ConversationController {
     return ResponseEntity.ok(this.conversationService.cancel(id));
   }
 
-  @Operation(summary = "Accept or reject a service offer", description = "Allows the user who owns the requested service or an admin to accept or reject a pending offer.")
+  @Operation(summary = "Accept or reject a service offer", description = "Allows the user who owns the requested service to accept or reject a pending offer.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Offer successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or offer status", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
@@ -80,7 +80,7 @@ public class ConversationController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityConversationService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityConversationService.requestedServiceOwner(#id)")
   @PatchMapping("/{id}/{offerStatus}")
   public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id,
       @PathVariable OfferStatusEnum offerStatus) {

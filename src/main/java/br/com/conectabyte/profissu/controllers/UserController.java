@@ -35,7 +35,6 @@ public class UserController {
       @ApiResponse(responseCode = "200", description = "User successfully retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Malformed ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "User does not have permission to access this resource", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "No user exists with the given ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @GetMapping("/{id}")
@@ -56,32 +55,24 @@ public class UserController {
     return ResponseEntity.accepted().build();
   }
 
-  @Operation(summary = "Update user profile", description = "Updates the profile information of a user. Only the owner of the profile or an admin can perform this operation.", responses = {
+  @Operation(summary = "Update user profile", description = "Updates the profile information of a user.", responses = {
       @ApiResponse(responseCode = "200", description = "User profile successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
-  @PutMapping("/{id}")
-  public ResponseEntity<UserResponseDto> updateById(@PathVariable Long id,
-      @Valid @RequestBody ProfileRequestDto profileRequestDto) {
-    return ResponseEntity.ok().body(this.userService.update(id, profileRequestDto));
+  @PutMapping
+  public ResponseEntity<UserResponseDto> update(@Valid @RequestBody ProfileRequestDto profileRequestDto) {
+    return ResponseEntity.ok().body(this.userService.update(profileRequestDto));
   }
 
   @Operation(summary = "Update user password", description = "Updates the password of a user identified by the given ID. Requires authentication.", responses = {
       @ApiResponse(responseCode = "204", description = "Password successfully updated"),
       @ApiResponse(responseCode = "400", description = "Malformed ID or missing parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "User does not have permission to update this password", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @PatchMapping("/{id}/password")
-  public ResponseEntity<Void> updatePassword(@PathVariable Long id,
-      @Valid @RequestBody PasswordRequestDto passwordRequestDto) {
-    this.userService.updatePassword(id, passwordRequestDto);
+  public ResponseEntity<Void> updatePassword(@Valid @RequestBody PasswordRequestDto passwordRequestDto) {
+    this.userService.updatePassword(passwordRequestDto);
     return ResponseEntity.noContent().build();
   }
 }
