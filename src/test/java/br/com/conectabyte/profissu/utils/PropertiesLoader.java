@@ -25,6 +25,7 @@ public class PropertiesLoader {
 
     profissuPropertiesTest.setSpring(profissuProperties.getSpring());
     profissuPropertiesTest.getProfissu().setJwt(profissuProperties.getProfissu().getJwt());
+    profissuPropertiesTest.getProfissu().setToken(profissuProperties.getProfissu().getToken());
 
     return profissuPropertiesTest;
   }

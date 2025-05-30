@@ -109,6 +109,7 @@ public class UserServiceTest {
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
     doNothing().when(this.passwordRecoveryEmailService).send(any());
+    doNothing().when(tokenService).flush();
 
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
@@ -224,6 +225,7 @@ public class UserServiceTest {
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
     doNothing().when(this.signUpConfirmationService).send(any());
+    doNothing().when(tokenService).flush();
 
     this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
 

@@ -30,6 +30,10 @@ public class TokenService {
     this.tokenRepository.delete(token);
   }
 
+  public void flush() {
+    tokenRepository.flush();
+  }
+
   @Transactional
   public void deleteByUser(User user) {
     final var token = user.getToken();

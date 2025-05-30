@@ -19,7 +19,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.entities.User;
+import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.repositories.TokenRepository;
+import br.com.conectabyte.profissu.utils.PropertiesLoader;
 import br.com.conectabyte.profissu.utils.TokenUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -34,10 +36,19 @@ class TokenServiceTest {
   @Mock
   private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+  @Mock
+  private ProfissuProperties profissuProperties;
+
   @InjectMocks
   private TokenService tokenService;
 
   private final Token token = TokenUtils.create(UserUtils.create());
+
+  void setUp() throws Exception {
+    final var loadedProfissuProperties = new PropertiesLoader().loadProperties();
+
+    when(profissuProperties.getProfissu()).thenReturn(loadedProfissuProperties.getProfissu());
+  }
 
   @Test
   void shouldSaveTokenSuccessfully() {
@@ -116,7 +127,8 @@ class TokenServiceTest {
   }
 
   @Test
-  void shouldReturnErrorWhenTokenIsExpired() {
+  void shouldReturnErrorWhenTokenIsExpired() throws Exception {
+    setUp();
     token.setCreatedAt(LocalDateTime.now().minusMinutes(2));
     when(user.getToken()).thenReturn(token);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
@@ -127,7 +139,8 @@ class TokenServiceTest {
   }
 
   @Test
-  void shouldReturnNullWhenTokenIsValid() {
+  void shouldReturnNullWhenTokenIsValid() throws Exception {
+    setUp();
     token.setCreatedAt(LocalDateTime.now().plusMinutes(2));
     when(user.getToken()).thenReturn(token);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(true);
