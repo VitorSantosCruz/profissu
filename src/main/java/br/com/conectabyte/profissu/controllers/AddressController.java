@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.AddressRequestDto;
@@ -37,8 +38,8 @@ public class AddressController {
       @ApiResponse(responseCode = "404", description = "No user exists with the given ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
-  @PostMapping("/{userId}")
-  public ResponseEntity<AddressResponseDto> register(@PathVariable Long userId,
+  @PostMapping
+  public ResponseEntity<AddressResponseDto> register(@RequestParam Long userId,
       @Valid @RequestBody AddressRequestDto addressRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.addressService.register(userId, addressRequestDto));
   }

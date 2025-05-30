@@ -59,6 +59,25 @@ class ConversationControllerTest {
 
   @Test
   @WithMockUser
+  void shouldFindConversationsByUserId() throws Exception {
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
+    final var page = new PageImpl<>(List.of(conversationResponseDto));
+
+    when(conversationService.findByUserId(any(), any())).thenReturn(page);
+    when(securityService.isOwner(any())).thenReturn(true);
+
+    mockMvc.perform(get("/conversations?userId={userId}", 1L)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[0]").exists());
+  }
+
+  @Test
+  @WithMockUser
   void shouldRegisterConversationSuccessfully() throws Exception {
     final var conversationRequestDto = new ConversationRequestDto(1L, "Hello, I'm interested!");
     final var conversationResponseDto = new ConversationResponseDto(1L, null, null, null, null);

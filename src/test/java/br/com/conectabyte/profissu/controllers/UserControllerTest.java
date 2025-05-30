@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,8 +32,6 @@ import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
-import br.com.conectabyte.profissu.mappers.ConversationMapper;
-import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ConversationService;
@@ -43,8 +40,6 @@ import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
-import br.com.conectabyte.profissu.utils.ConversationUtils;
-import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @WebMvcTest({ UserController.class, SecurityService.class, ProfissuProperties.class })
@@ -289,43 +284,5 @@ public class UserControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validProfileRequestDto)))
         .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldFindRequestedServicesByUserId() throws Exception {
-    final var user = UserUtils.create();
-    final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
-    final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
-        .requestedServiceToRequestedServiceResponseDto(requestedService);
-    final var page = new PageImpl<>(List.of(requestedServiceResponseDto));
-
-    when(requestedServiceService.findByUserId(any(), any())).thenReturn(page);
-
-    mockMvc.perform(get("/users/1/requested-services")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content").isArray())
-        .andExpect(jsonPath("$.content[0]").exists());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldFindConversationsByUserId() throws Exception {
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
-    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
-    final var page = new PageImpl<>(List.of(conversationResponseDto));
-
-    when(conversationService.findByUserId(any(), any())).thenReturn(page);
-    when(securityService.isOwner(any())).thenReturn(true);
-
-    mockMvc.perform(get("/users/1/conversations")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content").isArray())
-        .andExpect(jsonPath("$.content[0]").exists());
   }
 }

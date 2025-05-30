@@ -67,7 +67,7 @@ class ContactControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
-    mockMvc.perform(post("/contacts/{userId}", userId)
+    mockMvc.perform(post("/contacts?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isCreated())
@@ -80,7 +80,7 @@ class ContactControllerTest {
     final var invalidRequest = new ContactRequestDto("invalidEmail", false);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(post("/contacts/{userId}", userId)
+    mockMvc.perform(post("/contacts?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidRequest)))
         .andExpect(status().isBadRequest())
@@ -89,7 +89,7 @@ class ContactControllerTest {
 
   @Test
   void shouldReturnUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
-    mockMvc.perform(post("/contacts/{userId}", userId)
+    mockMvc.perform(post("/contacts?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isUnauthorized());
@@ -102,7 +102,7 @@ class ContactControllerTest {
     when(securityService.isAdmin()).thenReturn(false);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
-    mockMvc.perform(post("/contacts/{userId}", userId)
+    mockMvc.perform(post("/contacts?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isForbidden())
@@ -138,7 +138,7 @@ class ContactControllerTest {
   @Test
   @WithMockUser
   void shouldReturnBadRequestForMalformedJson() throws Exception {
-    mockMvc.perform(post("/contacts/{userId}", userId)
+    mockMvc.perform(post("/contacts?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content("{invalidJson}"))
         .andExpect(status().isBadRequest())

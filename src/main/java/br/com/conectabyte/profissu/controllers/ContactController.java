@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.ContactRequestDto;
@@ -38,8 +39,8 @@ public class ContactController {
       @ApiResponse(responseCode = "404", description = "No user exists with the given ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
-  @PostMapping("/{userId}")
-  public ResponseEntity<ContactResponseDto> register(@PathVariable Long userId,
+  @PostMapping
+  public ResponseEntity<ContactResponseDto> register(@RequestParam Long userId,
       @Validated(ValidatorGroup.class) @RequestBody ContactRequestDto contactRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.contactService.register(userId, contactRequestDto));
   }

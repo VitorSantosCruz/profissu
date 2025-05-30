@@ -29,12 +29,14 @@ import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
+import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import br.com.conectabyte.profissu.services.security.SecurityRequestedServiceService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
+import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @WebMvcTest({ RequestedServiceController.class, SecurityService.class, SecurityRequestedServiceService.class,
@@ -55,6 +57,25 @@ class RequestedServiceControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @Test
+  @WithMockUser
+  void shouldFindRequestedServicesByUserId() throws Exception {
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
+        .requestedServiceToRequestedServiceResponseDto(requestedService);
+    final var page = new PageImpl<>(List.of(requestedServiceResponseDto));
+
+    when(requestedServiceService.findByUserId(any(), any())).thenReturn(page);
+
+    mockMvc.perform(get("/requested-services/by-user?userId={userId}", 1L)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[0]").exists());
+  }
 
   @Test
   @WithMockUser
@@ -90,7 +111,7 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenReturn(RequestedServiceResponseDto);
 
-    mockMvc.perform(post("/requested-services/{userId}", 0)
+    mockMvc.perform(post("/requested-services?userId={userId}", 0)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isCreated())
@@ -108,7 +129,7 @@ class RequestedServiceControllerTest {
     when(securityService.isOwner(any())).thenReturn(true);
     when(requestedServiceService.register(any(), any())).thenThrow(new ResourceNotFoundException("User not found."));
 
-    mockMvc.perform(post("/requested-services/{userId}", 0)
+    mockMvc.perform(post("/requested-services?userId={userId}", 0)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isNotFound())
@@ -120,7 +141,7 @@ class RequestedServiceControllerTest {
   void shouldReturnBadRequestForInvalidInput() throws Exception {
     final var requestedServiceRequestDto = new RequestedServiceRequestDto("", "", null);
 
-    mockMvc.perform(post("/requested-services/{userId}", 1L)
+    mockMvc.perform(post("/requested-services?userId={userId}", 1L)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(requestedServiceRequestDto)))
         .andExpect(status().isBadRequest());

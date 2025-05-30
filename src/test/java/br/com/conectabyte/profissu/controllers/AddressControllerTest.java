@@ -62,7 +62,7 @@ class AddressControllerTest {
     when(addressService.register(any(), any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isCreated())
@@ -74,7 +74,7 @@ class AddressControllerTest {
   void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
     final var invalidRequest = new AddressRequestDto("", "", "", "", "invalid");
 
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidRequest)))
         .andExpect(status().isBadRequest())
@@ -92,7 +92,7 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isForbidden())
@@ -128,7 +128,7 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnBadRequestForMalformedJson() throws Exception {
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses?userId={userId}", userId)
         .contentType(MediaType.APPLICATION_JSON)
         .content("{invalidJson}"))
         .andExpect(status().isBadRequest())
