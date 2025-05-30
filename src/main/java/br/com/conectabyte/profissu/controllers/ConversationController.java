@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
@@ -42,10 +41,8 @@ public class ConversationController {
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @GetMapping
-  @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
-  public Page<ConversationResponseDto> findConversationByUserId(@RequestParam Long userId,
-      @ParameterObject Pageable pageable) {
-    return conversationService.findByUserId(userId, pageable);
+  public Page<ConversationResponseDto> findCurrentUserConversations(@ParameterObject Pageable pageable) {
+    return conversationService.findCurrentUserConversations(pageable);
   }
 
   @Operation(summary = "Make an offer for a requested service", description = "Allows a user to make an offer by opening a conversation related to a requested service.")

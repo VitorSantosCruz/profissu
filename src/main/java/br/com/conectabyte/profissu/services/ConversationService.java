@@ -40,7 +40,10 @@ public class ConversationService {
   }
 
   @Transactional
-  public Page<ConversationResponseDto> findByUserId(Long userId, Pageable pageable) {
+  public Page<ConversationResponseDto> findCurrentUserConversations(Pageable pageable) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var conversations = conversationRepository.findByUserId(userId, pageable);
     return conversationMapper.conversationPageToConversationResponseDtoPage(conversations);
   }

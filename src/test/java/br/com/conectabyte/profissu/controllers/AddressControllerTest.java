@@ -57,7 +57,7 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldRegisterAddressWhenUserIsOwnerOrAdmin() throws Exception {
-    when(addressService.register(any(), any())).thenReturn(responseDto);
+    when(addressService.register(any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(post("/addresses")
@@ -87,17 +87,6 @@ class AddressControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    mockMvc.perform(post("/addresses")
-        .param("userId", "1")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(validRequest)))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("Access denied."));
   }
 
   @Test

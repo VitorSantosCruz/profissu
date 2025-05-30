@@ -52,7 +52,7 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @GetMapping("/by-user")
-  public Page<RequestedServiceResponseDto> findRequestedServiceByUserId(@RequestParam Long userId,
+  public Page<RequestedServiceResponseDto> findByUserId(@RequestParam Long userId,
       @ParameterObject Pageable pageable) {
     return requestedServiceService.findByUserId(userId, pageable);
   }

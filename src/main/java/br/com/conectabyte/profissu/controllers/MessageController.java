@@ -43,7 +43,7 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Forbidden - access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId) || @securityService.isAdmin()")
   @GetMapping
   public Page<MessageResponseDto> listMessages(@RequestParam Long conversationId, @ParameterObject Pageable pageable) {
     return this.messageService.listMessages(conversationId, pageable);
@@ -57,7 +57,7 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityMessageService.ownershipCheck(#conversationId) || @securityMessageService.requestedServiceOwner(#conversationId) || @securityService.isAdmin()")
   @PostMapping
   public ResponseEntity<MessageResponseDto> sendMessage(@RequestParam Long conversationId,
       @Valid @RequestBody MessageRequestDto messageRequestDto) {

@@ -61,7 +61,7 @@ class ContactControllerTest {
   @Test
   @WithMockUser
   void shouldRegisterContactWhenUserIsOwnerOrAdmin() throws Exception {
-    when(contactService.register(any(), any())).thenReturn(responseDto);
+    when(contactService.register(any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
     when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
 
@@ -94,21 +94,6 @@ class ContactControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    when(securityService.isOwner(any())).thenReturn(false);
-    when(securityService.isAdmin()).thenReturn(false);
-    when(userService.findByEmail(any())).thenThrow(ResourceNotFoundException.class);
-
-    mockMvc.perform(post("/contacts")
-        .param("userId", "1")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(validRequest)))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("Access denied."));
   }
 
   @Test

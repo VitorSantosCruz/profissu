@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.AddressRequestDto;
@@ -37,11 +36,9 @@ public class AddressController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "No user exists with the given ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
   @PostMapping
-  public ResponseEntity<AddressResponseDto> register(@RequestParam Long userId,
-      @Valid @RequestBody AddressRequestDto addressRequestDto) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(this.addressService.register(userId, addressRequestDto));
+  public ResponseEntity<AddressResponseDto> register(@Valid @RequestBody AddressRequestDto addressRequestDto) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(this.addressService.register(addressRequestDto));
   }
 
   @Operation(summary = "Update address", description = "Updates an existing address. Only the owner of the address or an admin can perform this operation.", responses = {

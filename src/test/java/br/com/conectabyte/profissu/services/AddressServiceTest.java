@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,9 @@ class AddressServiceTest {
   @Mock
   private UserService userService;
 
+  @Mock
+  private JwtService jwtService;
+
   @InjectMocks
   private AddressService addressService;
 
@@ -42,10 +47,11 @@ class AddressServiceTest {
 
   @Test
   void shouldRegisterAddressSuccessfully() {
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(1L)).thenReturn(user);
     when(addressRepository.save(any(Address.class))).thenReturn(address);
 
-    AddressResponseDto savedAddress = addressService.register(1L, validRequest);
+    AddressResponseDto savedAddress = addressService.register(validRequest);
 
     assertEquals(savedAddress.id(), address.getId());
     assertEquals(savedAddress.street(), address.getStreet());
@@ -57,9 +63,10 @@ class AddressServiceTest {
 
   @Test
   void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(1L)).thenThrow(new ResourceNotFoundException("User not found."));
 
-    assertThrows(ResourceNotFoundException.class, () -> addressService.register(1L, validRequest));
+    assertThrows(ResourceNotFoundException.class, () -> addressService.register(validRequest));
   }
 
   @Test

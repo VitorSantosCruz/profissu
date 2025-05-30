@@ -226,9 +226,10 @@ class ConversationServiceTest {
     final var conversationPage = new PageImpl<>(List.of(conversation), pageable, 1);
     final var expectedResponsePage = new PageImpl<>(List.of(conversationResponseDto), pageable, 1);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(conversationRepository.findByUserId(any(), any())).thenReturn(conversationPage);
 
-    final var result = conversationService.findByUserId(1L, pageable);
+    final var result = conversationService.findCurrentUserConversations(pageable);
 
     assertNotNull(result);
     assertEquals(1, result.getTotalElements());
@@ -241,9 +242,10 @@ class ConversationServiceTest {
     final Page<Conversation> emptyPage = Page.empty(pageable);
     final var expectedEmptyResponsePage = Page.empty(pageable);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "0"))));
     when(conversationRepository.findByUserId(0L, pageable)).thenReturn(emptyPage);
 
-    final var result = conversationService.findByUserId(0L, pageable);
+    final var result = conversationService.findCurrentUserConversations(pageable);
 
     assertNotNull(result);
     assertEquals(0, result.getTotalElements());

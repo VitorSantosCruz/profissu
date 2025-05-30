@@ -31,11 +31,15 @@ public class ContactService {
   private final TokenService tokenService;
   private final ContactConfirmationService contactConfirmationService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final JwtService jwtService;
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
 
   @Transactional
-  public ContactResponseDto register(Long userId, ContactRequestDto contactRequestDto) {
+  public ContactResponseDto register(ContactRequestDto contactRequestDto) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var contactToBeSaved = contactMapper.contactRequestDtoToContact(contactRequestDto);
     final var user = this.userService.findById(userId);
 

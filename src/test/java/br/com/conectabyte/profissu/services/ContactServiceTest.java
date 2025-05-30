@@ -7,7 +7,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,9 @@ public class ContactServiceTest {
 
   @Mock
   private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+  @Mock
+  private JwtService jwtService;
 
   @InjectMocks
   private ContactService contactService;
@@ -99,11 +104,12 @@ public class ContactServiceTest {
     final var contact = ContactUtils.create(user);
     final var validRequest = contactMapper.contactToContactRequestDto(contact);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
     doNothing().when(tokenService).flush();
 
-    final var savedContact = contactService.register(1L, validRequest);
+    final var savedContact = contactService.register(validRequest);
 
     assertEquals(savedContact.id(), contact.getId());
     assertEquals(savedContact.value(), contact.getValue());
@@ -115,9 +121,10 @@ public class ContactServiceTest {
     final var user = UserUtils.create();
     final var validRequest = contactMapper.contactToContactRequestDto(ContactUtils.create(user));
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
-    assertThrows(ResourceNotFoundException.class, () -> contactService.register(1L, validRequest));
+    assertThrows(ResourceNotFoundException.class, () -> contactService.register(validRequest));
   }
 
   @Test
@@ -211,11 +218,12 @@ public class ContactServiceTest {
     final var contact = ContactUtils.create(user);
     final var validRequest = contactMapper.contactToContactRequestDto(contact);
 
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any())).thenReturn(contact);
     doNothing().when(tokenService).flush();
 
-    final var savedContact = contactService.register(1L, validRequest);
+    final var savedContact = contactService.register(validRequest);
 
     assertEquals(savedContact.value(), "test@conectabyte.com.br");
 

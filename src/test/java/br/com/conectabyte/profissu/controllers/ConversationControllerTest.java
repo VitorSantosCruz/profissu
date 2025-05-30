@@ -64,7 +64,7 @@ class ConversationControllerTest {
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
     final var page = new PageImpl<>(List.of(conversationResponseDto));
 
-    when(conversationService.findByUserId(any(), any())).thenReturn(page);
+    when(conversationService.findCurrentUserConversations(any())).thenReturn(page);
     when(securityService.isOwner(any())).thenReturn(true);
 
     mockMvc.perform(get("/conversations")
