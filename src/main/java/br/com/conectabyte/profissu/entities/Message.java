@@ -36,6 +36,9 @@ public class Message {
   @Column(name = "is_read", nullable = false)
   private boolean read;
 
+  @Column(name = "notification_sent", nullable = false)
+  private boolean notificationSent;
+
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private User user;

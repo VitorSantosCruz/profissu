@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.dtos.request.EmailCodeDto;
 import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
@@ -23,6 +24,8 @@ import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
+import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
+import br.com.conectabyte.profissu.services.email.SignUpConfirmationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +37,8 @@ public class UserService {
   private final UserRepository userRepository;
   private final RoleService roleService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
-  private final EmailService emailService;
+  private final PasswordRecoveryEmailService passwordRecoveryEmailService;
+  private final SignUpConfirmationService signUpConfirmationService;
   private final TokenService tokenService;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
@@ -79,7 +83,7 @@ public class UserService {
     final var code = UUID.randomUUID().toString().split("-")[1];
 
     this.tokenService.save(savedUser, code, bCryptPasswordEncoder);
-    this.emailService.sendSignUpConfirmation(userDto.contacts().get(0).value(), code);
+    this.signUpConfirmationService.send(new EmailCodeDto(userDto.contacts().get(0).value(), code));
 
     return userMapper.userToUserResponseDto(savedUser);
   }
@@ -107,7 +111,7 @@ public class UserService {
     }
 
     final var userIsVerified = user.getContacts().stream()
-        .filter(c -> c.isStandard())
+        .filter(c -> c.getValue().equals(email))
         .filter(c -> c.getVerificationCompletedAt() != null)
         .findFirst()
         .isPresent();
@@ -123,17 +127,19 @@ public class UserService {
     }
 
     final var code = UUID.randomUUID().toString().split("-")[1];
+
+    this.tokenService.deleteByUser(user);
+    this.tokenService.flush();
     this.tokenService.save(user, code, bCryptPasswordEncoder);
 
     if (isSignUp) {
-      user.getContacts().stream().filter(c -> c.isStandard()).findFirst()
-          .ifPresent(c -> c.setVerificationCompletedAt(LocalDateTime.now()));
-      emailService.sendSignUpConfirmation(email, code);
+      signUpConfirmationService.send(new EmailCodeDto(email, code));
     } else {
-      emailService.sendPasswordRecoveryEmail(email, code);
+      passwordRecoveryEmailService.send(new EmailCodeDto(email, code));
     }
   }
 
+  @Transactional
   public MessageValueResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
     final var email = resetPasswordRequestDto.email();
     User user = null;
@@ -158,6 +164,7 @@ public class UserService {
   }
 
   @Async
+  @Transactional
   public void deleteById(Long id) {
     final var optionalUser = this.userRepository.findById(id);
 

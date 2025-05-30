@@ -31,6 +31,8 @@ import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
+import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
+import br.com.conectabyte.profissu.services.email.SignUpConfirmationService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
@@ -47,7 +49,10 @@ public class UserServiceTest {
   private TokenService tokenService;
 
   @Mock
-  private EmailService emailService;
+  private PasswordRecoveryEmailService passwordRecoveryEmailService;
+
+  @Mock
+  private SignUpConfirmationService signUpConfirmationService;
 
   @Mock
   private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -103,12 +108,13 @@ public class UserServiceTest {
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
-    doNothing().when(this.emailService).sendPasswordRecoveryEmail(any(), any());
+    doNothing().when(this.passwordRecoveryEmailService).send(any());
+    doNothing().when(tokenService).flush();
 
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(1)).save(any(), any(), any());
-    verify(this.emailService, times(1)).sendPasswordRecoveryEmail(any(), any());
+    verify(this.passwordRecoveryEmailService, times(1)).send(any());
   }
 
   @Test
@@ -124,7 +130,7 @@ public class UserServiceTest {
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(0)).save(any(), any(), any());
-    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
+    verify(this.passwordRecoveryEmailService, times(0)).send(any());
   }
 
   @Test
@@ -135,7 +141,7 @@ public class UserServiceTest {
     this.userService.recoverPassword(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(0)).save(any(), any(), any());
-    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
+    verify(this.passwordRecoveryEmailService, times(0)).send(any());
   }
 
   @Test
@@ -218,12 +224,13 @@ public class UserServiceTest {
 
     when(this.userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     doNothing().when(this.tokenService).save(any(), any(), any());
-    doNothing().when(this.emailService).sendSignUpConfirmation(any(), any());
+    doNothing().when(this.signUpConfirmationService).send(any());
+    doNothing().when(tokenService).flush();
 
     this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(1)).save(any(), any(), any());
-    verify(this.emailService, times(1)).sendSignUpConfirmation(any(), any());
+    verify(this.signUpConfirmationService, times(1)).send(any());
   }
 
   @Test
@@ -237,7 +244,7 @@ public class UserServiceTest {
     this.userService.resendSignUpConfirmation(new EmailValueRequestDto(email));
 
     verify(this.tokenService, times(0)).save(any(), any(), any());
-    verify(this.emailService, times(0)).sendPasswordRecoveryEmail(any(), any());
+    verify(this.passwordRecoveryEmailService, times(0)).send(any());
   }
 
   @Test

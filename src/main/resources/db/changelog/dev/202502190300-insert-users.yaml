@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: "202502190300"
+      author: VCruz
+      context: dev
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: name
+                  value: "admin"
+              - column:
+                  name: bio
+                  value: "💜"
+              - column:
+                  name: password
+                  value: "$2y$10$D.E2J7CeUXU4G3QUqYJGN.jdo75P7iHVApCRkF.DRmGI8tQy3Tn.G"
+              - column:
+                  name: gender
+                  value: "MALE"

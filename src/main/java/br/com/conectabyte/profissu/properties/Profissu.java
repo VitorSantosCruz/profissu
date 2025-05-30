@@ -10,6 +10,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Profissu {
     private Jwt jwt = new Jwt();
+    private Token token = new Token();
     private String url;
     private List<String> allowedOrigins;
 }

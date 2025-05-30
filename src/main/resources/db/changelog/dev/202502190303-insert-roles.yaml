@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: "202502190303"
+      author: VCruz
+      context: dev
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: name
+                  value: ADMIN
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "2"
+              - column:
+                  name: name
+                  value: USER

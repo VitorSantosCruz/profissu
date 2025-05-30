@@ -49,7 +49,7 @@ class MessageControllerTest {
   @WithMockUser
   void shouldMarkMessageAsReadWhenUserIsServiceProvider() throws Exception {
     when(securityMessageService.ownershipCheck(any())).thenReturn(true);
-    when(securityMessageService.messageReciver(any())).thenReturn(true);
+    when(securityMessageService.messageReceiver(any())).thenReturn(true);
     doNothing().when(messageService).markAsRead(any());
 
     mockMvc.perform(patch("/messages/1/read"))
@@ -60,7 +60,7 @@ class MessageControllerTest {
   @WithMockUser
   void shouldMarkMessageAsReadWhenUserIsServiceRequester() throws Exception {
     when(securityMessageService.requestedServiceOwner(any())).thenReturn(true);
-    when(securityMessageService.messageReciver(any())).thenReturn(true);
+    when(securityMessageService.messageReceiver(any())).thenReturn(true);
     doNothing().when(messageService).markAsRead(any());
 
     mockMvc.perform(patch("/messages/1/read"))
@@ -71,7 +71,7 @@ class MessageControllerTest {
   @WithMockUser
   void shouldReturnForbiddenWhenUserIsMessageOwner() throws Exception {
     when(securityMessageService.requestedServiceOwner(any())).thenReturn(true);
-    when(securityMessageService.messageReciver(any())).thenReturn(false);
+    when(securityMessageService.messageReceiver(any())).thenReturn(false);
     doNothing().when(messageService).markAsRead(any());
 
     mockMvc.perform(patch("/messages/1/read"))

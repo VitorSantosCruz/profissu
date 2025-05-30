@@ -144,7 +144,7 @@ class JwtAuthChannelInterceptorTest {
 
   @Test
   void shouldRejectMessageWhenDestinationIsInvalid() {
-    final var token = "Bearer TOKEN";
+    final var token = "TOKEN";
     final var claims = new HashMap<String, Object>();
     final var now = Instant.now();
 

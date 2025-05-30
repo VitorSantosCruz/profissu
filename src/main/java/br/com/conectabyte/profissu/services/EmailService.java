@@ -1,7 +1,5 @@
 package br.com.conectabyte.profissu.services;
 
-import java.util.Map;
-
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -9,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import br.com.conectabyte.profissu.dtos.request.SendEmailDto;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -18,17 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Async
-public class EmailService {
-  private final JavaMailSender javaMailSender;
-  private final TemplateEngine templateEngine;
-  private final ProfissuProperties profissuProperties;
+public abstract class EmailService<T> {
+  protected final JavaMailSender javaMailSender;
+  protected final TemplateEngine templateEngine;
+  protected final ProfissuProperties profissuProperties;
 
-  private final String LOGO_PATH = "/images/profissu.jpeg";
+  protected final String LOGO_PATH = "/images/profissu.jpeg";
 
-  record SendEmailDto(String email, String subject, String templateName, Map<String, String> variables) {
-  }
+  public abstract void send(T data);
 
-  private void sendEmail(SendEmailDto sendEmailDto) throws MessagingException {
+  protected void sendEmail(SendEmailDto sendEmailDto) throws MessagingException {
     final var message = javaMailSender.createMimeMessage();
     final var helper = new MimeMessageHelper(message, true);
     final var context = new Context();
@@ -42,73 +40,5 @@ public class EmailService {
     helper.setText(htmlContent, true);
 
     javaMailSender.send(message);
-  }
-
-  public void sendPasswordRecoveryEmail(String email, String code) {
-    final var variables = Map.of(
-        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
-        "code", code,
-        "emailTitle", "Password Recovery",
-        "emailMessage",
-        "We received a request to reset your password. Please use the following code to create a new password.",
-        "footerMessage", "If you didn't request this, you can safely ignore this email.");
-    final var sendEmailDto = new SendEmailDto(email, "Password Recovery - Profisu", "code-verification-email.html",
-        variables);
-
-    try {
-      sendEmail(sendEmailDto);
-    } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
-    }
-  }
-
-  public void sendSignUpConfirmation(String email, String code) {
-    final var variables = Map.of(
-        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
-        "code", code,
-        "emailTitle", "Sign Up Confirmation",
-        "emailMessage", "Thank you for signing up for Profisu! Please use the code below to confirm your registration:",
-        "footerMessage", "If you did not sign up, you can safely ignore this email.");
-    final var sendEmailDto = new SendEmailDto(email, "Sign Up Confirmation - Profisu", "code-verification-email.html",
-        variables);
-
-    try {
-      sendEmail(sendEmailDto);
-    } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
-    }
-  }
-
-  public void sendContactConfirmation(
-      String email,
-      String code) {
-    final var variables = Map.of(
-        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
-        "code", code,
-        "emailTitle", "Contact Confirmation",
-        "emailMessage", "We received your contact request. Please use the code below to confirm your e-mail address:",
-        "footerMessage", "If you did not request this confirmation, you can safely ignore this email.");
-    final var sendEmailDto = new SendEmailDto(email, "Contact Confirmation - Profisu", "code-verification-email.html",
-        variables);
-
-    try {
-      sendEmail(sendEmailDto);
-    } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
-    }
-  }
-
-  public void sendRequestedServiceCancellationNotification(String title, String email) {
-    final var variables = Map.of(
-        "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
-        "serviceName", title);
-    final var sendEmailDto = new SendEmailDto(email, "Service Request Cancellation - Profisu",
-        "service_request_cancellation_email.html", variables);
-
-    try {
-      sendEmail(sendEmailDto);
-    } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", email, e.getMessage());
-    }
   }
 }

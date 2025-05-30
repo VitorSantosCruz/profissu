@@ -120,6 +120,12 @@ public class ConversationService {
   @Transactional
   public MessageResponseDto sendMessage(Long id, MessageRequestDto messageRequestDto) {
     final var conversation = this.findById(id);
+
+    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING
+        && conversation.getOfferStatus() != OfferStatusEnum.ACCEPTED) {
+      throw new ValidationException("This offer has already been canceled or rejected.");
+    }
+
     final var userId = this.jwtService.getClaims()
         .map(claims -> Long.valueOf(claims.get("sub").toString()))
         .orElseThrow();

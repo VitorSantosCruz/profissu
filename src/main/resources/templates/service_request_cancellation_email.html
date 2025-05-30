@@ -33,7 +33,7 @@
     h1 {
       font-family: 'Quicksand', sans-serif;
       color: #E84545;
-      font-size: 32px;
+      font-size: 36px;
       margin: 20px 0;
       letter-spacing: 1px;
     }
@@ -77,7 +77,7 @@
     <h1>Service Request Cancellation</h1>
     <p>Hello,</p>
     <p>The service request you made an offer for has been canceled.</p>
-    <div class="alert">
+    <div class="alert" th:if="${serviceName != null}">
       <p th:text="${serviceName}"></p>
     </div>
     <p>We apologize for the inconvenience and hope to see you in future opportunities.</p>

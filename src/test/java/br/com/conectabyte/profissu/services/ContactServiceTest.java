@@ -3,6 +3,7 @@ package br.com.conectabyte.profissu.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.repositories.ContactRepository;
+import br.com.conectabyte.profissu.services.email.ContactConfirmationService;
 import br.com.conectabyte.profissu.utils.ContactUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
@@ -39,7 +41,7 @@ public class ContactServiceTest {
   private TokenService tokenService;
 
   @Mock
-  private EmailService emailService;
+  private ContactConfirmationService contactConfirmationService;
 
   @Mock
   private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -99,6 +101,7 @@ public class ContactServiceTest {
 
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+    doNothing().when(tokenService).flush();
 
     final var savedContact = contactService.register(1L, validRequest);
 
@@ -124,6 +127,7 @@ public class ContactServiceTest {
 
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+    doNothing().when(tokenService).flush();
 
     final var updatedRequest = new ContactRequestDto("updated@example.com", false);
     final var updatedContact = contactService.update(1L, updatedRequest);
@@ -157,6 +161,7 @@ public class ContactServiceTest {
     user.setContacts(List.of(contact, notStandardContact));
     when(contactRepository.findById(any())).thenReturn(Optional.of(notStandardContact));
     when(contactRepository.save(any(Contact.class))).thenReturn(notStandardContact);
+    doNothing().when(tokenService).flush();
 
     final var updatedRequest = new ContactRequestDto("updated@example.com", true);
     final var updatedContact = contactService.update(1L, updatedRequest);
@@ -172,6 +177,7 @@ public class ContactServiceTest {
 
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+    doNothing().when(tokenService).flush();
 
     final var updatedRequestTrue = new ContactRequestDto("updated@example.com", true);
     final var updatedContactTrue = contactService.update(1L, updatedRequestTrue);
@@ -207,12 +213,13 @@ public class ContactServiceTest {
 
     when(userService.findById(any())).thenReturn(user);
     when(contactRepository.save(any())).thenReturn(contact);
+    doNothing().when(tokenService).flush();
 
     final var savedContact = contactService.register(1L, validRequest);
 
     assertEquals(savedContact.value(), "test@conectabyte.com.br");
 
-    verify(emailService).sendContactConfirmation(any(), any());
+    verify(contactConfirmationService).send(any());
   }
 
   @Test
@@ -220,7 +227,7 @@ public class ContactServiceTest {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
     final var validRequest = contactMapper.contactToContactRequestDto(contact);
-    
+
     contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
@@ -232,11 +239,12 @@ public class ContactServiceTest {
   void shouldUpdateContactAndSendVerificationEmailWhenValueIsChangedToEmail() {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
-    
+
     contact.setId(0L);
     when(contactRepository.findById(any())).thenReturn(Optional.of(contact));
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any())).thenReturn(contact);
+    doNothing().when(tokenService).flush();
 
     final var updatedRequest = new ContactRequestDto("new@conectabyte.com.br", true);
     final var updatedContact = contactService.update(contact.getId(), updatedRequest);
@@ -245,6 +253,6 @@ public class ContactServiceTest {
     assertEquals(true, updatedContact.standard());
 
     verify(tokenService).save(any(), any(), any());
-    verify(emailService).sendContactConfirmation(any(), any());
+    verify(contactConfirmationService).send(any());
   }
 }

@@ -12,6 +12,8 @@ server:
 profissu:
   jwt:
     expires-in: 3600
+  token:
+    expires-in: 3600
   url: http://localhost:8081
   allowed-origins:
     - http://127.0.0.1:3000

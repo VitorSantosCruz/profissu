@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.ContactConfirmationRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ContactRequestDto;
+import br.com.conectabyte.profissu.dtos.request.EmailCodeDto;
 import br.com.conectabyte.profissu.dtos.response.ContactResponseDto;
 import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
@@ -16,6 +17,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
 import br.com.conectabyte.profissu.repositories.ContactRepository;
+import br.com.conectabyte.profissu.services.email.ContactConfirmationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,7 @@ public class ContactService {
   private final ContactRepository contactRepository;
   private final UserService userService;
   private final TokenService tokenService;
-  private final EmailService emailService;
+  private final ContactConfirmationService contactConfirmationService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
@@ -42,8 +44,10 @@ public class ContactService {
 
     final var code = UUID.randomUUID().toString().split("-")[1];
 
+    this.tokenService.deleteByUser(user);
+    this.tokenService.flush();
     this.tokenService.save(user, code, bCryptPasswordEncoder);
-    this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
+    this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
 
     final var savedContact = contactRepository.save(contactToBeSaved);
 
@@ -67,8 +71,10 @@ public class ContactService {
       contact.setVerificationRequestedAt(LocalDateTime.now());
       contact.setVerificationCompletedAt(null);
 
+      this.tokenService.deleteByUser(contact.getUser());
+      this.tokenService.flush();
       this.tokenService.save(contact.getUser(), code, bCryptPasswordEncoder);
-      this.emailService.sendContactConfirmation(contactRequestDto.value(), code);
+      this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
     }
 
     contact.setUpdatedAt(LocalDateTime.now());

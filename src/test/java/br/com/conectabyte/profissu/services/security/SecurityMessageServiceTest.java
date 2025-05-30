@@ -125,7 +125,7 @@ class SecurityMessageServiceTest {
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(false);
 
-    final var isReceiver = securityMessageService.messageReciver(1L);
+    final var isReceiver = securityMessageService.messageReceiver(1L);
 
     assertTrue(isReceiver);
   }
@@ -141,7 +141,7 @@ class SecurityMessageServiceTest {
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    final var isReceiver = securityMessageService.messageReciver(1L);
+    final var isReceiver = securityMessageService.messageReceiver(1L);
 
     assertFalse(isReceiver);
   }
@@ -150,7 +150,7 @@ class SecurityMessageServiceTest {
   void shouldReturnFalseWhenMessageNotFoundInMessageReceiver() {
     when(messageService.findById(any())).thenThrow(new ResourceNotFoundException("Message not found"));
 
-    final var isReceiver = securityMessageService.messageReciver(1L);
+    final var isReceiver = securityMessageService.messageReceiver(1L);
 
     assertFalse(isReceiver);
   }

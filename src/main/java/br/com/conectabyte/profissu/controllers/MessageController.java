@@ -32,7 +32,7 @@ public class MessageController {
       @ApiResponse(responseCode = "403", description = "Forbidden - access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Message not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
-  @PreAuthorize("((@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id)) && @securityMessageService.messageReciver(#id)) || @securityService.isAdmin()")
+  @PreAuthorize("((@securityMessageService.ownershipCheck(#id) || @securityMessageService.requestedServiceOwner(#id)) && @securityMessageService.messageReceiver(#id)) || @securityService.isAdmin()")
   @PatchMapping("/{id}/read")
   public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
     messageService.markAsRead(id);
