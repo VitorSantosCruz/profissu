@@ -373,7 +373,7 @@ class ConversationServiceTest {
   }
 
   @Test
-  void shouldSendMessageSuccessfully() {
+  void shouldSendMessageSuccessfullyWhenStatusIdPending() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
@@ -390,6 +390,47 @@ class ConversationServiceTest {
     assertNotNull(response);
     verify(messageRepository).save(any());
     verify(simpMessagingTemplate).convertAndSend(any(), any(Object.class));
+  }
+
+  @Test
+  void shouldSendMessageSuccessfullyWhenStatusIdAccepted() {
+    final var user = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+    final var messageRequestDto = new MessageRequestDto("Teste");
+
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+    when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
+    when(userService.findById(any())).thenReturn(user);
+    when(messageRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    final var response = conversationService.sendMessage(1L, messageRequestDto);
+
+    assertNotNull(response);
+    verify(messageRepository).save(any());
+    verify(simpMessagingTemplate).convertAndSend(any(), any(Object.class));
+  }
+
+  @Test
+  void shouldThrowValidationExceptionWhenSendingMessageWithInvalidOfferStatus() {
+    final var user = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+
+    final var messageRequestDto = new MessageRequestDto("Test message");
+
+    when(conversationRepository.findById(any())).thenReturn(Optional.of(conversation));
+
+    ValidationException exception = assertThrows(ValidationException.class,
+        () -> conversationService.sendMessage(1L, messageRequestDto));
+
+    assertEquals("This offer has already been canceled or rejected.", exception.getMessage());
   }
 
   @Test

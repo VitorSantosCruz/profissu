@@ -43,8 +43,9 @@ public class MessageScheduler {
   private void proprocessMessages(List<Message> messages, Conversation conversation, User receiver,
       LocalDateTime thresholdDate) {
     final var messagesReaded = messages.stream()
-        .filter(m -> conversation.getId() == m.getConversation().getId())
-        .filter(m -> !m.isRead() && !m.isNotificationSent())
+        .filter(m -> m.getConversation().getId() == conversation.getId())
+        .filter(m -> !m.isRead())
+        .filter(m -> !m.isNotificationSent())
         .filter(m -> m.getCreatedAt().isBefore(thresholdDate))
         .map(m -> {
           m.setNotificationSent(true);

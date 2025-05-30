@@ -149,4 +149,13 @@ class TokenServiceTest {
 
     assertEquals(null, result);
   }
+
+  @Test
+  void shouldInvokeFlushOnRepository() {
+    doNothing().when(tokenRepository).flush();
+
+    tokenService.flush();
+
+    verify(tokenRepository, times(1)).flush();
+  }
 }

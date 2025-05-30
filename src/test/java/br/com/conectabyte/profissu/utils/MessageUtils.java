@@ -9,7 +9,6 @@ public class MessageUtils {
     final var message = new Message();
 
     message.setMessage("Teste");
-    message.setRead(false);
     message.setUser(user);
     message.setConversation(conversation);
 
