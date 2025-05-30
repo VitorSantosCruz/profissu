@@ -99,7 +99,7 @@ class SecurityMessageServiceTest {
     messageReciver.setId(2L);
 
     final var conversation = ConversationUtils.create(messageOwner, messageReciver, null, null);
-    final var message = MessageUtils.create(messageOwner, conversation);
+    final var message = MessageUtils.create(messageReciver, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(true);

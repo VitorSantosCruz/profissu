@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,7 @@ public class ReviewController {
       @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping
+  @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#requestedServiceId)")
   public ResponseEntity<ReviewResponseDto> register(
       @RequestParam Long requestedServiceId,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
