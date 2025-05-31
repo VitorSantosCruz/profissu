@@ -1,7 +1,11 @@
 package br.com.conectabyte.profissu.controllers;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +31,12 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
   private final ReviewService reviewService;
 
+  @GetMapping
+  public Page<ReviewResponseDto> findByUserId(@RequestParam Long userId, @RequestParam boolean isReviewOwner,
+      @ParameterObject Pageable pageable) {
+    return reviewService.findByUserId(userId, isReviewOwner, pageable);
+  }
+
   @Operation(summary = "Register review", description = "Registers a new review for a requested service.", responses = {
       @ApiResponse(responseCode = "200", description = "Review successfully registered", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
@@ -35,8 +45,7 @@ public class ReviewController {
   })
   @PostMapping
   @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#requestedServiceId) || @securityRequestedServiceService.isServiceProvider(#requestedServiceId)")
-  public ResponseEntity<ReviewResponseDto> register(
-      @RequestParam Long requestedServiceId,
+  public ResponseEntity<ReviewResponseDto> register(@RequestParam Long requestedServiceId,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
   }

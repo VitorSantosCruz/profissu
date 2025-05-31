@@ -78,6 +78,9 @@ public class User {
   @OneToMany(mappedBy = "user")
   private List<Message> messages;
 
+  @OneToMany(mappedBy = "user")
+  private List<Review> reviews;
+
   @Column(nullable = false)
   @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))

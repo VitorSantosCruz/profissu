@@ -57,6 +57,9 @@ public class RequestedService {
   @OneToMany(mappedBy = "requestedService")
   private List<Conversation> conversations;
 
+  @OneToMany(mappedBy = "requestedService")
+  private List<Review> reviews;
+
   public boolean canBeCancelled() {
     return this.status == RequestedServiceStatusEnum.PENDING;
   }
