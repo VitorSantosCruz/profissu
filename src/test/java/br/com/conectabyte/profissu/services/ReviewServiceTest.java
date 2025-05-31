@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -14,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.entities.Review;
@@ -138,4 +142,54 @@ class ReviewServiceTest {
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Database error");
   }
+
+  @Test
+  void shouldReturnReviewsGivenByUserWhenIsReviewOwnerTrue() {
+    final var pageable = PageRequest.of(0, 10);
+    final var review = new Review();
+
+    review.setId(100L);
+
+    final var reviewPage = new PageImpl<>(List.of(review), pageable, 1);
+
+    when(reviewRepository.findReviewsGivenByUserId(any(), any())).thenReturn(reviewPage);
+
+    final var result = reviewService.findByUserId(1L, true, pageable);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).id()).isEqualTo(100L);
+  }
+
+  @Test
+  void shouldReturnReviewsReceivedByUserWhenIsReviewOwnerFalse() {
+    final var pageable = PageRequest.of(0, 10);
+    final var review = new Review();
+
+    review.setId(200L);
+
+    final var reviewPage = new PageImpl<>(List.of(review), pageable, 1);
+
+    when(reviewRepository.findReviewsReceivedByUserId(any(), any())).thenReturn(reviewPage);
+
+    final var result = reviewService.findByUserId(1L, false, pageable);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).id()).isEqualTo(200L);
+  }
+
+  @Test
+  void shouldReturnEmptyPageWhenNoReviewsFound() {
+    final var pageable = PageRequest.of(0, 10);
+    final Page<Review> emptyPage = Page.empty(pageable);
+
+    when(reviewRepository.findReviewsGivenByUserId(any(), any())).thenReturn(emptyPage);
+
+    final var result = reviewService.findByUserId(1L, true, pageable);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEmpty();
+  }
+
 }

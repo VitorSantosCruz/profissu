@@ -14,10 +14,12 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
   @Query("""
       SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
-      FROM Conversation c
-      WHERE c.id = :conversationId AND (
-        c.requester.id = :userId OR c.serviceProvider.id = :userId
-      )
+        FROM Conversation c
+          WHERE c.id = :conversationId
+          AND (
+            c.requester.id = :userId
+            OR c.serviceProvider.id = :userId
+          )
       """)
   boolean isUserInConversation(@Param("userId") Long userId, @Param("conversationId") Long conversationId);
 }

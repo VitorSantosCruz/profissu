@@ -3,6 +3,8 @@ package br.com.conectabyte.profissu.mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ReviewResponseDto;
@@ -23,4 +25,14 @@ public interface ReviewMapper {
   ReviewRequestDto reviewToReviewRequestDto(Review review);
 
   ReviewResponseDto reviewToReviewResponseDto(Review review);
+
+  default Page<ReviewResponseDto> reviewPageToReviewResponseDtoPage(
+      Page<Review> reviewPage) {
+    final var reviewResponseDtoPageContent = reviewPage.getContent().stream()
+        .map(this::reviewToReviewResponseDto)
+        .toList();
+
+    return new PageImpl<>(reviewResponseDtoPageContent, reviewPage.getPageable(),
+        reviewPage.getTotalElements());
+  }
 }
