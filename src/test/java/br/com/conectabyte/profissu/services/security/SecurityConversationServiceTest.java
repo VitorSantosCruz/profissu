@@ -76,7 +76,7 @@ public class SecurityConversationServiceTest {
     when(conversationService.findById(any())).thenReturn(conversation);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    final var isOwner = securityConversationService.requestedServiceOwner(conversation.getId());
+    final var isOwner = securityConversationService.isRequestedServiceOwner(conversation.getId());
 
     assertTrue(isOwner);
   }
@@ -89,7 +89,7 @@ public class SecurityConversationServiceTest {
 
     when(conversationService.findById(any())).thenReturn(conversation);
 
-    final var isOwner = securityConversationService.requestedServiceOwner(0L);
+    final var isOwner = securityConversationService.isRequestedServiceOwner(0L);
 
     assertFalse(isOwner);
   }
@@ -98,7 +98,7 @@ public class SecurityConversationServiceTest {
   void shouldReturnFalseWhenConversationNotFounda() {
     when(conversationService.findById(any())).thenThrow(new ResourceNotFoundException("Conversation not found"));
 
-    final var isOwner = securityConversationService.requestedServiceOwner(any());
+    final var isOwner = securityConversationService.isRequestedServiceOwner(any());
 
     assertFalse(isOwner);
   }

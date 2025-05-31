@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,8 +32,6 @@ import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.mappers.AddressMapper;
 import br.com.conectabyte.profissu.mappers.ContactMapper;
-import br.com.conectabyte.profissu.mappers.ConversationMapper;
-import br.com.conectabyte.profissu.mappers.RequestedServiceMapper;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ConversationService;
@@ -43,8 +40,6 @@ import br.com.conectabyte.profissu.services.UserService;
 import br.com.conectabyte.profissu.services.security.SecurityService;
 import br.com.conectabyte.profissu.utils.AddressUtils;
 import br.com.conectabyte.profissu.utils.ContactUtils;
-import br.com.conectabyte.profissu.utils.ConversationUtils;
-import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @WebMvcTest({ UserController.class, SecurityService.class, ProfissuProperties.class })
@@ -129,10 +124,10 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "@newPassword123";
 
-    doNothing().when(userService).updatePassword(any(), any());
+    doNothing().when(userService).updatePassword(any());
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -144,10 +139,10 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "@newPassword123";
 
-    doNothing().when(userService).updatePassword(any(), any());
+    doNothing().when(userService).updatePassword(any());
     when(securityService.isAdmin()).thenReturn(true);
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isNoContent());
@@ -155,22 +150,10 @@ public class UserControllerTest {
 
   @Test
   @WithMockUser
-  void shouldRejectUpdatePasswordRequestWhenUserIsNeitherAdminNorOwner() throws Exception {
-    final var currentPassword = "currentPassword";
-    final var newPassword = "@newPassword123";
-
-    mockMvc.perform(patch("/users/1/password")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  @WithMockUser
   void shouldRejectUpdatePasswordRequestWhenCurrentPasswordIsNotValid() throws Exception {
     final var newPassword = "newPassword";
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(null, newPassword))))
         .andExpect(status().isBadRequest());
@@ -182,7 +165,7 @@ public class UserControllerTest {
     final var currentPassword = "currentPassword";
     final var newPassword = "newPassword";
 
-    mockMvc.perform(patch("/users/1/password")
+    mockMvc.perform(patch("/users/password")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(new PasswordRequestDto(currentPassword, newPassword))))
         .andExpect(status().isBadRequest());
@@ -190,7 +173,7 @@ public class UserControllerTest {
 
   @Test
   @WithMockUser
-  void shouldUpdateUserProfileWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldUpdateUserProfileWhenUserIsOwner() throws Exception {
     final var userId = 1L;
     final var user = UserUtils.create();
     final var newName = "New Name";
@@ -201,10 +184,10 @@ public class UserControllerTest {
     final var addresses = List.of(addressMapper.addressToAddressResponseDto(AddressUtils.create(user)));
     final var updatedUser = new UserResponseDto(userId, newName, newBio, newGender, contacts, addresses);
 
-    when(userService.update(any(), any())).thenReturn(updatedUser);
+    when(userService.update(any())).thenReturn(updatedUser);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(profileRequestDto)))
         .andExpect(status().isOk())
@@ -216,10 +199,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenNameIsInvalid() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto("Abc", "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -229,10 +211,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenNameIsEmpty() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto(null, "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -242,10 +223,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenGenderIsNull() throws Exception {
-    final var userId = 1L;
     final var invalidProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", null);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidProfileRequestDto)))
         .andExpect(status().isBadRequest())
@@ -255,10 +235,9 @@ public class UserControllerTest {
   @Test
   @WithMockUser
   void shouldRejectProfileUpdateWhenJsonIsMalformed() throws Exception {
-    final var userId = 1L;
     final var malformedJson = "{ \"name\": \"Valid Name\", \"bio\": \"Valid bio\", \"gender\": }";
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(malformedJson))
         .andExpect(status().isBadRequest())
@@ -266,66 +245,12 @@ public class UserControllerTest {
   }
 
   @Test
-  @WithMockUser
-  void shouldRejectProfileUpdateWhenUserIsNotOwnerOrAdmin() throws Exception {
-    final var validProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", GenderEnum.FEMALE);
-
-    when(securityService.isOwner(any())).thenReturn(false);
-    when(securityService.isAdmin()).thenReturn(false);
-
-    mockMvc.perform(put("/users/1")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(validProfileRequestDto)))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("Access denied."));
-  }
-
-  @Test
   void shouldRejectProfileUpdateWhenUserIsNotAuthenticated() throws Exception {
-    final var userId = 1L;
     final var validProfileRequestDto = new ProfileRequestDto("Valid Name", "Valid bio", GenderEnum.FEMALE);
 
-    mockMvc.perform(put("/users/" + userId)
+    mockMvc.perform(put("/users")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validProfileRequestDto)))
         .andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldFindRequestedServicesByUserId() throws Exception {
-    final var user = UserUtils.create();
-    final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
-    final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
-        .requestedServiceToRequestedServiceResponseDto(requestedService);
-    final var page = new PageImpl<>(List.of(requestedServiceResponseDto));
-
-    when(requestedServiceService.findByUserId(any(), any())).thenReturn(page);
-
-    mockMvc.perform(get("/users/1/requested-services")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content").isArray())
-        .andExpect(jsonPath("$.content[0]").exists());
-  }
-
-  @Test
-  @WithMockUser
-  void shouldFindConversationsByUserId() throws Exception {
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
-    final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
-    final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
-    final var page = new PageImpl<>(List.of(conversationResponseDto));
-
-    when(conversationService.findByUserId(any(), any())).thenReturn(page);
-    when(securityService.isOwner(any())).thenReturn(true);
-
-    mockMvc.perform(get("/users/1/conversations")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content").isArray())
-        .andExpect(jsonPath("$.content[0]").exists());
   }
 }

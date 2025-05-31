@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
@@ -45,20 +46,28 @@ public class RequestedServiceController {
     return requestedServiceService.findAvailableServiceRequests(pageable);
   }
 
+  @Operation(summary = "Retrieve requested services by user ID", description = "Fetches a paginated list of requested services associated with the provided user ID.", responses = {
+      @ApiResponse(responseCode = "200", description = "Successfully retrieved requested services", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
+  @GetMapping("/by-user")
+  public Page<RequestedServiceResponseDto> findByUserId(@RequestParam Long userId,
+      @ParameterObject Pageable pageable) {
+    return requestedServiceService.findByUserId(userId, pageable);
+  }
+
   @Operation(summary = "Register a requested service", description = "Allows a user to register a new requested service.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Successfully created requested service", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RequestedServiceResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityService.isOwner(#userId) || @securityService.isAdmin()")
-  @PostMapping("/{userId}")
-  public ResponseEntity<RequestedServiceResponseDto> register(@PathVariable Long userId,
+  @PostMapping
+  public ResponseEntity<RequestedServiceResponseDto> register(
       @Valid @RequestBody RequestedServiceRequestDto requestedServiceRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(this.requestedServiceService.register(userId, requestedServiceRequestDto));
+        .body(this.requestedServiceService.register(requestedServiceRequestDto));
   }
 
   @Operation(summary = "Cancel a requested service", description = "Allows an authorized user to cancel a requested service.")
@@ -68,7 +77,7 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#id) || @securityService.isAdmin()")
+  @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#id)")
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<RequestedServiceResponseDto> cancel(@PathVariable Long id) {
     return ResponseEntity.ok(requestedServiceService.cancel(id));

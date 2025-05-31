@@ -4,13 +4,10 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.ConversationRequestDto;
-import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ConversationResponseDto;
-import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.entities.RequestedService;
@@ -20,9 +17,7 @@ import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ConversationMapper;
-import br.com.conectabyte.profissu.mappers.MessageMapper;
 import br.com.conectabyte.profissu.repositories.ConversationRepository;
-import br.com.conectabyte.profissu.repositories.MessageRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -30,14 +25,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConversationService {
   private final ConversationRepository conversationRepository;
-  private final MessageRepository messageRepository;
   private final RequestedServiceService requestedServiceService;
   private final JwtService jwtService;
   private final UserService userService;
-  private final SimpMessagingTemplate simpMessagingTemplate;
 
   private final ConversationMapper conversationMapper = ConversationMapper.INSTANCE;
-  private final MessageMapper messageMapper = MessageMapper.INSTANCE;
 
   public Conversation findById(Long id) {
     final var optionalConversation = conversationRepository.findById(id);
@@ -48,7 +40,10 @@ public class ConversationService {
   }
 
   @Transactional
-  public Page<ConversationResponseDto> findByUserId(Long userId, Pageable pageable) {
+  public Page<ConversationResponseDto> findCurrentUserConversations(Pageable pageable) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var conversations = conversationRepository.findByUserId(userId, pageable);
     return conversationMapper.conversationPageToConversationResponseDtoPage(conversations);
   }
@@ -72,7 +67,7 @@ public class ConversationService {
         .findFirst()
         .isPresent();
 
-    this.validate(requestedService, serviceProvider, alreadySubmittedAnOffer);
+    this.validateNewOffers(requestedService, serviceProvider, alreadySubmittedAnOffer);
     conversation.setServiceProvider(serviceProvider);
     conversation.setRequester(requestedService.getUser());
     conversation.setRequestedService(requestedService);
@@ -82,28 +77,15 @@ public class ConversationService {
   }
 
   @Transactional
-  public ConversationResponseDto cancel(Long id) {
+  public ConversationResponseDto changeOfferStatus(Long id, OfferStatusEnum offerStatus) {
     final var conversation = findById(id);
 
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
-      throw new ValidationException("Conversation cannot be canceled.");
-    }
+    validateChangeOfferStatus(conversation);
 
-    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+    if (offerStatus == OfferStatusEnum.ACCEPTED) {
+      rejectOtherPendingOffers(conversation.getRequestedService(), conversation.getId());
 
-    return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
-  }
-
-  @Transactional
-  public ConversationResponseDto acceptOrRejectOffer(Long id, OfferStatusEnum offerStatus) {
-    final var conversation = findById(id);
-
-    if (offerStatus != OfferStatusEnum.ACCEPTED && offerStatus != OfferStatusEnum.REJECTED) {
-      throw new ValidationException("Offer status is invalid.");
-    }
-
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
-      throw new ValidationException("Conversation cannot be accepted/rejected.");
+      conversation.getRequestedService().setStatus(RequestedServiceStatusEnum.INPROGRESS);
     }
 
     conversation.setOfferStatus(offerStatus);
@@ -111,38 +93,8 @@ public class ConversationService {
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
   }
 
-  @Transactional
-  public Page<MessageResponseDto> listMessages(Long id, Pageable pageable) {
-    final var messages = messageRepository.listMessages(id, pageable);
-    return messageMapper.messagePageToMessageResponseDtoPage(messages);
-  }
-
-  @Transactional
-  public MessageResponseDto sendMessage(Long id, MessageRequestDto messageRequestDto) {
-    final var conversation = this.findById(id);
-
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING
-        && conversation.getOfferStatus() != OfferStatusEnum.ACCEPTED) {
-      throw new ValidationException("This offer has already been canceled or rejected.");
-    }
-
-    final var userId = this.jwtService.getClaims()
-        .map(claims -> Long.valueOf(claims.get("sub").toString()))
-        .orElseThrow();
-    final var user = userService.findById(userId);
-    final var message = Message.builder()
-        .message(messageRequestDto.message())
-        .conversation(conversation)
-        .user(user)
-        .build();
-    final var messageResponseDto = messageMapper.messageToMessageResponseDto(messageRepository.save(message));
-
-    simpMessagingTemplate.convertAndSend("/topic/conversations/" + id + "/messages", messageResponseDto);
-
-    return messageResponseDto;
-  }
-
-  private void validate(RequestedService requestedService, User serviceProvider, boolean alreadySubmittedAnOffer) {
+  private void validateNewOffers(RequestedService requestedService, User serviceProvider,
+      boolean alreadySubmittedAnOffer) {
     if (requestedService.getStatus() != RequestedServiceStatusEnum.PENDING) {
       throw new ValidationException("Cannot make an offer for this requested service.");
     }
@@ -154,5 +106,31 @@ public class ConversationService {
     if (alreadySubmittedAnOffer) {
       throw new ValidationException("You have already submitted an offer for this requested service.");
     }
+  }
+
+  private void validateChangeOfferStatus(Conversation conversation) {
+    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
+      throw new ValidationException("Action allowed only when the conversation status is PENDING.");
+    }
+
+    validateNoOfferAcceptedForConversation(conversation.getRequestedService(),
+        "It is not allowed to accept more than one offer for the same service request.");
+  }
+
+  private void rejectOtherPendingOffers(RequestedService requestedService, Long conversationId) {
+    requestedService.getConversations().stream()
+        .filter(c -> c.getId() != conversationId)
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
+        .forEach(c -> {
+          this.changeOfferStatus(c.getId(), OfferStatusEnum.REJECTED);
+        });
+  }
+
+  private void validateNoOfferAcceptedForConversation(RequestedService requestedService, String message) {
+    requestedService.getConversations().stream()
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.ACCEPTED)
+        .forEach(c -> {
+          throw new ValidationException(message);
+        });
   }
 }

@@ -26,6 +26,7 @@ public class RequestedServiceService {
   private final RequestedServiceRepository requestedServiceRepository;
   private final UserService userService;
   private final RequestedServiceCancellationNotificationService requestedServiceCancellationNotificationService;
+  private final JwtService jwtService;
 
   private final RequestedServiceMapper requestedServiceMapper = RequestedServiceMapper.INSTANCE;
 
@@ -50,7 +51,10 @@ public class RequestedServiceService {
   }
 
   @Transactional
-  public RequestedServiceResponseDto register(Long userId, RequestedServiceRequestDto requestedServiceRequestDto) {
+  public RequestedServiceResponseDto register(RequestedServiceRequestDto requestedServiceRequestDto) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var user = userService.findById(userId);
     final var requestedServiceToBeSaved = requestedServiceMapper
         .requestedServiceRequestDtoToRequestedService(requestedServiceRequestDto);

@@ -40,6 +40,7 @@ public class UserService {
   private final PasswordRecoveryEmailService passwordRecoveryEmailService;
   private final SignUpConfirmationService signUpConfirmationService;
   private final TokenService tokenService;
+  private final JwtService jwtService;
 
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
@@ -174,7 +175,10 @@ public class UserService {
     });
   }
 
-  public void updatePassword(Long id, PasswordRequestDto passwordRequestDto) {
+  public void updatePassword(PasswordRequestDto passwordRequestDto) {
+    final var id = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var optionalUser = this.userRepository.findById(id);
     final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
     final var isValidPassword = user.isValidPassword(passwordRequestDto.currentPassword(), bCryptPasswordEncoder);
@@ -188,7 +192,10 @@ public class UserService {
     this.save(user);
   }
 
-  public UserResponseDto update(Long id, ProfileRequestDto profileRequestDto) {
+  public UserResponseDto update(ProfileRequestDto profileRequestDto) {
+    final var id = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var optionalUser = this.userRepository.findById(id);
     final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
 

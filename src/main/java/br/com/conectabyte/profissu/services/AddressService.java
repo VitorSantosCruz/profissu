@@ -20,11 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 public class AddressService {
   private final AddressRepository addressRepository;
   private final UserService userService;
+  private final JwtService jwtService;
 
   private final AddressMapper addressMapper = AddressMapper.INSTANCE;
 
   @Transactional
-  public AddressResponseDto register(Long userId, AddressRequestDto addressRequestDto) {
+  public AddressResponseDto register(AddressRequestDto addressRequestDto) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var addressToBeSaved = addressMapper.addressRequestDtoToAddress(addressRequestDto);
     final var user = this.userService.findById(userId);
 

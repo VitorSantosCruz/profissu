@@ -31,11 +31,15 @@ public class ContactService {
   private final TokenService tokenService;
   private final ContactConfirmationService contactConfirmationService;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final JwtService jwtService;
 
   private final ContactMapper contactMapper = ContactMapper.INSTANCE;
 
   @Transactional
-  public ContactResponseDto register(Long userId, ContactRequestDto contactRequestDto) {
+  public ContactResponseDto register(ContactRequestDto contactRequestDto) {
+    final var userId = this.jwtService.getClaims()
+        .map(claims -> Long.valueOf(claims.get("sub").toString()))
+        .orElseThrow();
     final var contactToBeSaved = contactMapper.contactRequestDtoToContact(contactRequestDto);
     final var user = this.userService.findById(userId);
 
@@ -115,7 +119,17 @@ public class ContactService {
 
     contact.setVerificationCompletedAt(LocalDateTime.now());
     this.tokenService.deleteByUser(contact.getUser());
-    contactRepository.save(contact);
+    final var savedContact = contactRepository.save(contact);
+
+    savedContact.getUser().getContacts().stream()
+        .filter(c -> c.isStandard())
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .filter(c -> !c.getValue().equals(contact.getValue()))
+        .map(c -> {
+          c.setStandard(false);
+          return c;
+        })
+        .forEach(c -> contactRepository.save(c));
 
     return new MessageValueResponseDto(HttpStatus.OK.value(), "Contact was confirmed.");
   }

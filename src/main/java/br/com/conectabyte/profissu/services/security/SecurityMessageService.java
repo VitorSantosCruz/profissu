@@ -16,27 +16,23 @@ public class SecurityMessageService implements OwnerCheck {
     try {
       final var message = messageService.findById(id);
 
-      return securityService.isOwner(message.getConversation().getServiceProvider().getId());
+      return securityService.isOwner(message.getUser().getId());
     } catch (Exception e) {
       return false;
     }
   }
 
-  public boolean requestedServiceOwner(Long id) {
+  public boolean isMessageReceiver(Long id) {
     try {
       final var message = messageService.findById(id);
 
-      return securityService.isOwner(message.getConversation().getRequester().getId());
-    } catch (Exception e) {
-      return false;
-    }
-  }
+      var messageReceiverId = message.getConversation().getRequester().getId();
 
-  public boolean messageReceiver(Long id) {
-    try {
-      final var message = messageService.findById(id);
+      if (messageReceiverId == message.getUser().getId()) {
+        messageReceiverId = message.getConversation().getServiceProvider().getId();
+      }
 
-      return !securityService.isOwner(message.getUser().getId());
+      return !securityService.isOwner(messageReceiverId);
     } catch (Exception e) {
       return false;
     }

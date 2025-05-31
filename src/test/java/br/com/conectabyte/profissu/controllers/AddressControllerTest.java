@@ -50,19 +50,18 @@ class AddressControllerTest {
   private ObjectMapper objectMapper;
 
   private final AddressMapper addressMapper = AddressMapper.INSTANCE;
-  private final Long userId = 1L;
-  private final Long addressId = 1L;
   private final Address address = AddressUtils.create(UserUtils.create());
   private final AddressRequestDto validRequest = addressMapper.addressToAddressRequestDto(address);
   private final AddressResponseDto responseDto = addressMapper.addressToAddressResponseDto(address);
 
   @Test
   @WithMockUser
-  void shouldRegisterAddressWhenUserIsOwnerOrAdmin() throws Exception {
-    when(addressService.register(any(), any())).thenReturn(responseDto);
+  void shouldRegisterAddressWhenUserIsOwner() throws Exception {
+    when(addressService.register(any())).thenReturn(responseDto);
     when(securityService.isOwner(any())).thenReturn(true);
 
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isCreated())
@@ -74,7 +73,8 @@ class AddressControllerTest {
   void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
     final var invalidRequest = new AddressRequestDto("", "", "", "", "invalid");
 
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(invalidRequest)))
         .andExpect(status().isBadRequest())
@@ -83,7 +83,7 @@ class AddressControllerTest {
 
   @Test
   void shouldReturnUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isUnauthorized());
@@ -91,21 +91,11 @@ class AddressControllerTest {
 
   @Test
   @WithMockUser
-  void shouldReturnForbiddenWhenUserHasNoPermission() throws Exception {
-    mockMvc.perform(post("/addresses/" + userId)
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(validRequest)))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("Access denied."));
-  }
-
-  @Test
-  @WithMockUser
-  void shouldUpdateAddressWhenUserIsOwnerOrAdmin() throws Exception {
+  void shouldUpdateAddressWhenUserIsOwner() throws Exception {
     when(addressService.update(any(), any())).thenReturn(responseDto);
     when(securityAddressService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(put("/addresses/" + addressId)
+    mockMvc.perform(put("/addresses/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isOk())
@@ -118,7 +108,7 @@ class AddressControllerTest {
     when(addressService.update(any(), any())).thenThrow(new ResourceNotFoundException("Address not found"));
     when(securityAddressService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(put("/addresses/" + addressId)
+    mockMvc.perform(put("/addresses/1")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(validRequest)))
         .andExpect(status().isNotFound())
@@ -128,7 +118,8 @@ class AddressControllerTest {
   @Test
   @WithMockUser
   void shouldReturnBadRequestForMalformedJson() throws Exception {
-    mockMvc.perform(post("/addresses/" + userId)
+    mockMvc.perform(post("/addresses")
+        .param("userId", "1")
         .contentType(MediaType.APPLICATION_JSON)
         .content("{invalidJson}"))
         .andExpect(status().isBadRequest())

@@ -53,13 +53,12 @@ jobs:
       - name: Install openssl
         run: sudo apt-get update && sudo apt-get install -y openssl
 
-      - name: Build
+      - name: Generate RSA keys
         run: |
-          openssl genrsa -out src/main/resources/profissu.key 4096 && \
+          openssl genrsa -out src/main/resources/profissu.key 4096
           openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
-          mvn clean package -DskipTests
 
-      - name: Tests
+      - name: Run Tests and generate JaCoCo report
         env:
           MYSQL_HOST_TEST: 127.0.0.1
           MYSQL_PORT_TEST: 3307
@@ -67,6 +66,10 @@ jobs:
           MYSQL_USER_TEST: admin
           MYSQL_PASSWORD_TEST: admin
         run: |
-          openssl  mvn clean packaggenrsa -out src/main/resources/profissu.key 4096 && \
-          openssl rsa -in src/main/resources/profissu.key -pubout -out src/main/resources/profissu.pub
-          mvn test
+          mvn verify
+
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
