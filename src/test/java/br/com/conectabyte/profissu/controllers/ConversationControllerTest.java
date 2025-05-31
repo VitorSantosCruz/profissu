@@ -110,10 +110,10 @@ class ConversationControllerTest {
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
-    when(conversationService.cancel(any())).thenReturn(conversationResponseDto);
+    when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
     when(securityConversationService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(patch("/conversations/1"))
+    mockMvc.perform(patch("/conversations/1/CANCELLED"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.PENDING.toString()));
   }
@@ -129,8 +129,8 @@ class ConversationControllerTest {
 
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
-    when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
+    when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
+    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/ACCEPTED"))
         .andExpect(status().isOk())
@@ -148,8 +148,8 @@ class ConversationControllerTest {
 
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
-    when(conversationService.acceptOrRejectOffer(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
+    when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
+    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/REJECTED"))
         .andExpect(status().isOk())

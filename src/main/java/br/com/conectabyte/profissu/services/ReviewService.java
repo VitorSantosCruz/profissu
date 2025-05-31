@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ReviewResponseDto;
+import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
+import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ReviewMapper;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
 import jakarta.transaction.Transactional;
@@ -27,6 +29,10 @@ public class ReviewService {
     final var user = userService.findById(userId);
     final var requestedService = requestedServiceService.findById(requestedServiceId);
     final var review = reviewMapper.reviewRequestDtoToReview(reviewRequestDto);
+
+    if (requestedService.getStatus() != RequestedServiceStatusEnum.DONE) {
+      throw new ValidationException("Feedback can only be provided for services that have been completed.");
+    }
 
     review.setUser(user);
     review.setRequestedService(requestedService);

@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.entities.Review;
+import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
+import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
@@ -39,10 +41,12 @@ class ReviewServiceTest {
   private ReviewService reviewService;
 
   @Test
-  void shouldRegisterReviewSuccessfully() {
+  void shouldRegisterReviewSuccessfullyWhenRequestedServiceIsDone() {
     final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, null);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
     when(userService.findById(any())).thenReturn(user);
@@ -60,6 +64,23 @@ class ReviewServiceTest {
     assertThat(response.title()).isEqualTo("Title");
     assertThat(response.review()).isEqualTo("Review");
     assertThat(response.stars()).isEqualTo(5);
+  }
+
+  @Test
+  void shouldThrowValidationExceptionWhenRequestedServiceIsNotDone() {
+    final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
+    final var user = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, null);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.INPROGRESS);
+
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+    when(userService.findById(any())).thenReturn(user);
+    when(requestedServiceService.findById(any())).thenReturn(requestedService);
+
+    assertThatThrownBy(() -> reviewService.register(1L, reviewRequestDto))
+        .isInstanceOf(ValidationException.class)
+        .hasMessageContaining("Feedback can only be provided for services that have been completed.");
   }
 
   @Test
@@ -104,6 +125,8 @@ class ReviewServiceTest {
     final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, null);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
     when(userService.findById(any())).thenReturn(user);

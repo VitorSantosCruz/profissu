@@ -67,7 +67,7 @@ public class ConversationService {
         .findFirst()
         .isPresent();
 
-    this.validate(requestedService, serviceProvider, alreadySubmittedAnOffer);
+    this.validateNewOffers(requestedService, serviceProvider, alreadySubmittedAnOffer);
     conversation.setServiceProvider(serviceProvider);
     conversation.setRequester(requestedService.getUser());
     conversation.setRequestedService(requestedService);
@@ -77,28 +77,15 @@ public class ConversationService {
   }
 
   @Transactional
-  public ConversationResponseDto cancel(Long id) {
+  public ConversationResponseDto changeOfferStatus(Long id, OfferStatusEnum offerStatus) {
     final var conversation = findById(id);
 
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
-      throw new ValidationException("Conversation cannot be canceled.");
-    }
+    validateChangeOfferStatus(conversation);
 
-    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+    if (offerStatus == OfferStatusEnum.ACCEPTED) {
+      rejectOtherPendingOffers(conversation.getRequestedService(), conversation.getId());
 
-    return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
-  }
-
-  @Transactional
-  public ConversationResponseDto acceptOrRejectOffer(Long id, OfferStatusEnum offerStatus) {
-    final var conversation = findById(id);
-
-    if (offerStatus != OfferStatusEnum.ACCEPTED && offerStatus != OfferStatusEnum.REJECTED) {
-      throw new ValidationException("Offer status is invalid.");
-    }
-
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
-      throw new ValidationException("Conversation cannot be accepted/rejected.");
+      conversation.getRequestedService().setStatus(RequestedServiceStatusEnum.INPROGRESS);
     }
 
     conversation.setOfferStatus(offerStatus);
@@ -106,7 +93,8 @@ public class ConversationService {
     return conversationMapper.conversationToConversationResponseDto(conversationRepository.save(conversation));
   }
 
-  private void validate(RequestedService requestedService, User serviceProvider, boolean alreadySubmittedAnOffer) {
+  private void validateNewOffers(RequestedService requestedService, User serviceProvider,
+      boolean alreadySubmittedAnOffer) {
     if (requestedService.getStatus() != RequestedServiceStatusEnum.PENDING) {
       throw new ValidationException("Cannot make an offer for this requested service.");
     }
@@ -118,5 +106,31 @@ public class ConversationService {
     if (alreadySubmittedAnOffer) {
       throw new ValidationException("You have already submitted an offer for this requested service.");
     }
+  }
+
+  private void validateChangeOfferStatus(Conversation conversation) {
+    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
+      throw new ValidationException("Action allowed only when the conversation status is PENDING.");
+    }
+
+    validateNoOfferAcceptedForConversation(conversation.getRequestedService(),
+        "It is not allowed to accept more than one offer for the same service request.");
+  }
+
+  private void rejectOtherPendingOffers(RequestedService requestedService, Long conversationId) {
+    requestedService.getConversations().stream()
+        .filter(c -> c.getId() != conversationId)
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.PENDING)
+        .forEach(c -> {
+          this.changeOfferStatus(c.getId(), OfferStatusEnum.REJECTED);
+        });
+  }
+
+  private void validateNoOfferAcceptedForConversation(RequestedService requestedService, String message) {
+    requestedService.getConversations().stream()
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.ACCEPTED)
+        .forEach(c -> {
+          throw new ValidationException(message);
+        });
   }
 }

@@ -61,12 +61,55 @@ public class ContactServiceTest {
     final var user = UserUtils.create();
     final var contact = ContactUtils.create(user);
 
+    user.setContacts(List.of(contact));
+
     when(contactRepository.findByValue(any())).thenReturn(Optional.of(contact));
     when(contactRepository.save(any())).thenReturn(contact);
     when(tokenService.validateToken(any(), any(), any())).thenReturn(null);
 
     final var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
     final var response = contactService.contactConfirmation(requestDto);
+
+    assertEquals(HttpStatus.OK.value(), response.responseCode());
+    assertEquals("Contact was confirmed.", response.message());
+  }
+
+  @Test
+  void shouldUnsetOtherStandardContactWhenConfirmed() {
+    var user = UserUtils.create();
+    var contactToConfirm = ContactUtils.create(user);
+    var otherStandardContact = ContactUtils.create(user);
+
+    otherStandardContact.setValue("any@conectabyte.com.br");
+    user.setContacts(List.of(otherStandardContact, contactToConfirm));
+
+    when(contactRepository.findByValue(any())).thenReturn(Optional.of(contactToConfirm));
+    when(contactRepository.save(any())).thenReturn(contactToConfirm);
+    when(tokenService.validateToken(any(), any(), any())).thenReturn(null);
+
+    var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    var response = contactService.contactConfirmation(requestDto);
+
+    assertEquals(HttpStatus.OK.value(), response.responseCode());
+    assertEquals("Contact was confirmed.", response.message());
+  }
+
+  @Test
+  void shouldNotUnsetOtherStandardContactIfNotVerified() {
+    var user = UserUtils.create();
+    var contactToConfirm = ContactUtils.create(user);
+    var otherUnverifiedContact = ContactUtils.create(user);
+
+    otherUnverifiedContact.setValue("any@conectabyte.com.br");
+    otherUnverifiedContact.setVerificationCompletedAt(null);
+    user.setContacts(List.of(otherUnverifiedContact, contactToConfirm));
+
+    when(contactRepository.findByValue(any())).thenReturn(Optional.of(contactToConfirm));
+    when(contactRepository.save(any())).thenReturn(contactToConfirm);
+    when(tokenService.validateToken(any(), any(), any())).thenReturn(null);
+
+    var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
+    var response = contactService.contactConfirmation(requestDto);
 
     assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Contact was confirmed.", response.message());

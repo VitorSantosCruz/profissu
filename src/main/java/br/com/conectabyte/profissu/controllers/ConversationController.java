@@ -48,28 +48,14 @@ public class ConversationController {
   @Operation(summary = "Make an offer for a requested service", description = "Allows a user to make an offer by opening a conversation related to a requested service.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Offer successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format, missing required fields, or an offer has already been accepted for this service request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping
   public ResponseEntity<ConversationResponseDto> start(
       @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
-  }
-
-  @Operation(summary = "Cancel a service offer", description = "Allows the user who created the conversation or an admin to cancel an existing offer.")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Offer successfully canceled", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConversationResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid request format", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "401", description = "Invalid or missing authentication credentials", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-      @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
-  })
-  @PreAuthorize("@securityConversationService.ownershipCheck(#id) || @securityService.isAdmin()")
-  @PatchMapping("/{id}")
-  public ResponseEntity<ConversationResponseDto> cancel(@PathVariable Long id) {
-    return ResponseEntity.ok(this.conversationService.cancel(id));
   }
 
   @Operation(summary = "Accept or reject a service offer", description = "Allows the user who owns the requested service to accept or reject a pending offer.")
@@ -80,10 +66,10 @@ public class ConversationController {
       @ApiResponse(responseCode = "403", description = "Access denied", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
       @ApiResponse(responseCode = "404", description = "Conversation not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
-  @PreAuthorize("@securityConversationService.isRequestedServiceOwner(#id)")
+  @PreAuthorize("@securityConversationService.ownershipCheck(#id)")
   @PatchMapping("/{id}/{offerStatus}")
-  public ResponseEntity<ConversationResponseDto> acceptOrRejectOffer(@PathVariable Long id,
+  public ResponseEntity<ConversationResponseDto> changeOfferStatus(@PathVariable Long id,
       @PathVariable OfferStatusEnum offerStatus) {
-    return ResponseEntity.ok(this.conversationService.acceptOrRejectOffer(id, offerStatus));
+    return ResponseEntity.ok(this.conversationService.changeOfferStatus(id, offerStatus));
   }
 }
