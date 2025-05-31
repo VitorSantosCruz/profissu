@@ -31,6 +31,10 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
   private final ReviewService reviewService;
 
+  @Operation(summary = "Find reviews by user", description = "Retrieves reviews based on the user ID and whether the user is the author or the recipient of the reviews.", responses = {
+      @ApiResponse(responseCode = "200", description = "Reviews successfully retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid parameters provided", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @GetMapping
   public Page<ReviewResponseDto> findByUserId(@RequestParam Long userId, @RequestParam boolean isReviewOwner,
       @ParameterObject Pageable pageable) {
