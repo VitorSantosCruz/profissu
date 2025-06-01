@@ -62,7 +62,7 @@ class MessageServiceTest {
     final var serviceProvider = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-    final var messageRequestDto = new MessageRequestDto("Teste");
+    final var messageRequestDto = new MessageRequestDto("Test");
 
     when(conversationService.findById(any())).thenReturn(conversation);
     when(jwtService.getClaims()).thenReturn(Optional.of(new HashMap<>(Map.of("sub", "1"))));
@@ -82,7 +82,7 @@ class MessageServiceTest {
     final var serviceProvider = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
-    final var messageRequestDto = new MessageRequestDto("Teste");
+    final var messageRequestDto = new MessageRequestDto("Test");
 
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
 
@@ -136,7 +136,7 @@ class MessageServiceTest {
     when(userService.findById(any())).thenThrow(new ResourceNotFoundException("User not found."));
 
     assertThrows(ResourceNotFoundException.class,
-        () -> messageService.sendMessage(1L, new MessageRequestDto("Teste")));
+        () -> messageService.sendMessage(1L, new MessageRequestDto("Test")));
   }
 
   @Test
