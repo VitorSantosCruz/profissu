@@ -62,6 +62,19 @@ public class ReviewService {
     return reviewMapper.reviewPageToReviewResponseDtoPage(reviews);
   }
 
+  public ReviewResponseDto updateById(Long id, ReviewRequestDto reviewRequestDto) {
+    final var review = this.findById(id);
+
+    review.setUpdatedAt(LocalDateTime.now());
+    review.setReview(reviewRequestDto.review());
+    review.setStars(reviewRequestDto.stars());
+    review.setTitle(reviewRequestDto.title());
+
+    final var savedReview = reviewRepository.save(review);
+
+    return reviewMapper.reviewToReviewResponseDto(savedReview);
+  }
+
   @Async
   @Transactional
   public void deleteById(Long id) {

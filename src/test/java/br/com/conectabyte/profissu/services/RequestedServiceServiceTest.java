@@ -134,7 +134,8 @@ class RequestedServiceServiceTest {
     when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
     when(requestedServiceRepository.save(any())).thenReturn(requestedService);
 
-    final var result = requestedServiceService.cancel(requestedService.getId());
+    final var result = requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
+        RequestedServiceStatusEnum.CANCELLED);
 
     assertNotNull(result);
     assertEquals(RequestedServiceStatusEnum.CANCELLED, result.status());
@@ -155,9 +156,10 @@ class RequestedServiceServiceTest {
     when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
 
     final var exception = assertThrows(RequestedServiceCancellationException.class,
-        () -> requestedServiceService.cancel(requestedService.getId()));
+        () -> requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
+            RequestedServiceStatusEnum.CANCELLED));
 
-    assertEquals("Requested service can't be cancelled", exception.getMessage());
+    assertEquals("Requested service can't be cancelled/done", exception.getMessage());
 
     verify(requestedServiceRepository, never()).save(any());
   }
@@ -166,7 +168,8 @@ class RequestedServiceServiceTest {
   void shouldThrowExceptionWhenRequestedServiceNotFound() {
     when(requestedServiceRepository.findById(any())).thenReturn(Optional.empty());
 
-    final var exception = assertThrows(ResourceNotFoundException.class, () -> requestedServiceService.cancel(0L));
+    final var exception = assertThrows(ResourceNotFoundException.class,
+        () -> requestedServiceService.changeStatusTOcancelOrDone(0L, RequestedServiceStatusEnum.CANCELLED));
 
     assertEquals("Requested service not found.", exception.getMessage());
     verify(requestedServiceRepository, never()).save(any());

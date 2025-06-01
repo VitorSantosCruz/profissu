@@ -179,8 +179,7 @@ public class UserService {
     final var id = this.jwtService.getClaims()
         .map(claims -> Long.valueOf(claims.get("sub").toString()))
         .orElseThrow();
-    final var optionalUser = this.userRepository.findById(id);
-    final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
+    final var user = this.findById(id);
     final var isValidPassword = user.isValidPassword(passwordRequestDto.currentPassword(), bCryptPasswordEncoder);
 
     if (!isValidPassword) {
@@ -196,8 +195,7 @@ public class UserService {
     final var id = this.jwtService.getClaims()
         .map(claims -> Long.valueOf(claims.get("sub").toString()))
         .orElseThrow();
-    final var optionalUser = this.userRepository.findById(id);
-    final var user = optionalUser.orElseThrow(() -> new ResourceNotFoundException("User not found."));
+    final var user = this.findById(id);
 
     user.setUpdatedAt(LocalDateTime.now());
     user.setName(profileRequestDto.name());
