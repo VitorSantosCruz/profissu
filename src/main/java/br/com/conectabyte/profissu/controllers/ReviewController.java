@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +55,19 @@ public class ReviewController {
   public ResponseEntity<ReviewResponseDto> register(@RequestParam Long requestedServiceId,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
+  }
+
+  @Operation(summary = "Update review by ID", description = "Allows the owner of a review to update its content. Ownership is verified to ensure only the author can perform this action.", responses = {
+      @ApiResponse(responseCode = "200", description = "Review successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "User is not authorized to update this review", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Review not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
+  @PreAuthorize("@securityReviewService.ownershipCheck(#id)")
+  @PutMapping("{id}")
+  public ResponseEntity<ReviewResponseDto> updateById(@PathVariable Long id,
+      @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
+    return ResponseEntity.ok().body(this.reviewService.updateById(id, reviewRequestDto));
   }
 
   @Operation(summary = "Delete review", description = "Allows the user to delete a review they have submitted.", responses = {

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ExceptionDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
+import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.services.RequestedServiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -78,8 +79,9 @@ public class RequestedServiceController {
       @ApiResponse(responseCode = "404", description = "Requested service not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
   })
   @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#id)")
-  @PatchMapping("/{id}/cancel")
-  public ResponseEntity<RequestedServiceResponseDto> cancel(@PathVariable Long id) {
-    return ResponseEntity.ok(requestedServiceService.cancel(id));
+  @PatchMapping("/{id}/{requestedServiceStatusEnum}")
+  public ResponseEntity<RequestedServiceResponseDto> changeStatusTOcancelOrDone(@PathVariable Long id,
+      RequestedServiceStatusEnum requestedServiceStatusEnum) {
+    return ResponseEntity.ok(requestedServiceService.changeStatusTOcancelOrDone(id, requestedServiceStatusEnum));
   }
 }

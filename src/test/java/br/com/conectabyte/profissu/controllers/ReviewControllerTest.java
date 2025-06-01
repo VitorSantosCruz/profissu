@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -150,6 +151,57 @@ class ReviewControllerTest {
 
     mockMvc.perform(delete("/reviews/{id}", 1L))
         .andExpect(status().isAccepted());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldUpdateReviewSuccessfully() throws Exception {
+    final var validRequest = new ReviewRequestDto("Updated Title", "Updated Review", 4);
+    final var response = new ReviewResponseDto(1L, validRequest.title(), validRequest.review(), validRequest.stars(),
+        null, null);
+
+    when(securityReviewService.ownershipCheck(any())).thenReturn(true);
+    when(reviewService.updateById(anyLong(), any())).thenReturn(response);
+
+    mockMvc.perform(put("/reviews/{id}", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(validRequest)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldReturnBadRequestWhenUpdateTitleIsNull() throws Exception {
+    final var invalidRequest = new ReviewRequestDto(null, "Updated Review", 4);
+
+    mockMvc.perform(put("/reviews/{id}", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(invalidRequest)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldReturnBadRequestWhenUpdateReviewIsBlank() throws Exception {
+    final var invalidRequest = new ReviewRequestDto("Updated Title", " ", 4);
+
+    mockMvc.perform(put("/reviews/{id}", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(invalidRequest)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldReturnForbiddenWhenOwnershipCheckFailsOnUpdate() throws Exception {
+    final var validRequest = new ReviewRequestDto("Updated Title", "Updated Review", 4);
+
+    when(securityReviewService.ownershipCheck(any())).thenReturn(false);
+
+    mockMvc.perform(put("/reviews/{id}", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(validRequest)))
+        .andExpect(status().isForbidden());
   }
 
   private org.springframework.test.web.servlet.ResultActions performPost(ReviewRequestDto request) throws Exception {

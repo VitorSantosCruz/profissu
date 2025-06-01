@@ -28,6 +28,7 @@ import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
+import br.com.conectabyte.profissu.utils.ReviewUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -240,5 +241,23 @@ class ReviewServiceTest {
     reviewService.deleteById(1L);
 
     verify(reviewRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldUpdateReviewSuccessfully() {
+    final var review = ReviewUtils.create(null, null);
+    final var updatedReviewDto = new ReviewRequestDto("New Title", "New Review", 5);
+
+    when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
+    when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    final var response = reviewService.updateById(1L, updatedReviewDto);
+
+    assertThat(response).isNotNull();
+    assertThat(response.title()).isEqualTo(updatedReviewDto.title());
+    assertThat(response.review()).isEqualTo(updatedReviewDto.review());
+    assertThat(response.stars()).isEqualTo(updatedReviewDto.stars());
+    assertThat(review.getUpdatedAt()).isNotNull();
+    verify(reviewRepository).save(review);
   }
 }

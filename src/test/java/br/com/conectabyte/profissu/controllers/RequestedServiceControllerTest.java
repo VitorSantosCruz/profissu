@@ -154,7 +154,8 @@ class RequestedServiceControllerTest {
   @WithMockUser
   void shouldReturnNotFoundWhenRequestedServiceNotFound() throws Exception {
     when(securityRequestedServiceService.ownershipCheck(any())).thenReturn(true);
-    when(requestedServiceService.cancel(any())).thenThrow(new ResourceNotFoundException("Requested service not found"));
+    when(requestedServiceService.changeStatusTOcancelOrDone(any(), any()))
+        .thenThrow(new ResourceNotFoundException("Requested service not found"));
 
     mockMvc.perform(patch("/requested-services/{id}/cancel", 1L))
         .andExpect(status().isNotFound())
@@ -183,7 +184,7 @@ class RequestedServiceControllerTest {
         RequestedServiceStatusEnum.CANCELLED, addressResponseDto, userResponseDto);
 
     when(securityRequestedServiceService.ownershipCheck(any())).thenReturn(true);
-    when(requestedServiceService.cancel(any())).thenReturn(requestedServiceResponseDto);
+    when(requestedServiceService.changeStatusTOcancelOrDone(any(), any())).thenReturn(requestedServiceResponseDto);
 
     mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))
         .andExpect(status().isOk())

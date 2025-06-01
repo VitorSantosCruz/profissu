@@ -68,15 +68,14 @@ public class RequestedServiceService {
   }
 
   @Transactional
-  public RequestedServiceResponseDto cancel(Long id) {
+  public RequestedServiceResponseDto changeStatusTOcancelOrDone(Long id,
+      RequestedServiceStatusEnum requestedServiceStatusEnum) {
     final var requestedService = this.findById(id);
 
-    if (!requestedService.canBeCancelled()) {
-      throw new RequestedServiceCancellationException("Requested service can't be cancelled");
-    }
+    canChangeStatus(requestedService, requestedServiceStatusEnum);
 
     requestedService.setUpdatedAt(LocalDateTime.now());
-    requestedService.setStatus(RequestedServiceStatusEnum.CANCELLED);
+    requestedService.setStatus(requestedServiceStatusEnum);
     requestedService.getConversations().forEach(c -> c.getServiceProvider().getContacts().stream()
         .filter(Contact::isStandard)
         .forEach(contact -> requestedServiceCancellationNotificationService
@@ -85,5 +84,14 @@ public class RequestedServiceService {
     final var updatedRequestedService = requestedServiceRepository.save(requestedService);
 
     return requestedServiceMapper.requestedServiceToRequestedServiceResponseDto(updatedRequestedService);
+  }
+
+  private void canChangeStatus(RequestedService requestedService,
+      RequestedServiceStatusEnum requestedServiceStatusEnum) {
+    if (requestedService.getStatus() != RequestedServiceStatusEnum.PENDING
+        || requestedServiceStatusEnum == RequestedServiceStatusEnum.INPROGRESS
+        || requestedServiceStatusEnum == RequestedServiceStatusEnum.DONE) {
+      throw new RequestedServiceCancellationException("Requested service can't be cancelled/done");
+    }
   }
 }

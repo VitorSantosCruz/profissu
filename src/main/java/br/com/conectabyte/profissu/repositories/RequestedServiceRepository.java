@@ -1,5 +1,7 @@
 package br.com.conectabyte.profissu.repositories;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +11,13 @@ import org.springframework.data.repository.query.Param;
 import br.com.conectabyte.profissu.entities.RequestedService;
 
 public interface RequestedServiceRepository extends JpaRepository<RequestedService, Long> {
+  @Query("""
+      FROM RequestedService rs
+        WHERE rs.id = :id
+        AND rs.deletedAt IS NULL
+      """)
+  Optional<RequestedService> findById(@Param("id") Long id);
+
   @Query("""
       FROM RequestedService rs
         WHERE rs.status = 'PENDING'
