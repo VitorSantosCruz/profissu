@@ -209,4 +209,42 @@ class RequestedServiceServiceTest {
     assertEquals(0, result.getTotalElements());
     assertEquals(expectedEmptyResponsePage, result);
   }
+
+  @Test
+  void shouldThrowExceptionWhenTryingToChangeStatusToInProgress() {
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.PENDING);
+
+    when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
+
+    final var exception = assertThrows(RequestedServiceCancellationException.class,
+        () -> requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
+            RequestedServiceStatusEnum.INPROGRESS));
+
+    assertEquals("Requested service can't be cancelled/done", exception.getMessage());
+
+    verify(requestedServiceRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenTryingToChangeStatusToDone() {
+    final var user = UserUtils.create();
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.PENDING);
+
+    when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
+
+    final var exception = assertThrows(RequestedServiceCancellationException.class,
+        () -> requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
+            RequestedServiceStatusEnum.DONE));
+
+    assertEquals("Requested service can't be cancelled/done", exception.getMessage());
+
+    verify(requestedServiceRepository, never()).save(any());
+  }
 }
