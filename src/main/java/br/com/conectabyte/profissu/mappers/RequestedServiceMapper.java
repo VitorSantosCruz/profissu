@@ -21,6 +21,7 @@ public interface RequestedServiceMapper {
   @Mapping(target = "user", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "conversations", ignore = true)
+  @Mapping(target = "reviews", ignore = true)
   RequestedService requestedServiceRequestDtoToRequestedService(RequestedServiceRequestDto requestedServiceRequestDto);
 
   RequestedServiceResponseDto requestedServiceToRequestedServiceResponseDto(

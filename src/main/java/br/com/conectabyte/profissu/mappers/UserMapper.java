@@ -23,6 +23,7 @@ public interface UserMapper {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "token", ignore = true)
   @Mapping(target = "requestedService", ignore = true)
+  @Mapping(target = "reviews", ignore = true)
   User userRequestDtoToUser(UserRequestDto userRequestDto);
 
   UserRequestDto userToUserRequestDto(User user);

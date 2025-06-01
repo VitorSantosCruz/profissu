@@ -18,13 +18,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   @Query("""
       FROM Review r
         WHERE r.user.id <> :userId
-        AND r.requestedService.id IN (
-            SELECT DISTINCT rs.id
-              FROM RequestedService rs
-              JOIN rs.conversations c
-                WHERE c.requester.id = :userId
-                OR c.serviceProvider.id = :userId
-          )
+        AND r.requestedService.id
+        IN (
+          SELECT DISTINCT rs.id
+            FROM RequestedService rs
+            JOIN rs.conversations c
+              WHERE c.requester.id = :userId
+              OR c.serviceProvider.id = :userId
+        )
+        AND r.deletedAt IS NULL
       """)
   Page<Review> findReviewsReceivedByUserId(Long userId, Pageable pageable);
 }

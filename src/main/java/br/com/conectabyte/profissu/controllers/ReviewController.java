@@ -5,7 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,5 +54,12 @@ public class ReviewController {
   public ResponseEntity<ReviewResponseDto> register(@RequestParam Long requestedServiceId,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
+  }
+
+  @PreAuthorize("@securityReviewService.ownershipCheck(#id) || @securityService.isAdmin()")
+  @DeleteMapping("{id}")
+  public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+    this.reviewService.deleteById(id);
+    return ResponseEntity.accepted().build();
   }
 }
