@@ -56,6 +56,12 @@ public class ReviewController {
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
   }
 
+  @Operation(summary = "Delete review", description = "Allows the user to delete a review they have submitted.", responses = {
+      @ApiResponse(responseCode = "202", description = "Review successfully deleted"),
+      @ApiResponse(responseCode = "403", description = "User is not authorized to delete this review", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "400", description = "Malformed ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Review not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @PreAuthorize("@securityReviewService.ownershipCheck(#id) || @securityService.isAdmin()")
   @DeleteMapping("{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
