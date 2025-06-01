@@ -57,6 +57,12 @@ public class ReviewController {
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
   }
 
+  @Operation(summary = "Update review by ID", description = "Allows the owner of a review to update its content. Ownership is verified to ensure only the author can perform this action.", responses = {
+      @ApiResponse(responseCode = "200", description = "Review successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "403", description = "User is not authorized to update this review", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class))),
+      @ApiResponse(responseCode = "404", description = "Review not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
+  })
   @PreAuthorize("@securityReviewService.ownershipCheck(#id)")
   @PutMapping("{id}")
   public ResponseEntity<ReviewResponseDto> updateById(@PathVariable Long id,
