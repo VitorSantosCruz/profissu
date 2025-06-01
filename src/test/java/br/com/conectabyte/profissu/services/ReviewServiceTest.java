@@ -3,6 +3,8 @@ package br.com.conectabyte.profissu.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.entities.Review;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
+import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
@@ -192,4 +195,50 @@ class ReviewServiceTest {
     assertThat(result.getContent()).isEmpty();
   }
 
+  @Test
+  void shouldReturnReviewWhenFoundById() {
+    final var review = new Review();
+
+    review.setId(1L);
+
+    when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
+
+    final var result = reviewService.findById(1L);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo(1L);
+  }
+
+  @Test
+  void shouldThrowResourceNotFoundExceptionWhenReviewNotFound() {
+    when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> reviewService.findById(1L))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessage("User not found.");
+  }
+
+  @Test
+  void shouldSetDeletedAtAndSaveWhenReviewExists() {
+    final var review = new Review();
+
+    review.setId(1L);
+
+    when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
+    when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    reviewService.deleteById(1L);
+
+    assertThat(review.getDeletedAt()).isNotNull();
+    verify(reviewRepository).save(review);
+  }
+
+  @Test
+  void shouldDoNothingWhenReviewDoesNotExist() {
+    when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
+
+    reviewService.deleteById(1L);
+
+    verify(reviewRepository, never()).save(any());
+  }
 }

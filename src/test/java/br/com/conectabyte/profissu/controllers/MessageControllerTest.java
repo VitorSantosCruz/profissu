@@ -52,8 +52,8 @@ class MessageControllerTest {
   @Test
   @WithMockUser
   void shouldSendMessageSuccessfullyWhenIsConversationOwner() throws Exception {
-    final var messageResponseDto = new MessageResponseDto(null, "Teste", false, null);
-    final var messageRequestDto = new MessageRequestDto("Teste");
+    final var messageResponseDto = new MessageResponseDto(null, "Test", false, null);
+    final var messageRequestDto = new MessageRequestDto("Test");
 
     when(securityConversationService.ownershipCheck(any())).thenReturn(true);
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponseDto);
@@ -63,14 +63,14 @@ class MessageControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(messageRequestDto)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.message").value("Teste"));
+        .andExpect(jsonPath("$.message").value("Test"));
   }
 
   @Test
   @WithMockUser
   void shouldSendMessageSuccessfullyWhenIsRequestedServiceOwner() throws Exception {
-    final var messageResponseDto = new MessageResponseDto(null, "Teste", false, null);
-    final var messageRequestDto = new MessageRequestDto("Teste");
+    final var messageResponseDto = new MessageResponseDto(null, "Test", false, null);
+    final var messageRequestDto = new MessageRequestDto("Test");
 
     when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
     when(messageService.sendMessage(any(), any())).thenReturn(messageResponseDto);
@@ -80,14 +80,14 @@ class MessageControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(messageRequestDto)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.message").value("Teste"));
+        .andExpect(jsonPath("$.message").value("Test"));
   }
 
   @Test
   @WithMockUser
   void shouldListMessagesSuccessfully() throws Exception {
-    final var message1 = new MessageResponseDto(1L, "Teste 1", false, null);
-    final var message2 = new MessageResponseDto(2L, "Teste 2", false, null);
+    final var message1 = new MessageResponseDto(1L, "Test 1", false, null);
+    final var message2 = new MessageResponseDto(2L, "Test 2", false, null);
     final var messages = new PageImpl<>(List.of(message1, message2));
 
     when(securityConversationService.ownershipCheck(any())).thenReturn(true);
@@ -101,8 +101,8 @@ class MessageControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())
         .andExpect(jsonPath("$.content.length()").value(2))
-        .andExpect(jsonPath("$.content[0].message").value("Teste 1"))
-        .andExpect(jsonPath("$.content[1].message").value("Teste 2"));
+        .andExpect(jsonPath("$.content[0].message").value("Test 1"))
+        .andExpect(jsonPath("$.content[1].message").value("Test 2"));
   }
 
   @Test

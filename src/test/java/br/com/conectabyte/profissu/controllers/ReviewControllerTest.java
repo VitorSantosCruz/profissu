@@ -3,7 +3,9 @@ package br.com.conectabyte.profissu.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,8 +30,10 @@ import br.com.conectabyte.profissu.dtos.response.ReviewResponseDto;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ReviewService;
 import br.com.conectabyte.profissu.services.security.SecurityRequestedServiceService;
+import br.com.conectabyte.profissu.services.security.SecurityReviewService;
 
-@WebMvcTest({ ReviewController.class, SecurityRequestedServiceService.class, ProfissuProperties.class })
+@WebMvcTest({ ReviewController.class, SecurityReviewService.class, SecurityRequestedServiceService.class,
+    ProfissuProperties.class })
 @Import(SecurityConfig.class)
 class ReviewControllerTest {
 
@@ -41,6 +45,9 @@ class ReviewControllerTest {
 
   @MockitoBean
   private ReviewService reviewService;
+
+  @MockitoBean
+  private SecurityReviewService securityReviewService;
 
   @MockitoBean
   private SecurityRequestedServiceService securityRequestedServiceService;
@@ -132,6 +139,17 @@ class ReviewControllerTest {
         .param("userId", "1")
         .param("isReviewOwner", "true"))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser
+  void shouldDeleteReviewSuccessfully() throws Exception {
+    doNothing().when(reviewService).deleteById(anyLong());
+
+    when(securityReviewService.ownershipCheck(any())).thenReturn(true);
+
+    mockMvc.perform(delete("/reviews/{id}", 1L))
+        .andExpect(status().isAccepted());
   }
 
   private org.springframework.test.web.servlet.ResultActions performPost(ReviewRequestDto request) throws Exception {

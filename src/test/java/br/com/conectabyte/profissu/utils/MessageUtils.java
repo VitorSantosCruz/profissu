@@ -8,7 +8,7 @@ public class MessageUtils {
   public static Message create(User user, Conversation conversation) {
     final var message = new Message();
 
-    message.setMessage("Teste");
+    message.setMessage("Test");
     message.setUser(user);
     message.setConversation(conversation);
 
