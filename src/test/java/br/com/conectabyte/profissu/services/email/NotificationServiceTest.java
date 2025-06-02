@@ -35,7 +35,7 @@ class NotificationServiceTest {
   private ProfissuProperties profissuProperties;
 
   @InjectMocks
-  private NotificationService NotificationService;
+  private NotificationService notificationService;
 
   @BeforeEach
   void before() throws Exception {
@@ -52,7 +52,7 @@ class NotificationServiceTest {
     when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
     when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
 
-    NotificationService.send(new NotificationEmailDto("Notification", "test@conectabyte.com.br"));
+    notificationService.send(new NotificationEmailDto("Notification", "test@conectabyte.com.br"));
 
     verify(javaMailSender, times(1)).createMimeMessage();
     verify(javaMailSender, times(1)).send(mimeMessage);
@@ -67,7 +67,7 @@ class NotificationServiceTest {
       throw new MessagingException("Simulated MessagingException");
     }).when(javaMailSender).createMimeMessage();
 
-    NotificationService.send(new NotificationEmailDto("Notification", "test@conectabyte.com.br"));
+    notificationService.send(new NotificationEmailDto("Notification", "test@conectabyte.com.br"));
 
     verify(javaMailSender, times(1)).createMimeMessage();
     verify(javaMailSender, times(0)).send(mimeMessage);

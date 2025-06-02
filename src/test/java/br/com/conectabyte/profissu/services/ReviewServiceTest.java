@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,10 +64,15 @@ class ReviewServiceTest {
     final var serviceProvider = UserUtils.create();
     final var contact = ContactUtils.create(serviceProvider);
     final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
-    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
+    final var rejectedConversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null,
+        List.of(rejectedConversation, conversation));
+    final var review = ReviewUtils.create(requester, requestedService);
 
     serviceProvider.setContacts(List.of(contact));
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+    rejectedConversation.setOfferStatus(OfferStatusEnum.REJECTED);
+    conversation.setRequestedService(requestedService);
 
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
@@ -74,19 +80,41 @@ class ReviewServiceTest {
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
     when(userService.findById(any())).thenReturn(requester);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
-    when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
-      Review savedReview = invocation.getArgument(0);
-      savedReview.setId(10L);
-      return savedReview;
-    });
+    when(reviewRepository.save(any())).thenReturn(review);
 
     var response = reviewService.register(1L, reviewRequestDto);
 
     assertThat(response).isNotNull();
-    assertThat(response.id()).isEqualTo(10L);
-    assertThat(response.title()).isEqualTo("Title");
-    assertThat(response.review()).isEqualTo("Review");
-    assertThat(response.stars()).isEqualTo(5);
+    assertThat(response.title()).isEqualTo("Title Test");
+    assertThat(response.review()).isEqualTo("Revew Test");
+    assertThat(response.stars()).isEqualTo(1);
+    verify(notificationService, times(1)).send(any());
+  }
+
+  @Test
+  void shouldNotSendNotificationWhenReceiverHasNoValidContact() {
+    final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
+    final var requester = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var contact = ContactUtils.create(serviceProvider);
+    final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
+    final var review = ReviewUtils.create(requester, requestedService);
+
+    contact.setVerificationCompletedAt(null);
+    serviceProvider.setContacts(List.of(contact));
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+    conversation.setRequestedService(requestedService);
+
+    requestedService.setStatus(RequestedServiceStatusEnum.DONE);
+    when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
+    when(userService.findById(any())).thenReturn(requester);
+    when(requestedServiceService.findById(any())).thenReturn(requestedService);
+    when(reviewRepository.save(any())).thenReturn(review);
+
+    reviewService.register(1L, reviewRequestDto);
+
+    verify(notificationService, times(0)).send(any());
   }
 
   @Test
@@ -156,6 +184,7 @@ class ReviewServiceTest {
 
     serviceProvider.setContacts(List.of(contact));
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+    conversation.setRequestedService(requestedService);
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
@@ -281,6 +310,7 @@ class ReviewServiceTest {
     contact.setVerificationCompletedAt(null);
     requester.setContacts(List.of(notVerifiedContact, contact));
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+    conversation.setRequestedService(requestedService);
 
     when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
     when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));

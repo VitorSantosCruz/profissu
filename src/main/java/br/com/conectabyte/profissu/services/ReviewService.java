@@ -21,8 +21,10 @@ import br.com.conectabyte.profissu.repositories.ReviewRepository;
 import br.com.conectabyte.profissu.services.email.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ReviewService {
   private final ReviewRepository reviewRepository;
@@ -56,9 +58,11 @@ public class ReviewService {
     review.setUser(user);
     review.setRequestedService(requestedService);
 
-    sendNotification(review);
+    final var savedReview = reviewRepository.save(review);
 
-    return reviewMapper.reviewToReviewResponseDto(reviewRepository.save(review));
+    sendNotification(savedReview);
+
+    return reviewMapper.reviewToReviewResponseDto(savedReview);
   }
 
   @Transactional
@@ -77,9 +81,11 @@ public class ReviewService {
     review.setStars(reviewRequestDto.stars());
     review.setTitle(reviewRequestDto.title());
 
-    sendNotification(review);
+    final var updatedReview = reviewRepository.save(review);
 
-    return reviewMapper.reviewToReviewResponseDto(reviewRepository.save(review));
+    sendNotification(updatedReview);
+
+    return reviewMapper.reviewToReviewResponseDto(updatedReview);
   }
 
   @Async
@@ -94,23 +100,33 @@ public class ReviewService {
   }
 
   private void sendNotification(Review review) {
-    final var conversation = review.getRequestedService().getConversations().stream()
-        .filter(c -> c.getOfferStatus() == OfferStatusEnum.ACCEPTED)
-        .findAny()
-        .orElseThrow();
+    try {
+      final var conversation = review.getRequestedService().getConversations().stream()
+          .filter(c -> c.getOfferStatus() == OfferStatusEnum.ACCEPTED)
+          .findAny()
+          .orElseThrow();
 
-    var reciver = conversation.getRequester();
+      var receiver = conversation.getRequester();
 
-    if (reciver.getId() == review.getUser().getId()) {
-      reciver = conversation.getServiceProvider();
+      if (receiver.getId() == review.getUser().getId()) {
+        receiver = conversation.getServiceProvider();
+      }
+
+      final var contact = receiver.getContacts().stream()
+          .filter(Contact::isStandard)
+          .filter(c -> c.getVerificationCompletedAt() != null)
+          .findAny()
+          .orElseThrow();
+
+      final var notification = String.format(
+          "%s, %s sent you a review about %s.",
+          receiver.getName(),
+          review.getUser().getName(),
+          conversation.getRequestedService().getTitle());
+
+      notificationService.send(new NotificationEmailDto(notification, contact.getValue()));
+    } catch (Exception e) {
+      log.warn("Unable to send notification");
     }
-
-    final var contact = reciver.getContacts().stream()
-        .filter(Contact::isStandard)
-        .filter(c -> c.getVerificationCompletedAt() != null)
-        .findAny()
-        .orElseThrow();
-
-    notificationService.send(new NotificationEmailDto(review.getTitle(), contact.getValue()));
   }
 }
