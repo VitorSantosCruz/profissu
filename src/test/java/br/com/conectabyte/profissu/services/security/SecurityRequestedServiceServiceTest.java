@@ -36,7 +36,7 @@ public class SecurityRequestedServiceServiceTest {
   void shouldReturnTrueWhenUserIsOwnerOfRequestedService() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
     when(securityService.isOwner(any())).thenReturn(true);
@@ -50,7 +50,7 @@ public class SecurityRequestedServiceServiceTest {
   void shouldReturnFalseWhenUserIsNotOwnerOfRequestedService() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
 
@@ -73,7 +73,7 @@ public class SecurityRequestedServiceServiceTest {
   void shouldReturnTrueWhenUserIsServiceProvider() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     final var serviceProvider = UserUtils.create();
     final var acceptedConversation = new Conversation();
@@ -94,7 +94,7 @@ public class SecurityRequestedServiceServiceTest {
   void shouldReturnFalseWhenUserIsNotServiceProvider() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     final var serviceProvider = UserUtils.create();
     final var acceptedConversation = new Conversation();
@@ -115,7 +115,7 @@ public class SecurityRequestedServiceServiceTest {
   void shouldReturnFalseWhenNoAcceptedOfferExists() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     final var conversation = new Conversation();
     conversation.setServiceProvider(UserUtils.create());

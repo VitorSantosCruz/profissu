@@ -51,9 +51,10 @@ public class ContactService {
     this.tokenService.deleteByUser(user);
     this.tokenService.flush();
     this.tokenService.save(user, code, bCryptPasswordEncoder);
-    this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
 
     final var savedContact = contactRepository.save(contactToBeSaved);
+
+    this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
 
     return contactMapper.contactToContactResponseDto(savedContact);
   }
@@ -69,16 +70,16 @@ public class ContactService {
           }
         });
 
-    if (!contact.getValue().equals(contactRequestDto.value())) {
-      final var code = UUID.randomUUID().toString().split("-")[1];
+    final var code = UUID.randomUUID().toString().split("-")[1];
+    final var wasContactValueChanged = !contact.getValue().equals(contactRequestDto.value());
 
+    if (wasContactValueChanged) {
       contact.setVerificationRequestedAt(LocalDateTime.now());
       contact.setVerificationCompletedAt(null);
 
       this.tokenService.deleteByUser(contact.getUser());
       this.tokenService.flush();
       this.tokenService.save(contact.getUser(), code, bCryptPasswordEncoder);
-      this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
     }
 
     contact.setUpdatedAt(LocalDateTime.now());
@@ -96,6 +97,10 @@ public class ContactService {
     contact.setStandard(contactRequestDto.standard());
 
     final var updatedContact = contactRepository.save(contact);
+
+    if (wasContactValueChanged) {
+      this.contactConfirmationService.send(new EmailCodeDto(contactRequestDto.value(), code));
+    }
 
     return contactMapper.contactToContactResponseDto(updatedContact);
   }
@@ -122,7 +127,7 @@ public class ContactService {
     final var savedContact = contactRepository.save(contact);
 
     savedContact.getUser().getContacts().stream()
-        .filter(c -> c.isStandard())
+        .filter(Contact::isStandard)
         .filter(c -> c.getVerificationCompletedAt() != null)
         .filter(c -> !c.getValue().equals(contact.getValue()))
         .map(c -> {

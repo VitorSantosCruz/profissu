@@ -3,6 +3,7 @@ package br.com.conectabyte.profissu.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,10 +24,14 @@ import org.springframework.data.domain.PageRequest;
 
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.entities.Review;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
+import br.com.conectabyte.profissu.services.email.NotificationService;
+import br.com.conectabyte.profissu.utils.ContactUtils;
+import br.com.conectabyte.profissu.utils.ConversationUtils;
 import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.ReviewUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
@@ -45,19 +50,29 @@ class ReviewServiceTest {
   @Mock
   private JwtService jwtService;
 
+  @Mock
+  NotificationService notificationService;
+
   @InjectMocks
   private ReviewService reviewService;
 
   @Test
   void shouldRegisterReviewSuccessfullyWhenRequestedServiceIsDone() {
     final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, null);
+    final var requester = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var contact = ContactUtils.create(serviceProvider);
+    final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
+
+    serviceProvider.setContacts(List.of(contact));
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
 
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
+    doNothing().when(notificationService).send(any());
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
-    when(userService.findById(any())).thenReturn(user);
+    when(userService.findById(any())).thenReturn(requester);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
     when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
       Review savedReview = invocation.getArgument(0);
@@ -77,13 +92,15 @@ class ReviewServiceTest {
   @Test
   void shouldThrowValidationExceptionWhenRequestedServiceIsNotDone() {
     final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, null);
+    final var requester = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
 
     requestedService.setStatus(RequestedServiceStatusEnum.INPROGRESS);
 
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
-    when(userService.findById(any())).thenReturn(user);
+    when(userService.findById(any())).thenReturn(requester);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
 
     assertThatThrownBy(() -> reviewService.register(1L, reviewRequestDto))
@@ -131,13 +148,18 @@ class ReviewServiceTest {
   @Test
   void shouldPropagateExceptionWhenReviewRepositoryFails() {
     final var reviewRequestDto = new ReviewRequestDto("Title", "Review", 5);
-    final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, null);
+    final var requester = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var contact = ContactUtils.create(serviceProvider);
+    final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
 
+    serviceProvider.setContacts(List.of(contact));
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
     when(jwtService.getClaims()).thenReturn(Optional.of(Map.of("sub", "1")));
-    when(userService.findById(any())).thenReturn(user);
+    when(userService.findById(any())).thenReturn(requester);
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
     when(reviewRepository.save(any(Review.class)))
         .thenThrow(new RuntimeException("Database error"));
@@ -245,8 +267,20 @@ class ReviewServiceTest {
 
   @Test
   void shouldUpdateReviewSuccessfully() {
-    final var review = ReviewUtils.create(null, null);
     final var updatedReviewDto = new ReviewRequestDto("New Title", "New Review", 5);
+    final var requester = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var contact = ContactUtils.create(serviceProvider);
+    final var notVerifiedContact = ContactUtils.create(serviceProvider);
+    final var conversation = ConversationUtils.create(requester, serviceProvider, null, List.of());
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of(conversation));
+    final var review = ReviewUtils.create(serviceProvider, requestedService);
+
+    requester.setId(1L);
+    serviceProvider.setId(2L);
+    contact.setVerificationCompletedAt(null);
+    requester.setContacts(List.of(notVerifiedContact, contact));
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
 
     when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
     when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));

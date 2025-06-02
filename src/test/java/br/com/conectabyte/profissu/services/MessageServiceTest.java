@@ -60,7 +60,7 @@ class MessageServiceTest {
   void shouldSendMessageSuccessfullyWhenStatusIdPending() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
     final var messageRequestDto = new MessageRequestDto("Test");
 
@@ -80,7 +80,7 @@ class MessageServiceTest {
   void shouldSendMessageSuccessfullyWhenStatusIdAccepted() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
     final var messageRequestDto = new MessageRequestDto("Test");
 
@@ -102,7 +102,7 @@ class MessageServiceTest {
   void shouldThrowValidationExceptionWhenSendingMessageWithInvalidOfferStatus() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
@@ -128,7 +128,7 @@ class MessageServiceTest {
   @Test
   void shouldThrowWhenUserNotFound() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     when(conversationService.findById(any())).thenReturn(conversation);

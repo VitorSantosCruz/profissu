@@ -56,7 +56,7 @@ class MessageSchedulerTest {
   void shouldSendNotificationForUnreadMessages() {
     final var requester = createUserWithContact("Requester", "requester@conectabyte.com.br");
     final var serviceProvider = createUserWithContact("ServiceProvider", "serviceProvider@conectabyte.com.br");
-    final var requestedService = RequestedServiceUtils.create(requester, null);
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
     final var unreadMessage = MessageUtils.create(requester, conversation);
 
@@ -85,7 +85,7 @@ class MessageSchedulerTest {
   void shouldNotSendNotificationIfMessageDoesNotBelongToConversation() {
     final var requester = createUserWithContact("Requester", "requester@conectabyte.com.br");
     final var serviceProvider = createUserWithContact("ServiceProvider", "serviceProvider@conectabyte.com.br");
-    final var requestedService = RequestedServiceUtils.create(requester, null);
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
     final var anotherConversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
 
@@ -111,7 +111,7 @@ class MessageSchedulerTest {
   void shouldNotSendNotificationWhenAllMessagesAreRead() {
     final var requester = createUserWithContact("Requester", "requester@conectabyte.com.br");
     final var serviceProvider = createUserWithContact("ServiceProvider", "serviceProvider@conectabyte.com.br");
-    final var requestedService = RequestedServiceUtils.create(requester, null);
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
     final var readMessage = MessageUtils.create(requester, conversation);
 
@@ -134,7 +134,7 @@ class MessageSchedulerTest {
   void shouldNotSendNotificationIfAlreadyNotified() {
     final var requester = createUserWithContact("Requester", "requester@conectabyte.com.br");
     final var serviceProvider = createUserWithContact("ServiceProvider", "serviceProvider@conectabyte.com.br");
-    final var requestedService = RequestedServiceUtils.create(requester, null);
+    final var requestedService = RequestedServiceUtils.create(requester, null, List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
     final var unreadMessage = MessageUtils.create(requester, conversation);
 

@@ -7,14 +7,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import br.com.conectabyte.profissu.dtos.request.NotificationEmailDto;
 import br.com.conectabyte.profissu.dtos.request.ReviewRequestDto;
 import br.com.conectabyte.profissu.dtos.response.ReviewResponseDto;
+import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.Review;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.ReviewMapper;
 import br.com.conectabyte.profissu.repositories.ReviewRepository;
+import br.com.conectabyte.profissu.services.email.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +29,7 @@ public class ReviewService {
   private final UserService userService;
   private final RequestedServiceService requestedServiceService;
   private final JwtService jwtService;
+  private final NotificationService notificationService;
 
   private final ReviewMapper reviewMapper = ReviewMapper.INSTANCE;
 
@@ -51,6 +56,8 @@ public class ReviewService {
     review.setUser(user);
     review.setRequestedService(requestedService);
 
+    sendNotification(review);
+
     return reviewMapper.reviewToReviewResponseDto(reviewRepository.save(review));
   }
 
@@ -70,9 +77,9 @@ public class ReviewService {
     review.setStars(reviewRequestDto.stars());
     review.setTitle(reviewRequestDto.title());
 
-    final var savedReview = reviewRepository.save(review);
+    sendNotification(review);
 
-    return reviewMapper.reviewToReviewResponseDto(savedReview);
+    return reviewMapper.reviewToReviewResponseDto(reviewRepository.save(review));
   }
 
   @Async
@@ -84,5 +91,26 @@ public class ReviewService {
       review.setDeletedAt(LocalDateTime.now());
       reviewRepository.save(review);
     });
+  }
+
+  private void sendNotification(Review review) {
+    final var conversation = review.getRequestedService().getConversations().stream()
+        .filter(c -> c.getOfferStatus() == OfferStatusEnum.ACCEPTED)
+        .findAny()
+        .orElseThrow();
+
+    var reciver = conversation.getRequester();
+
+    if (reciver.getId() == review.getUser().getId()) {
+      reciver = conversation.getServiceProvider();
+    }
+
+    final var contact = reciver.getContacts().stream()
+        .filter(Contact::isStandard)
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .findAny()
+        .orElseThrow();
+
+    notificationService.send(new NotificationEmailDto(review.getTitle(), contact.getValue()));
   }
 }

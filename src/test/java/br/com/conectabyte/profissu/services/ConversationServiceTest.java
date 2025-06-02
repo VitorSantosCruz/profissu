@@ -63,7 +63,7 @@ class ConversationServiceTest {
   void shouldCreateConversationWhenValidRequest() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversationRequestDto = new ConversationRequestDto(1L, "Hello, I'm interested!");
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
@@ -84,7 +84,7 @@ class ConversationServiceTest {
   void shouldThrowExceptionWhenRequestedServiceIsNotPending() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversationRequestDto = new ConversationRequestDto(1L, "Hello, I'm interested!");
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
@@ -105,7 +105,8 @@ class ConversationServiceTest {
   @Test
   void shouldThrowExceptionWhenServiceProviderIsRequester() {
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(serviceProvider, AddressUtils.create(serviceProvider));
+    final var requestedService = RequestedServiceUtils.create(serviceProvider, AddressUtils.create(serviceProvider),
+        List.of());
     final var conversationRequestDto = new ConversationRequestDto(1L, "Hello, I'm interested!");
 
     when(requestedServiceService.findById(any())).thenReturn(requestedService);
@@ -123,7 +124,7 @@ class ConversationServiceTest {
   void shouldThrowExceptionWhenAlreadySubmittedAnOffer() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversationRequestDto = new ConversationRequestDto(1L, "Hello, I'm interested!");
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
@@ -142,7 +143,7 @@ class ConversationServiceTest {
   @Test
   void shouldReturnConversationWhenFoundById() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
     conversation.setId(1L);
 
@@ -168,7 +169,7 @@ class ConversationServiceTest {
   void shouldCancelPendingConversation() {
     final var serviceProvider = UserUtils.create();
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
     conversation.setId(1L);
@@ -201,7 +202,7 @@ class ConversationServiceTest {
   void shouldThrowWhenCancelingNonExistentConversation() {
     final var serviceProvider = UserUtils.create();
     final var requester = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester), List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
@@ -219,7 +220,7 @@ class ConversationServiceTest {
     final var pageable = PageRequest.of(0, 10);
     final var serviceProvider = UserUtils.create();
     final var requester = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester), List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
     final var conversationResponseDto = ConversationMapper.INSTANCE
         .conversationToConversationResponseDto(conversation);
@@ -256,7 +257,7 @@ class ConversationServiceTest {
   void shouldAcceptPendingConversation() {
     final var serviceProvider = UserUtils.create();
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
     final var otherConversation1 = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
     final var otherConversation2 = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
@@ -295,7 +296,7 @@ class ConversationServiceTest {
   void shouldThrowWhenAcceptingNonPendingConversation() {
     final var serviceProvider = UserUtils.create();
     final var requester = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester), List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
@@ -312,7 +313,7 @@ class ConversationServiceTest {
   void shouldRejectPendingConversation() {
     final var serviceProvider = UserUtils.create();
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
     conversation.setId(1L);
@@ -345,7 +346,7 @@ class ConversationServiceTest {
   void shouldThrowWhenRejectingNonPendingConversation() {
     final var serviceProvider = UserUtils.create();
     final var requester = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester));
+    final var requestedService = RequestedServiceUtils.create(requester, AddressUtils.create(requester), List.of());
     final var conversation = ConversationUtils.create(requester, serviceProvider, requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.CANCELLED);

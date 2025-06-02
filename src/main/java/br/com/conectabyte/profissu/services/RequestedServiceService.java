@@ -11,6 +11,7 @@ import br.com.conectabyte.profissu.dtos.request.TitleEmailDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.RequestedService;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
@@ -76,22 +77,39 @@ public class RequestedServiceService {
 
     requestedService.setUpdatedAt(LocalDateTime.now());
     requestedService.setStatus(requestedServiceStatusEnum);
-    requestedService.getConversations().forEach(c -> c.getServiceProvider().getContacts().stream()
-        .filter(Contact::isStandard)
-        .forEach(contact -> requestedServiceCancellationNotificationService
-            .send(new TitleEmailDto(requestedService.getTitle(), contact.getValue()))));
 
     final var updatedRequestedService = requestedServiceRepository.save(requestedService);
+
+    if (requestedServiceStatusEnum == RequestedServiceStatusEnum.CANCELLED) {
+      updatedRequestedService.getConversations()
+          .stream()
+          .filter(c -> c.getOfferStatus() != OfferStatusEnum.CANCELLED)
+          .filter(c -> c.getOfferStatus() != OfferStatusEnum.REJECTED)
+          .forEach(c -> c.getServiceProvider().getContacts().stream()
+              .filter(Contact::isStandard)
+              .forEach(contact -> requestedServiceCancellationNotificationService
+                  .send(new TitleEmailDto(updatedRequestedService.getTitle(), contact.getValue()))));
+    }
 
     return requestedServiceMapper.requestedServiceToRequestedServiceResponseDto(updatedRequestedService);
   }
 
   private void canChangeStatus(RequestedService requestedService,
       RequestedServiceStatusEnum requestedServiceStatusEnum) {
-    if (requestedService.getStatus() != RequestedServiceStatusEnum.PENDING
-        || requestedServiceStatusEnum == RequestedServiceStatusEnum.INPROGRESS
-        || requestedServiceStatusEnum == RequestedServiceStatusEnum.DONE) {
+    final var shouldBlockFinalize = requestedServiceStatusEnum == RequestedServiceStatusEnum.DONE
+        && requestedService.getStatus() != RequestedServiceStatusEnum.INPROGRESS;
+    final var shouldBlockCancel = requestedServiceStatusEnum == RequestedServiceStatusEnum.CANCELLED
+        && requestedService.getStatus() != RequestedServiceStatusEnum.PENDING;
+
+    if (shouldBlockFinalize || shouldBlockCancel) {
       throw new RequestedServiceCancellationException("Requested service can't be cancelled/done");
+    }
+
+    final var isValidStatus = requestedServiceStatusEnum == RequestedServiceStatusEnum.DONE
+        || requestedServiceStatusEnum == RequestedServiceStatusEnum.CANCELLED;
+
+    if (!isValidStatus) {
+      throw new RequestedServiceCancellationException("Status is not valid");
     }
   }
 }

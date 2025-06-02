@@ -33,8 +33,9 @@ public class UserRepositoryTest {
 
     assertTrue(optionalUser.isPresent());
     assertTrue(optionalUser.get().getContacts().stream()
-        .filter(c -> c.getValue().equals(email) && c.isStandard()
-            && c.getVerificationCompletedAt() != null)
+        .filter(c -> c.isStandard())
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .filter(c -> c.getValue().equals(email))
         .findAny().isPresent());
   }
 

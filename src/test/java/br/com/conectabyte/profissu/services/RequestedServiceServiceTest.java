@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import br.com.conectabyte.profissu.dtos.request.RequestedServiceRequestDto;
 import br.com.conectabyte.profissu.dtos.response.RequestedServiceResponseDto;
 import br.com.conectabyte.profissu.entities.RequestedService;
+import br.com.conectabyte.profissu.enums.OfferStatusEnum;
 import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.RequestedServiceCancellationException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
@@ -80,7 +81,7 @@ class RequestedServiceServiceTest {
     final var address = AddressUtils.create(user);
     final var addressRequestDto = AddressMapper.INSTANCE.addressToAddressRequestDto(address);
     final var requestedServiceRequestDto = new RequestedServiceRequestDto("Title", "Description", addressRequestDto);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     requestedService.setUser(user);
 
@@ -125,11 +126,15 @@ class RequestedServiceServiceTest {
     final var serviceProvider = UserUtils.create();
     final var contact = ContactUtils.create(serviceProvider);
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
     final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+    final var rejectedConversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+    final var canceledConversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
 
+    rejectedConversation.setOfferStatus(OfferStatusEnum.REJECTED);
+    canceledConversation.setOfferStatus(OfferStatusEnum.CANCELLED);
     serviceProvider.setContacts(List.of(contact));
-    requestedService.setConversations(List.of(conversation));
+    requestedService.setConversations(List.of(conversation, rejectedConversation, canceledConversation));
 
     when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
     when(requestedServiceRepository.save(any())).thenReturn(requestedService);
@@ -141,15 +146,41 @@ class RequestedServiceServiceTest {
     assertEquals(RequestedServiceStatusEnum.CANCELLED, result.status());
 
     verify(requestedServiceRepository).save(any());
-    verify(requestedServiceCancellationNotificationService, times(requestedService.getConversations().size()))
+    verify(requestedServiceCancellationNotificationService, times(1))
         .send(any());
+  }
+
+  @Test
+  void shouldDoneRequestedServiceSuccessfully() {
+    final var user = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var contact = ContactUtils.create(serviceProvider);
+    final var address = AddressUtils.create(user);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+
+    serviceProvider.setContacts(List.of(contact));
+    requestedService.setStatus(RequestedServiceStatusEnum.INPROGRESS);
+    requestedService.setConversations(List.of(conversation));
+
+    when(requestedServiceRepository.findById(any())).thenReturn(Optional.of(requestedService));
+    when(requestedServiceRepository.save(any())).thenReturn(requestedService);
+
+    final var result = requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
+        RequestedServiceStatusEnum.DONE);
+
+    assertNotNull(result);
+    assertEquals(RequestedServiceStatusEnum.DONE, result.status());
+
+    verify(requestedServiceRepository).save(any());
+    verify(requestedServiceCancellationNotificationService, times(0)).send(any());
   }
 
   @Test
   void shouldThrowExceptionWhenServiceCannotBeCancelled() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
 
@@ -180,7 +211,7 @@ class RequestedServiceServiceTest {
     final var pageable = PageRequest.of(0, 10);
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
     final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
         .requestedServiceToRequestedServiceResponseDto(requestedService);
     final var requestedServicePage = new PageImpl<>(List.of(requestedService), pageable, 1);
@@ -214,7 +245,7 @@ class RequestedServiceServiceTest {
   void shouldThrowExceptionWhenTryingToChangeStatusToInProgress() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     requestedService.setStatus(RequestedServiceStatusEnum.PENDING);
 
@@ -224,7 +255,7 @@ class RequestedServiceServiceTest {
         () -> requestedServiceService.changeStatusTOcancelOrDone(requestedService.getId(),
             RequestedServiceStatusEnum.INPROGRESS));
 
-    assertEquals("Requested service can't be cancelled/done", exception.getMessage());
+    assertEquals("Status is not valid", exception.getMessage());
 
     verify(requestedServiceRepository, never()).save(any());
   }
@@ -233,7 +264,7 @@ class RequestedServiceServiceTest {
   void shouldThrowExceptionWhenTryingToChangeStatusToDone() {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
 
     requestedService.setStatus(RequestedServiceStatusEnum.PENDING);
 

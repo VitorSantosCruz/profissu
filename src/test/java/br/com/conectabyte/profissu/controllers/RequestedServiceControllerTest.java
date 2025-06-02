@@ -63,7 +63,7 @@ class RequestedServiceControllerTest {
   void shouldFindRequestedServicesByUserId() throws Exception {
     final var user = UserUtils.create();
     final var address = AddressUtils.create(user);
-    final var requestedService = RequestedServiceUtils.create(user, address);
+    final var requestedService = RequestedServiceUtils.create(user, address, List.of());
     final var requestedServiceResponseDto = RequestedServiceMapper.INSTANCE
         .requestedServiceToRequestedServiceResponseDto(requestedService);
     final var page = new PageImpl<>(List.of(requestedServiceResponseDto));

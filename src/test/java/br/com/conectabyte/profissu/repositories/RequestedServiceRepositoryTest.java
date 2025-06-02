@@ -43,7 +43,7 @@ public class RequestedServiceRepositoryTest {
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
 
     requestedServiceRepository.save(requestedService);
 
@@ -61,7 +61,7 @@ public class RequestedServiceRepositoryTest {
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
 
     requestedService.setStatus(RequestedServiceStatusEnum.DONE);
     requestedServiceRepository.save(requestedService);
@@ -80,7 +80,7 @@ public class RequestedServiceRepositoryTest {
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
 
     requestedService.setDeletedAt(LocalDateTime.now());
     requestedServiceRepository.save(requestedService);
@@ -98,7 +98,7 @@ public class RequestedServiceRepositoryTest {
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
 
     requestedServiceRepository.save(requestedService);
 
@@ -117,15 +117,17 @@ public class RequestedServiceRepositoryTest {
 
     final var savedUser = userRepository.save(user);
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
     final var savedServiceProvider = userRepository.save(serviceProvider);
     final var savedRequestedService = requestedServiceRepository.save(requestedService);
-    final var conversation = ConversationUtils.create(savedUser, savedServiceProvider, savedRequestedService, List.of());
+    final var conversation = ConversationUtils.create(savedUser, savedServiceProvider, savedRequestedService,
+        List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
     conversationRepository.save(conversation);
 
-    final var requestedServicePage = requestedServiceRepository.findByUserId(savedServiceProvider.getId(), Pageable.ofSize(10));
+    final var requestedServicePage = requestedServiceRepository.findByUserId(savedServiceProvider.getId(),
+        Pageable.ofSize(10));
 
     assertEquals(1, requestedServicePage.getTotalElements());
     assertEquals(savedRequestedService.getId(), requestedServicePage.getContent().get(0).getId());
@@ -140,15 +142,17 @@ public class RequestedServiceRepositoryTest {
 
     final var savedUser = userRepository.save(user);
     final var serviceProvider = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
     final var savedServiceProvider = userRepository.save(serviceProvider);
     final var savedRequestedService = requestedServiceRepository.save(requestedService);
-    final var conversation = ConversationUtils.create(savedUser, savedServiceProvider, savedRequestedService, List.of());
+    final var conversation = ConversationUtils.create(savedUser, savedServiceProvider, savedRequestedService,
+        List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.PENDING);
     conversationRepository.save(conversation);
 
-    final var requestedServicePage = requestedServiceRepository.findByUserId(savedServiceProvider.getId(), Pageable.ofSize(10));
+    final var requestedServicePage = requestedServiceRepository.findByUserId(savedServiceProvider.getId(),
+        Pageable.ofSize(10));
 
     assertEquals(0, requestedServicePage.getTotalElements());
   }
@@ -161,7 +165,7 @@ public class RequestedServiceRepositoryTest {
     user.setAddresses(List.of(address));
 
     final var savedUser = userRepository.save(user);
-    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0));
+    final var requestedService = RequestedServiceUtils.create(savedUser, savedUser.getAddresses().get(0), List.of());
 
     requestedService.setDeletedAt(LocalDateTime.now());
     requestedServiceRepository.save(requestedService);
