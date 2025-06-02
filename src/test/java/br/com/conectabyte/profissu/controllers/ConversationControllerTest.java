@@ -59,7 +59,7 @@ class ConversationControllerTest {
   @WithMockUser
   void shouldFindConversationsByUserId() throws Exception {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
     final var page = new PageImpl<>(List.of(conversationResponseDto));
@@ -106,7 +106,7 @@ class ConversationControllerTest {
   @WithMockUser
   void shouldCancelAConversation() throws Exception {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
@@ -122,7 +122,7 @@ class ConversationControllerTest {
   @WithMockUser
   void shouldAcceptAConversation() throws Exception {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
@@ -141,7 +141,7 @@ class ConversationControllerTest {
   @WithMockUser
   void shouldRejectAConversation() throws Exception {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     conversation.setOfferStatus(OfferStatusEnum.REJECTED);

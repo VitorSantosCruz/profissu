@@ -28,6 +28,7 @@ import br.com.conectabyte.profissu.dtos.request.EmailValueRequestDto;
 import br.com.conectabyte.profissu.dtos.request.PasswordRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ProfileRequestDto;
 import br.com.conectabyte.profissu.dtos.request.ResetPasswordRequestDto;
+import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
@@ -78,8 +79,9 @@ public class UserServiceTest {
     final var findedUser = this.userService.findByEmail(email);
 
     assertTrue(findedUser.getContacts().stream()
-        .filter(c -> c.getValue().equals(email) && c.isStandard()
-            && c.getVerificationCompletedAt() != null)
+        .filter(Contact::isStandard)
+        .filter(c -> c.getVerificationCompletedAt() != null)
+        .filter(c -> c.getValue().equals(email))
         .findAny().isPresent());
   }
 

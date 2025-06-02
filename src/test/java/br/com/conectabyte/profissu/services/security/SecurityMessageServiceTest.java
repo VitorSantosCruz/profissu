@@ -74,13 +74,12 @@ class SecurityMessageServiceTest {
   @Test
   void shouldReturnTrueWhenUserIsNotTheMessageOwner() {
     final var messageOwner = UserUtils.create();
-    final var messageReciver = UserUtils.create();
+    final var messageReceiver = UserUtils.create();
+    final var conversation = ConversationUtils.create(messageOwner, messageReceiver, null, null);
+    final var message = MessageUtils.create(messageOwner, conversation);
 
     messageOwner.setId(1L);
-    messageReciver.setId(2L);
-
-    final var conversation = ConversationUtils.create(messageOwner, messageReciver, null, null);
-    final var message = MessageUtils.create(messageOwner, conversation);
+    messageReceiver.setId(2L);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(false);
@@ -93,13 +92,13 @@ class SecurityMessageServiceTest {
   @Test
   void shouldReturnFalseWhenUserIsTheMessageReceiver() {
     final var messageOwner = UserUtils.create();
-    final var messageReciver = UserUtils.create();
+    final var messageReceiver = UserUtils.create();
 
     messageOwner.setId(1L);
-    messageReciver.setId(2L);
+    messageReceiver.setId(2L);
 
-    final var conversation = ConversationUtils.create(messageOwner, messageReciver, null, null);
-    final var message = MessageUtils.create(messageReciver, conversation);
+    final var conversation = ConversationUtils.create(messageOwner, messageReceiver, null, null);
+    final var message = MessageUtils.create(messageReceiver, conversation);
 
     when(messageService.findById(any())).thenReturn(message);
     when(securityService.isOwner(any())).thenReturn(true);

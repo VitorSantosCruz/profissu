@@ -57,7 +57,7 @@ public class MessageScheduler {
       receiver.getContacts().stream()
           .filter(Contact::isStandard)
           .forEach(contact -> {
-            String notification = String.format(
+            final var notification = String.format(
                 "%s, %s sent you a message about %s.",
                 receiver.getName(),
                 messages.get(0).getUser().getName(),

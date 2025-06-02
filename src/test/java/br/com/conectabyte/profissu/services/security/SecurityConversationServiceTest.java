@@ -34,7 +34,7 @@ public class SecurityConversationServiceTest {
   @Test
   void shouldReturnTrueWhenUserIsOwnerOfConversation() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     when(conversationService.findById(any())).thenReturn(conversation);
@@ -48,7 +48,7 @@ public class SecurityConversationServiceTest {
   @Test
   void shouldReturnFalseWhenUserIsNotOwnerOfConversation() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     when(conversationService.findById(any())).thenReturn(conversation);
@@ -70,7 +70,7 @@ public class SecurityConversationServiceTest {
   @Test
   void shouldReturnTrueWhenUserIsOwnerOfRequestedService() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     when(conversationService.findById(any())).thenReturn(conversation);
@@ -84,7 +84,7 @@ public class SecurityConversationServiceTest {
   @Test
   void shouldReturnFalseWhenUserIsNotOwnerOfRequestedService() {
     final var user = UserUtils.create();
-    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user));
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
 
     when(conversationService.findById(any())).thenReturn(conversation);
