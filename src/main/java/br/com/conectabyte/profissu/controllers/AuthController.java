@@ -66,8 +66,7 @@ public class AuthController {
   @PostMapping("/sign-up-confirmation")
   public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
       @Valid @RequestBody ContactConfirmationRequestDto request) {
-    final var response = this.contactService.contactConfirmation(request);
-    return ResponseEntity.status(response.responseCode()).body(response);
+    return ResponseEntity.ok(contactService.contactConfirmation(request));
   }
 
   @Operation(summary = "Resend sign-up confirmation email", description = "Triggers a request to resend the sign-up confirmation email.", responses = {
@@ -94,7 +93,6 @@ public class AuthController {
   })
   @PostMapping("/password-reset")
   public ResponseEntity<MessageValueResponseDto> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
-    final var response = this.userService.resetPassword(request);
-    return ResponseEntity.status(response.responseCode()).body(response);
+    return ResponseEntity.ok(userService.resetPassword(request));
   }
 }

@@ -3,7 +3,6 @@ package br.com.conectabyte.profissu.services;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -112,14 +111,14 @@ public class ContactService {
 
     if (optionalContact.isEmpty()) {
       log.warn("No contact found with this value: {}", email);
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No contact found with this value.");
+      throw new ValidationException("No contact found with this value.");
     }
 
     final var contact = optionalContact.get();
     final var messageError = tokenService.validateToken(contact.getUser(), email, contactConfirmationRequestDto.code());
 
     if (messageError != null) {
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+      throw new ValidationException(messageError);
     }
 
     contact.setVerificationCompletedAt(LocalDateTime.now());
@@ -136,7 +135,7 @@ public class ContactService {
         })
         .forEach(c -> contactRepository.save(c));
 
-    return new MessageValueResponseDto(HttpStatus.OK.value(), "Contact was confirmed.");
+    return new MessageValueResponseDto("Contact was confirmed.");
   }
 
   public Contact findById(Long id) {

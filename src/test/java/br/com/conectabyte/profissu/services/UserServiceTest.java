@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -32,6 +31,7 @@ import br.com.conectabyte.profissu.entities.Contact;
 import br.com.conectabyte.profissu.entities.Token;
 import br.com.conectabyte.profissu.enums.GenderEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
+import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
@@ -156,56 +156,65 @@ public class UserServiceTest {
     when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
-    var response = userService.resetPassword(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> userService.resetPassword(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("No user found with this e-mail.", response.message());
+    assertEquals("No user found with this e-mail.", exception.getMessage());
   }
 
   @Test
   void shouldReturnBadRequestWhenTokenIsNull() {
     final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    user.setContacts(List.of(contact));
+
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     when(tokenService.validateToken(any(), any(), any())).thenReturn("Missing reset code for user with this e-mail.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
-    final var response = userService.resetPassword(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> userService.resetPassword(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Missing reset code for user with this e-mail.", response.message());
+    assertEquals("Missing reset code for user with this e-mail.", exception.getMessage());
   }
 
   @Test
   void shouldReturnBadRequestWhenTokenIsInvalid() {
     final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    user.setContacts(List.of(contact));
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     when(tokenService.validateToken(any(), any(), any())).thenReturn("Reset code is invalid.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
-    final var response = userService.resetPassword(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> userService.resetPassword(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Reset code is invalid.", response.message());
+    assertEquals("Reset code is invalid.", exception.getMessage());
   }
 
   @Test
   void shouldReturnBadRequestWhenTokenIsExpired() {
     final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    user.setContacts(List.of(contact));
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
     when(tokenService.validateToken(any(), any(), any())).thenReturn("Reset code is expired.");
 
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
-    final var response = userService.resetPassword(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> userService.resetPassword(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Reset code is expired.", response.message());
+    assertEquals("Reset code is expired.", exception.getMessage());
   }
 
   @Test
   void shouldReturnOkWhenPasswordIsUpdated() {
     final var user = UserUtils.create();
+    final var contact = ContactUtils.create(user);
+
+    user.setContacts(List.of(contact));
     user.setToken(new Token());
 
     when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
@@ -215,7 +224,6 @@ public class UserServiceTest {
     final var requestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "admin", "CODE");
     final var response = userService.resetPassword(requestDto);
 
-    assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Password was updated.", response.message());
     verify(tokenService, times(1)).deleteByUser(user);
   }

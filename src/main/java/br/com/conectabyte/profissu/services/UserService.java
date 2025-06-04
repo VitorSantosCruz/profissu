@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,6 +21,7 @@ import br.com.conectabyte.profissu.entities.Role;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.enums.RoleEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
+import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.repositories.UserRepository;
 import br.com.conectabyte.profissu.services.email.PasswordRecoveryEmailService;
@@ -149,19 +149,19 @@ public class UserService {
       user = this.findByEmail(email);
     } catch (Exception e) {
       log.warn("No user found with this e-mail: {}", email);
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "No user found with this e-mail.");
+      throw new ValidationException("No user found with this e-mail.");
     }
 
     final var messageError = tokenService.validateToken(user, email, resetPasswordRequestDto.code());
 
     if (messageError != null) {
-      return new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), messageError);
+      throw new ValidationException(messageError);
     }
 
     user.setPassword(bCryptPasswordEncoder.encode(resetPasswordRequestDto.password()));
     this.tokenService.deleteByUser(user);
 
-    return new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated.");
+    return new MessageValueResponseDto("Password was updated.");
   }
 
   @Async

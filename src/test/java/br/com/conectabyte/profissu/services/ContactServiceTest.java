@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import br.com.conectabyte.profissu.dtos.request.ContactConfirmationRequestDto;
@@ -70,7 +69,6 @@ public class ContactServiceTest {
     final var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
     final var response = contactService.contactConfirmation(requestDto);
 
-    assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Contact was confirmed.", response.message());
   }
 
@@ -90,7 +88,6 @@ public class ContactServiceTest {
     var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
     var response = contactService.contactConfirmation(requestDto);
 
-    assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Contact was confirmed.", response.message());
   }
 
@@ -111,7 +108,6 @@ public class ContactServiceTest {
     var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
     var response = contactService.contactConfirmation(requestDto);
 
-    assertEquals(HttpStatus.OK.value(), response.responseCode());
     assertEquals("Contact was confirmed.", response.message());
   }
 
@@ -120,10 +116,9 @@ public class ContactServiceTest {
     when(contactRepository.findByValue(any())).thenReturn(Optional.empty());
 
     final var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    final var response = contactService.contactConfirmation(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> contactService.contactConfirmation(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("No contact found with this value.", response.message());
+    assertEquals("No contact found with this value.", exception.getMessage());
   }
 
   @Test
@@ -135,10 +130,9 @@ public class ContactServiceTest {
     when(tokenService.validateToken(any(), any(), any())).thenReturn("Missing reset code for user with this e-mail.");
 
     final var requestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    final var response = contactService.contactConfirmation(requestDto);
+    final var exception = assertThrows(ValidationException.class, () -> contactService.contactConfirmation(requestDto));
 
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.responseCode());
-    assertEquals("Missing reset code for user with this e-mail.", response.message());
+    assertEquals("Missing reset code for user with this e-mail.", exception.getMessage());
   }
 
   @Test
