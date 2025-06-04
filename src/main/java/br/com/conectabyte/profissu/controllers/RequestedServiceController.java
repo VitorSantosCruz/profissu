@@ -81,7 +81,7 @@ public class RequestedServiceController {
   @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#id)")
   @PatchMapping("/{id}/{requestedServiceStatusEnum}")
   public ResponseEntity<RequestedServiceResponseDto> changeStatusTOcancelOrDone(@PathVariable Long id,
-      RequestedServiceStatusEnum requestedServiceStatusEnum) {
+      @PathVariable RequestedServiceStatusEnum requestedServiceStatusEnum) {
     return ResponseEntity.ok(requestedServiceService.changeStatusTOcancelOrDone(id, requestedServiceStatusEnum));
   }
 }

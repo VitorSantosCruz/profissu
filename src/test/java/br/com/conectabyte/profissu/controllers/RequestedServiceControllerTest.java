@@ -157,7 +157,7 @@ class RequestedServiceControllerTest {
     when(requestedServiceService.changeStatusTOcancelOrDone(any(), any()))
         .thenThrow(new ResourceNotFoundException("Requested service not found"));
 
-    mockMvc.perform(patch("/requested-services/{id}/cancel", 1L))
+    mockMvc.perform(patch("/requested-services/{id}/CANCELLED", 1L))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Requested service not found"));
   }
@@ -167,7 +167,7 @@ class RequestedServiceControllerTest {
   void shouldReturnForbiddenWhenUserNotAuthorizedToCancel() throws Exception {
     final long serviceId = 1L;
 
-    mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))
+    mockMvc.perform(patch("/requested-services/{id}/CANCELLED", serviceId))
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.message").value("Access denied."));
   }
@@ -186,7 +186,7 @@ class RequestedServiceControllerTest {
     when(securityRequestedServiceService.ownershipCheck(any())).thenReturn(true);
     when(requestedServiceService.changeStatusTOcancelOrDone(any(), any())).thenReturn(requestedServiceResponseDto);
 
-    mockMvc.perform(patch("/requested-services/{id}/cancel", serviceId))
+    mockMvc.perform(patch("/requested-services/{id}/CANCELLED", serviceId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("CANCELLED"))
         .andExpect(jsonPath("$.title").value("Title"));
