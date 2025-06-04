@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,6 +31,7 @@ import br.com.conectabyte.profissu.dtos.response.MessageValueResponseDto;
 import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.EmailNotVerifiedException;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
+import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.UserMapper;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
 import br.com.conectabyte.profissu.services.ContactService;
@@ -198,8 +198,7 @@ public class AuthControllerTest {
   @Test
   void shouldResetPasswordSuccessfullyWhenDataIsValid() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", "CODE");
-    when(userService.resetPassword(any()))
-        .thenReturn(new MessageValueResponseDto(HttpStatus.OK.value(), "Password was updated."));
+    when(userService.resetPassword(any())).thenReturn(new MessageValueResponseDto("Password was updated."));
 
     mockMvc.perform(post("/auth/password-reset")
         .contentType(MediaType.APPLICATION_JSON)
@@ -211,8 +210,8 @@ public class AuthControllerTest {
   @Test
   void shouldReturnBadRequestWhenCodeIsInvalid() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("invalid@conectabyte.com.br", "@Admin123", "CODE");
-    when(userService.resetPassword(any()))
-        .thenReturn(new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
+
+    when(userService.resetPassword(any())).thenThrow(new ValidationException("Reset code is invalid."));
 
     mockMvc.perform(post("/auth/password-reset")
         .contentType(MediaType.APPLICATION_JSON)
@@ -257,8 +256,7 @@ public class AuthControllerTest {
   @Test
   void shouldConfirmSignupSuccessfullyWhenDataIsValid() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    when(contactService.contactConfirmation(any()))
-        .thenReturn(new MessageValueResponseDto(HttpStatus.OK.value(), "Sign up was confirmed."));
+    when(contactService.contactConfirmation(any())).thenReturn(new MessageValueResponseDto("Sign up was confirmed."));
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
         .contentType(MediaType.APPLICATION_JSON)
@@ -270,8 +268,8 @@ public class AuthControllerTest {
   @Test
   void shouldReturnBadRequestWhenSignupCodeIsInvalid() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
-    when(contactService.contactConfirmation(any()))
-        .thenReturn(new MessageValueResponseDto(HttpStatus.BAD_REQUEST.value(), "Reset code is invalid."));
+
+    when(contactService.contactConfirmation(any())).thenThrow(new ValidationException("Reset code is invalid."));
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
         .contentType(MediaType.APPLICATION_JSON)
