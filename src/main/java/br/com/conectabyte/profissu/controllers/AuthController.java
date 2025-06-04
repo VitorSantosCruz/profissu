@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -53,7 +54,8 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid request format or missing required fields", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionDto.class)))
   })
   @PostMapping("/register")
-  public ResponseEntity<UserResponseDto> register(@Validated(ValidatorGroup.class) @RequestBody UserRequestDto user) {
+  public ResponseEntity<UserResponseDto> register(
+      @Validated(value = { Default.class, ValidatorGroup.class }) @RequestBody UserRequestDto user) {
     return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
   }
 
