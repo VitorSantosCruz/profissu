@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import br.com.conectabyte.profissu.entities.Conversation;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
-  @Query("FROM Conversation c WHERE c.requester.id = :userId")
+  @Query("FROM Conversation c WHERE c.requester.id = :userId OR c.serviceProvider.id = :userId")
   Page<Conversation> findByUserId(Long userId, Pageable pageable);
 
   @Query("""
