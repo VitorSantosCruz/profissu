@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.services;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -105,10 +106,8 @@ public class RequestedServiceService {
       throw new RequestedServiceCancellationException("Requested service can't be cancelled/done");
     }
 
-    final var isValidStatus = requestedServiceStatusEnum == RequestedServiceStatusEnum.DONE
-        || requestedServiceStatusEnum == RequestedServiceStatusEnum.CANCELLED;
-
-    if (!isValidStatus) {
+    if (!EnumSet.of(RequestedServiceStatusEnum.DONE, RequestedServiceStatusEnum.CANCELLED)
+        .contains(requestedServiceStatusEnum)) {
       throw new RequestedServiceCancellationException("Status is not valid");
     }
   }
