@@ -25,4 +25,10 @@ jobs:
     needs: enforce-branch
 
     steps:
-      - uses: actions/labeler@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Labeler
+        uses: actions/labeler@v5
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
