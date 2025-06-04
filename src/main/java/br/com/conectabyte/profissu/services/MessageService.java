@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.services;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import br.com.conectabyte.profissu.dtos.response.MessageResponseDto;
 import br.com.conectabyte.profissu.entities.Conversation;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
+import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.MessageMapper;
@@ -49,10 +51,7 @@ public class MessageService {
   public MessageResponseDto sendMessage(Long conversationId, MessageRequestDto messageRequestDto) {
     final var conversation = conversationService.findById(conversationId);
 
-    if (conversation.getOfferStatus() != OfferStatusEnum.PENDING
-        && conversation.getOfferStatus() != OfferStatusEnum.ACCEPTED) {
-      throw new ValidationException("This offer has already been canceled or rejected.");
-    }
+    validateCanSendMessage(conversation);
 
     final var userId = this.jwtService.getClaims()
         .map(claims -> Long.valueOf(claims.get("sub").toString()))
@@ -80,5 +79,19 @@ public class MessageService {
 
   public List<Conversation> findConversationsWithUnreadMessages(LocalDateTime thresholdDate) {
     return messageRepository.findConversationsWithUnreadMessages(thresholdDate);
+  }
+
+  private void validateCanSendMessage(Conversation conversation) {
+    final var requestedService = conversation.getRequestedService();
+
+    if (!EnumSet.of(OfferStatusEnum.ACCEPTED, OfferStatusEnum.PENDING).contains(conversation.getOfferStatus())) {
+      throw new ValidationException("This offer has already been canceled or rejected.");
+    }
+
+    if (!EnumSet.of(RequestedServiceStatusEnum.INPROGRESS, RequestedServiceStatusEnum.PENDING)
+        .contains(requestedService.getStatus())) {
+      throw new ValidationException(
+          "The requested service associated with this offer has already been canceled or completed.");
+    }
   }
 }
