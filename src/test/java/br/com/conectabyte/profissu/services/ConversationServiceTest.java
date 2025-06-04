@@ -212,7 +212,7 @@ class ConversationServiceTest {
     ValidationException exception = assertThrows(ValidationException.class,
         () -> conversationService.changeOfferStatus(1L, OfferStatusEnum.CANCELLED));
 
-    assertEquals("Action allowed only when the conversation status is PENDING.", exception.getMessage());
+    assertEquals("Action allowed only when the offer status is PENDING.", exception.getMessage());
   }
 
   @Test
@@ -306,7 +306,7 @@ class ConversationServiceTest {
     ValidationException exception = assertThrows(ValidationException.class,
         () -> conversationService.changeOfferStatus(1L, OfferStatusEnum.ACCEPTED));
 
-    assertEquals("Action allowed only when the conversation status is PENDING.", exception.getMessage());
+    assertEquals("Action allowed only when the offer status is PENDING.", exception.getMessage());
   }
 
   @Test
@@ -356,6 +356,6 @@ class ConversationServiceTest {
     ValidationException exception = assertThrows(ValidationException.class,
         () -> conversationService.changeOfferStatus(1L, OfferStatusEnum.REJECTED));
 
-    assertEquals("Action allowed only when the conversation status is PENDING.", exception.getMessage());
+    assertEquals("Action allowed only when the offer status is PENDING.", exception.getMessage());
   }
 }
