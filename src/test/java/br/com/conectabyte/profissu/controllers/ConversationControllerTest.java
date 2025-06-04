@@ -108,14 +108,17 @@ class ConversationControllerTest {
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
     final var conversation = ConversationUtils.create(user, UserUtils.create(), requestedService, List.of());
+
+    conversation.setOfferStatus(OfferStatusEnum.CANCELLED);
+
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
     when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
     when(securityConversationService.ownershipCheck(any())).thenReturn(true);
 
-    mockMvc.perform(patch("/conversations/1/CANCELLED"))
+    mockMvc.perform(patch("/conversations/1/cancel"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.PENDING.toString()));
+        .andExpect(jsonPath("$.offerStatus").value(OfferStatusEnum.CANCELLED.toString()));
   }
 
   @Test
@@ -130,7 +133,7 @@ class ConversationControllerTest {
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
     when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
+    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/ACCEPTED"))
         .andExpect(status().isOk())
@@ -149,7 +152,7 @@ class ConversationControllerTest {
     final var conversationResponseDto = ConversationMapper.INSTANCE.conversationToConversationResponseDto(conversation);
 
     when(conversationService.changeOfferStatus(any(), any())).thenReturn(conversationResponseDto);
-    when(securityConversationService.ownershipCheck(any())).thenReturn(true);
+    when(securityConversationService.isRequestedServiceOwner(any())).thenReturn(true);
 
     mockMvc.perform(patch("/conversations/1/REJECTED"))
         .andExpect(status().isOk())

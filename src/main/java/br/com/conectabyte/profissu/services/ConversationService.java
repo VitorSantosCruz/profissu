@@ -80,7 +80,7 @@ public class ConversationService {
   public ConversationResponseDto changeOfferStatus(Long id, OfferStatusEnum offerStatus) {
     final var conversation = findById(id);
 
-    validateChangeOfferStatus(conversation);
+    validateChangeOfferStatus(conversation, offerStatus);
 
     if (offerStatus == OfferStatusEnum.ACCEPTED) {
       rejectOtherPendingOffers(conversation.getRequestedService(), conversation.getId());
@@ -108,9 +108,19 @@ public class ConversationService {
     }
   }
 
-  private void validateChangeOfferStatus(Conversation conversation) {
+  private void validateChangeOfferStatus(Conversation conversation, OfferStatusEnum offerStatus) {
+    final var requestedService = conversation.getRequestedService();
     if (conversation.getOfferStatus() != OfferStatusEnum.PENDING) {
-      throw new ValidationException("Action allowed only when the conversation status is PENDING.");
+      throw new ValidationException("Action allowed only when the offer status is PENDING.");
+    }
+
+    if (OfferStatusEnum.CANCELLED == offerStatus) {
+      return;
+    }
+
+    if (offerStatus == OfferStatusEnum.ACCEPTED
+        && requestedService.getStatus() == RequestedServiceStatusEnum.INPROGRESS) {
+      throw new ValidationException("Action allowed only when the requested service status is PENDING.");
     }
 
     validateNoOfferAcceptedForConversation(conversation.getRequestedService(),
