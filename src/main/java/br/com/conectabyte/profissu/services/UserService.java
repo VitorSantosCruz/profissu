@@ -152,6 +152,13 @@ public class UserService {
       throw new ValidationException("No user found with this e-mail.");
     }
 
+    final var isValidated = user.getContacts().stream()
+        .anyMatch(c -> c.getVerificationCompletedAt() != null);
+
+    if (!isValidated) {
+      throw new ValidationException("The provided contact has not been validated.");
+    }
+
     final var messageError = tokenService.validateToken(user, email, resetPasswordRequestDto.code());
 
     if (messageError != null) {
