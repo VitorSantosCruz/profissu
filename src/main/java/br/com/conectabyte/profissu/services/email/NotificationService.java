@@ -9,7 +9,6 @@ import org.thymeleaf.TemplateEngine;
 import br.com.conectabyte.profissu.dtos.request.NotificationEmailDto;
 import br.com.conectabyte.profissu.dtos.request.SendEmailDto;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
-import br.com.conectabyte.profissu.services.EmailService;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +22,8 @@ public class NotificationService extends EmailService<NotificationEmailDto> {
 
   @Override
   public void send(NotificationEmailDto data) {
+    log.info("Attempting to send notification email to: {}", data.email());
+
     final var variables = Map.of(
         "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "notification", data.notification());
@@ -33,7 +34,7 @@ public class NotificationService extends EmailService<NotificationEmailDto> {
     try {
       sendEmail(sendEmailDto);
     } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", data.email(), e.getMessage());
+      log.error("Failed to send notification email to {}: {}", data.email(), e.getMessage());
     }
   }
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import br.com.conectabyte.profissu.dtos.request.MessageRequestDto;
 import br.com.conectabyte.profissu.entities.Message;
 import br.com.conectabyte.profissu.enums.OfferStatusEnum;
+import br.com.conectabyte.profissu.enums.RequestedServiceStatusEnum;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.exceptions.ValidationException;
 import br.com.conectabyte.profissu.mappers.MessageMapper;
@@ -36,8 +39,8 @@ import br.com.conectabyte.profissu.utils.RequestedServiceUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("MessageService Tests")
 class MessageServiceTest {
-
   @Mock
   private MessageRepository messageRepository;
 
@@ -57,6 +60,7 @@ class MessageServiceTest {
   private MessageService messageService;
 
   @Test
+  @DisplayName("Should send message successfully when status is PENDING")
   void shouldSendMessageSuccessfullyWhenStatusIdPending() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
@@ -77,6 +81,7 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should send message successfully when status is ACCEPTED")
   void shouldSendMessageSuccessfullyWhenStatusIdAccepted() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
@@ -99,6 +104,7 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should throw ValidationException when sending message with invalid offer status")
   void shouldThrowValidationExceptionWhenSendingMessageWithInvalidOfferStatus() {
     final var user = UserUtils.create();
     final var serviceProvider = UserUtils.create();
@@ -118,6 +124,7 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should throw ResourceNotFoundException when conversation not found")
   void shouldThrowWhenConversationNotFound() {
     when(conversationService.findById(any())).thenThrow(new ResourceNotFoundException("Conversation not found."));
 
@@ -126,6 +133,7 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should throw ResourceNotFoundException when user not found from JWT")
   void shouldThrowWhenUserNotFound() {
     final var user = UserUtils.create();
     final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
@@ -140,6 +148,7 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should list messages successfully")
   void shouldListMessagesSuccessfully() {
     final var conversationId = 1L;
     final var pageable = PageRequest.of(0, 10);
@@ -159,17 +168,19 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should find message by ID when it exists")
   void shouldFindMessageByIdWhenExists() {
     final var message = MessageUtils.create(null, null);
     when(messageRepository.findById(any())).thenReturn(Optional.of(message));
 
     Message foundMessage = messageService.findById(1L);
 
-    assert (foundMessage).equals(message);
+    assertEquals(message, foundMessage);
     verify(messageRepository).findById(any());
   }
 
   @Test
+  @DisplayName("Should throw ResourceNotFoundException when message does not exist by ID")
   void shouldThrowResourceNotFoundWhenMessageDoesNotExist() {
     when(messageRepository.findById(any())).thenReturn(Optional.empty());
 
@@ -181,15 +192,42 @@ class MessageServiceTest {
   }
 
   @Test
+  @DisplayName("Should mark message as read when it exists")
   void shouldMarkMessageAsReadWhenExists() {
     final var message = MessageUtils.create(null, null);
     when(messageRepository.findById(any())).thenReturn(Optional.of(message));
-    when(messageRepository.save(any(Message.class))).thenReturn(message);
+    when(messageRepository.save(any(Message.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     messageService.markAsRead(1L);
 
-    assert (message.isRead());
+    assertTrue(message.isRead());
     verify(messageRepository).findById(any());
     verify(messageRepository).save(message);
+  }
+
+  @Test
+  @DisplayName("Should throw ValidationException when sending message with invalid requested service status")
+  void shouldThrowValidationExceptionWhenSendingMessageWithInvalidRequestedServiceStatus() {
+    final var user = UserUtils.create();
+    final var serviceProvider = UserUtils.create();
+    final var requestedService = RequestedServiceUtils.create(user, AddressUtils.create(user), List.of());
+    requestedService.setStatus(RequestedServiceStatusEnum.DONE);
+
+    final var conversation = ConversationUtils.create(user, serviceProvider, requestedService, List.of());
+    conversation.setOfferStatus(OfferStatusEnum.ACCEPTED);
+
+    final var messageRequestDto = new MessageRequestDto("Test message");
+
+    when(conversationService.findById(any())).thenReturn(conversation);
+
+    final var exception = assertThrows(ValidationException.class,
+        () -> messageService.sendMessage(1L, messageRequestDto));
+
+    assertEquals("The requested service associated with this offer has already been canceled or completed.",
+        exception.getMessage());
+    verify(conversationService).findById(any());
+    verify(jwtService, org.mockito.Mockito.never()).getClaims();
+    verify(userService, org.mockito.Mockito.never()).findById(any());
+    verify(messageRepository, org.mockito.Mockito.never()).save(any());
   }
 }

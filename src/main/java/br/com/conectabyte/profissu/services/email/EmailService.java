@@ -1,4 +1,4 @@
-package br.com.conectabyte.profissu.services;
+package br.com.conectabyte.profissu.services.email;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -27,6 +27,8 @@ public abstract class EmailService<T> {
   public abstract void send(T data);
 
   protected void sendEmail(SendEmailDto sendEmailDto) throws MessagingException {
+    log.debug("Preparing to send email to: {} with subject: {}", sendEmailDto.email(), sendEmailDto.subject());
+
     final var message = javaMailSender.createMimeMessage();
     final var helper = new MimeMessageHelper(message, true);
     final var context = new Context();
@@ -40,5 +42,6 @@ public abstract class EmailService<T> {
     helper.setText(htmlContent, true);
 
     javaMailSender.send(message);
+    log.info("Email successfully sent to: {} with subject: {}", sendEmailDto.email(), sendEmailDto.subject());
   }
 }

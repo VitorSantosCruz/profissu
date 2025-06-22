@@ -10,11 +10,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -61,8 +64,10 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, swaggerEndpoints).permitAll()
             .requestMatchers(HttpMethod.GET, staticResources).permitAll()
             .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
+            .requestMatchers("/actuator/prometheus").hasRole("ACTUATOR")
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+        .httpBasic(Customizer.withDefaults())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
     return http.build();
   }
@@ -77,6 +82,16 @@ public class SecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
+  }
+
+  @Bean
+  public UserDetailsService userDetailsService(BCryptPasswordEncoder bCryptPasswordEncoder) {
+    return new InMemoryUserDetailsManager(
+        User.withUsername(profissuProperties.getSpring().getSecurity().getUser().getName())
+            .password(
+                bCryptPasswordEncoder.encode(profissuProperties.getSpring().getSecurity().getUser().getPassword()))
+            .roles("ACTUATOR")
+            .build());
   }
 
   @Bean

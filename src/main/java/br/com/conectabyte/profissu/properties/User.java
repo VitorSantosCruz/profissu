@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Spring {
-  private Application application = new Application();
-  private Security security = new Security();
+public class User {
+  private String name;
+  private String password;
 }

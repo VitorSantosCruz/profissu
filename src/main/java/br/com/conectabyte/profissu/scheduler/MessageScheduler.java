@@ -16,7 +16,9 @@ import br.com.conectabyte.profissu.services.MessageService;
 import br.com.conectabyte.profissu.services.email.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageScheduler {
@@ -26,23 +28,34 @@ public class MessageScheduler {
   @Scheduled(initialDelay = 0, fixedRate = 600000)
   @Transactional
   public void notifyUnreadMessages() {
+    log.info("Starting scheduled task: notifyUnreadMessages at {}", LocalDateTime.now());
+
     final var thresholdDate = LocalDateTime.now().minusMinutes(5);
+    log.debug("Threshold date for unread messages: {}", thresholdDate);
+
     final var conversationsWithUnreadMessages = messageService.findConversationsWithUnreadMessages(thresholdDate);
+    log.debug("Found {} conversations with potential unread messages.", conversationsWithUnreadMessages.size());
 
-    conversationsWithUnreadMessages.forEach(c -> {
-      final var requester = c.getRequester();
-      final var serviceProvider = c.getServiceProvider();
-      final var requesterMessages = requester.getMessages();
-      final var serviceProviderMessages = serviceProvider.getMessages();
+    if (conversationsWithUnreadMessages.isEmpty()) {
+      log.info("No conversations with unread messages requiring notification found.");
+    } else {
+      conversationsWithUnreadMessages.forEach(c -> {
+        log.debug("Processing conversation ID: {}", c.getId());
+        final var requester = c.getRequester();
+        final var serviceProvider = c.getServiceProvider();
 
-      proprocessMessages(requesterMessages, c, serviceProvider, thresholdDate);
-      proprocessMessages(serviceProviderMessages, c, requester, thresholdDate);
-    });
+        proprocessMessages(requester.getMessages(), c, serviceProvider, thresholdDate);
+        proprocessMessages(serviceProvider.getMessages(), c, requester, thresholdDate);
+      });
+      log.info("Finished processing unread messages notifications.");
+    }
   }
 
   private void proprocessMessages(List<Message> messages, Conversation conversation, User receiver,
       LocalDateTime thresholdDate) {
-    final var messagesReaded = messages.stream()
+    log.debug("Preprocessing messages for receiver: {} in conversation: {}", receiver.getId(), conversation.getId());
+
+    final var messagesToNotify = messages.stream()
         .filter(m -> m.getConversation().getId() == conversation.getId())
         .filter(m -> !m.isRead())
         .filter(m -> !m.isNotificationSent())
@@ -53,18 +66,26 @@ public class MessageScheduler {
         })
         .collect(Collectors.toList());
 
-    if (messagesReaded.size() > 0) {
+    if (!messagesToNotify.isEmpty()) {
+      log.info("Found {} unread messages for user {} in conversation {}. Sending notifications...",
+          messagesToNotify.size(), receiver.getName(), conversation.getId());
+
       receiver.getContacts().stream()
           .filter(Contact::isStandard)
           .forEach(contact -> {
             final var notification = String.format(
                 "%s, %s sent you a message about %s.",
                 receiver.getName(),
-                messages.get(0).getUser().getName(),
+                messagesToNotify.get(0).getUser().getName(),
                 conversation.getRequestedService().getTitle());
 
+            log.debug("Sending notification email to {} for conversation {}. Message: {}", contact.getValue(),
+                conversation.getId(), notification);
             notificationService.send(new NotificationEmailDto(notification, contact.getValue()));
           });
+    } else {
+      log.debug("No new unread messages requiring notification for user {} in conversation {}.", receiver.getName(),
+          conversation.getId());
     }
   }
 }

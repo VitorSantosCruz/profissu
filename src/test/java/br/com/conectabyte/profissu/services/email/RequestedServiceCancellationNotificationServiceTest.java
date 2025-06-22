@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.services.email;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +26,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("RequestedServiceCancellationNotificationService Tests")
 class RequestedServiceCancellationNotificationServiceTest {
+
   @Mock
   private JavaMailSender javaMailSender;
 
@@ -37,40 +41,49 @@ class RequestedServiceCancellationNotificationServiceTest {
   @InjectMocks
   private RequestedServiceCancellationNotificationService requestedServiceCancellationNotificationService;
 
+  private static final String TEST_EMAIL = "user@conectabyte.com.br";
+  private static final String TEST_SERVICE_NAME = "Consultoria de TI";
+  private static final String TEMPLATE_NAME = "service_request_cancellation_email.html";
+
   @BeforeEach
   void before() throws Exception {
     final var loadedProfissuProperties = new PropertiesLoader().loadProperties();
 
     when(profissuProperties.getProfissu()).thenReturn(loadedProfissuProperties.getProfissu());
+
   }
 
   @Test
+  @DisplayName("Should send service cancellation notification successfully")
   void shouldSendRequestedServiceCancellationNotificationSuccessfully() throws MessagingException {
     final var htmlContent = "<html><body>Reset Code: 123456</body></html>";
+
     final var mimeMessage = mock(MimeMessage.class);
+    final var titleEmailDto = new TitleEmailDto(TEST_SERVICE_NAME, TEST_EMAIL);
 
     when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
     when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
 
-    requestedServiceCancellationNotificationService.send(new TitleEmailDto("Title", "test@conectabyte.com.br"));
+    requestedServiceCancellationNotificationService.send(titleEmailDto);
 
     verify(javaMailSender, times(1)).createMimeMessage();
+    verify(templateEngine, times(1)).process(eq(TEMPLATE_NAME), any(Context.class));
     verify(javaMailSender, times(1)).send(mimeMessage);
-    verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
   }
 
   @Test
-  void shouldLogErrorSendRequestedServiceCancellationNotificationWhenMessagingExceptionIsThrown() throws Exception {
-    final var mimeMessage = mock(MimeMessage.class);
+  @DisplayName("Should log error and not send email when MessagingException occurs")
+  void shouldLogErrorWhenMessagingExceptionIsThrown() throws MessagingException {
+    final var titleEmailDto = new TitleEmailDto(TEST_SERVICE_NAME, TEST_EMAIL);
 
     doAnswer(invocation -> {
       throw new MessagingException("Simulated MessagingException");
     }).when(javaMailSender).createMimeMessage();
 
-    requestedServiceCancellationNotificationService.send(new TitleEmailDto("Title", "test@conectabyte.com.br"));
+    requestedServiceCancellationNotificationService.send(titleEmailDto);
 
     verify(javaMailSender, times(1)).createMimeMessage();
-    verify(javaMailSender, times(0)).send(mimeMessage);
     verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
+    verify(javaMailSender, times(0)).send(any(MimeMessage.class));
   }
 }

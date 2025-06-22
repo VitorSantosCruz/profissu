@@ -29,10 +29,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Authentication", description = "Operations related to managing authentication")
 public class AuthController {
   private final LoginService loginService;
@@ -46,6 +48,7 @@ public class AuthController {
   })
   @PostMapping("/login")
   public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto credentials) {
+    log.debug("Login request received: {}", credentials);
     return ResponseEntity.ok(loginService.login(credentials));
   }
 
@@ -56,6 +59,7 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<UserResponseDto> register(
       @Validated(value = { Default.class, ValidatorGroup.class }) @RequestBody UserRequestDto user) {
+    log.debug("Register request received: {}", user);
     return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(user));
   }
 
@@ -66,6 +70,7 @@ public class AuthController {
   @PostMapping("/sign-up-confirmation")
   public ResponseEntity<MessageValueResponseDto> signUpConfirmation(
       @Valid @RequestBody ContactConfirmationRequestDto request) {
+    log.debug("Sign-up confirmation request received: {}", request);
     return ResponseEntity.ok(contactService.contactConfirmation(request));
   }
 
@@ -74,6 +79,7 @@ public class AuthController {
   })
   @PostMapping("/sign-up-confirmation/resend")
   public ResponseEntity<Void> resendSignUpConfirmation(@Valid @RequestBody EmailValueRequestDto request) {
+    log.debug("Resend sign-up confirmation request received: {}", request);
     this.userService.resendSignUpConfirmation(request);
     return ResponseEntity.accepted().build();
   }
@@ -83,6 +89,7 @@ public class AuthController {
   })
   @PostMapping("/password-recovery")
   public ResponseEntity<Void> recoverPassword(@Valid @RequestBody EmailValueRequestDto request) {
+    log.debug("Password recovery request received: {}", request);
     this.userService.recoverPassword(request);
     return ResponseEntity.accepted().build();
   }
@@ -93,6 +100,7 @@ public class AuthController {
   })
   @PostMapping("/password-reset")
   public ResponseEntity<MessageValueResponseDto> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
+    log.debug("Password reset request received: {}", request);
     return ResponseEntity.ok(userService.resetPassword(request));
   }
 }

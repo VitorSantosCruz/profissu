@@ -23,7 +23,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -39,6 +41,7 @@ public class UserController {
   })
   @GetMapping("/{id}")
   public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
+    log.debug("Find user by ID request received. ID: {}", id);
     return ResponseEntity.ok().body(this.userService.findByIdAndReturnDto(id));
   }
 
@@ -51,6 +54,7 @@ public class UserController {
   @PreAuthorize("@securityService.isOwner(#id) || @securityService.isAdmin()")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+    log.debug("Soft delete user profile request received. ID: {}", id);
     this.userService.deleteById(id);
     return ResponseEntity.accepted().build();
   }
@@ -62,6 +66,7 @@ public class UserController {
   })
   @PutMapping
   public ResponseEntity<UserResponseDto> update(@Valid @RequestBody ProfileRequestDto profileRequestDto) {
+    log.debug("Update user profile request received: {}", profileRequestDto);
     return ResponseEntity.ok().body(this.userService.update(profileRequestDto));
   }
 
@@ -72,6 +77,7 @@ public class UserController {
   })
   @PatchMapping("/password")
   public ResponseEntity<Void> updatePassword(@Valid @RequestBody PasswordRequestDto passwordRequestDto) {
+    log.debug("Update user password request received.");
     this.userService.updatePassword(passwordRequestDto);
     return ResponseEntity.noContent().build();
   }

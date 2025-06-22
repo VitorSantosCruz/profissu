@@ -2,15 +2,23 @@ package br.com.conectabyte.profissu.services.security;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import br.com.conectabyte.profissu.entities.Conversation;
+import br.com.conectabyte.profissu.entities.Message;
+import br.com.conectabyte.profissu.entities.User;
 import br.com.conectabyte.profissu.exceptions.ResourceNotFoundException;
 import br.com.conectabyte.profissu.services.MessageService;
 import br.com.conectabyte.profissu.utils.ConversationUtils;
@@ -18,8 +26,8 @@ import br.com.conectabyte.profissu.utils.MessageUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("SecurityMessageService Tests")
 class SecurityMessageServiceTest {
-
   @Mock
   private MessageService messageService;
 
@@ -29,91 +37,176 @@ class SecurityMessageServiceTest {
   @InjectMocks
   private SecurityMessageService securityMessageService;
 
+  private static final Long TEST_MESSAGE_ID = 1L;
+  private static final Long SENDER_USER_ID = 10L;
+  private static final Long RECEIVER_USER_ID = 20L;
+  private static final Long OTHER_USER_ID = 30L;
+
   @Test
+  @DisplayName("Should return true when authenticated user is the message owner")
   void shouldReturnTrueWhenUserIsOwnerOfMessage() {
-    final var user = UserUtils.create();
+    User messageOwner = UserUtils.create();
+    messageOwner.setId(SENDER_USER_ID);
+    Conversation conversation = ConversationUtils.create(null, null, null, null);
+    Message message = MessageUtils.create(messageOwner, conversation);
 
-    user.setId(1L);
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(SENDER_USER_ID))).thenReturn(true);
 
-    final var conversation = ConversationUtils.create(null, null, null, null);
-    final var message = MessageUtils.create(user, conversation);
-
-    when(messageService.findById(any())).thenReturn(message);
-    when(securityService.isOwner(any())).thenReturn(true);
-
-    final var isOwner = securityMessageService.ownershipCheck(1L);
+    boolean isOwner = securityMessageService.ownershipCheck(TEST_MESSAGE_ID);
 
     assertTrue(isOwner);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(SENDER_USER_ID));
   }
 
   @Test
+  @DisplayName("Should return false when authenticated user is not the message owner")
   void shouldReturnFalseWhenUserIsNotOwnerOfMessage() {
-    final var user = UserUtils.create();
+    User messageOwner = UserUtils.create();
+    messageOwner.setId(OTHER_USER_ID);
+    Conversation conversation = ConversationUtils.create(null, null, null, null);
+    Message message = MessageUtils.create(messageOwner, conversation);
 
-    user.setId(1L);
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(OTHER_USER_ID))).thenReturn(false);
 
-    final var conversation = ConversationUtils.create(null, null, null, null);
-    final var message = MessageUtils.create(user, conversation);
-
-    when(messageService.findById(any())).thenReturn(message);
-
-    final var isOwner = securityMessageService.ownershipCheck(1L);
+    boolean isOwner = securityMessageService.ownershipCheck(TEST_MESSAGE_ID);
 
     assertFalse(isOwner);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(OTHER_USER_ID));
   }
 
   @Test
+  @DisplayName("Should return false when message not found during ownership check")
   void shouldReturnFalseWhenMessageNotFoundInOwnershipCheck() {
-    when(messageService.findById(any())).thenThrow(new ResourceNotFoundException("Message not found"));
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenThrow(new ResourceNotFoundException("Message not found"));
 
-    final var isOwner = securityMessageService.ownershipCheck(1L);
+    boolean isOwner = securityMessageService.ownershipCheck(TEST_MESSAGE_ID);
 
     assertFalse(isOwner);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, never()).isOwner(anyLong());
   }
 
   @Test
-  void shouldReturnTrueWhenUserIsNotTheMessageOwner() {
-    final var messageOwner = UserUtils.create();
-    final var messageReceiver = UserUtils.create();
-    final var conversation = ConversationUtils.create(messageOwner, messageReceiver, null, null);
-    final var message = MessageUtils.create(messageOwner, conversation);
+  @DisplayName("Should return false when unexpected exception occurs during ownership check")
+  void shouldReturnFalseWhenUnexpectedExceptionInOwnershipCheck() {
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenThrow(new RuntimeException("Simulated error"));
 
-    messageOwner.setId(1L);
-    messageReceiver.setId(2L);
+    boolean isOwner = securityMessageService.ownershipCheck(TEST_MESSAGE_ID);
 
-    when(messageService.findById(any())).thenReturn(message);
-    when(securityService.isOwner(any())).thenReturn(false);
+    assertFalse(isOwner);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, never()).isOwner(anyLong());
+  }
 
-    final var isReceiver = securityMessageService.isMessageReceiver(1L);
+  @Test
+  @DisplayName("Should return true when authenticated user is the message receiver (not owner)")
+  void shouldReturnTrueWhenUserIsTheMessageReceiverAndNotOwner() {
+    User messageSender = UserUtils.create();
+    messageSender.setId(SENDER_USER_ID);
+    User messageReceiver = UserUtils.create();
+    messageReceiver.setId(RECEIVER_USER_ID);
+
+    Conversation conversation = ConversationUtils.create(messageSender, messageReceiver, null, null);
+    Message message = MessageUtils.create(messageSender, conversation);
+
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(RECEIVER_USER_ID))).thenReturn(false);
+
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
 
     assertTrue(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(RECEIVER_USER_ID));
   }
 
   @Test
-  void shouldReturnFalseWhenUserIsTheMessageReceiver() {
-    final var messageOwner = UserUtils.create();
-    final var messageReceiver = UserUtils.create();
+  @DisplayName("Should return false when authenticated user is the message sender (not receiver)")
+  void shouldReturnFalseWhenUserIsTheMessageSender() {
+    User messageSender = UserUtils.create();
+    messageSender.setId(SENDER_USER_ID);
+    User messageReceiver = UserUtils.create();
+    messageReceiver.setId(RECEIVER_USER_ID);
 
-    messageOwner.setId(1L);
-    messageReceiver.setId(2L);
+    Conversation conversation = ConversationUtils.create(messageSender, messageReceiver, null, null);
+    Message message = MessageUtils.create(messageSender, conversation);
 
-    final var conversation = ConversationUtils.create(messageOwner, messageReceiver, null, null);
-    final var message = MessageUtils.create(messageReceiver, conversation);
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(RECEIVER_USER_ID))).thenReturn(true);
 
-    when(messageService.findById(any())).thenReturn(message);
-    when(securityService.isOwner(any())).thenReturn(true);
-
-    final var isReceiver = securityMessageService.isMessageReceiver(1L);
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
 
     assertFalse(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(RECEIVER_USER_ID));
   }
 
   @Test
+  @DisplayName("Should return false when message not found during receiver check")
   void shouldReturnFalseWhenMessageNotFoundInMessageReceiver() {
-    when(messageService.findById(any())).thenThrow(new ResourceNotFoundException("Message not found"));
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenThrow(new ResourceNotFoundException("Message not found"));
 
-    final var isReceiver = securityMessageService.isMessageReceiver(1L);
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
 
     assertFalse(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, never()).isOwner(anyLong());
+  }
+
+  @Test
+  @DisplayName("Should return false when unexpected exception occurs during receiver check")
+  void shouldReturnFalseWhenUnexpectedExceptionInMessageReceiver() {
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenThrow(new RuntimeException("Simulated error"));
+
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
+
+    assertFalse(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, never()).isOwner(anyLong());
+  }
+
+  @Test
+  @DisplayName("Should handle case where message owner is the conversation's requester (sender)")
+  void shouldHandleMessageOwnerIsRequester() {
+    User requester = UserUtils.create();
+    requester.setId(SENDER_USER_ID);
+    User serviceProvider = UserUtils.create();
+    serviceProvider.setId(RECEIVER_USER_ID);
+
+    Conversation conversation = ConversationUtils.create(requester, serviceProvider, null, null);
+    Message message = MessageUtils.create(requester, conversation);
+
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(serviceProvider.getId()))).thenReturn(false);
+
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
+
+    assertTrue(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(serviceProvider.getId()));
+  }
+
+  @Test
+  @DisplayName("Should handle case where message owner is the conversation's service provider (sender)")
+  void shouldHandleMessageOwnerIsServiceProvider() {
+    User requester = UserUtils.create();
+    requester.setId(RECEIVER_USER_ID);
+    User serviceProvider = UserUtils.create();
+    serviceProvider.setId(SENDER_USER_ID);
+
+    Conversation conversation = ConversationUtils.create(requester, serviceProvider, null, null);
+    Message message = MessageUtils.create(serviceProvider, conversation);
+
+    when(messageService.findById(eq(TEST_MESSAGE_ID))).thenReturn(message);
+    when(securityService.isOwner(eq(requester.getId()))).thenReturn(false);
+
+    boolean isReceiver = securityMessageService.isMessageReceiver(TEST_MESSAGE_ID);
+
+    assertTrue(isReceiver);
+    verify(messageService, times(1)).findById(eq(TEST_MESSAGE_ID));
+    verify(securityService, times(1)).isOwner(eq(requester.getId()));
   }
 }

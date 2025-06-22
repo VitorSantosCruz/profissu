@@ -1,6 +1,7 @@
 package br.com.conectabyte.profissu.services.email;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +26,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("SignUpConfirmationService Tests")
 class SignUpConfirmationServiceTest {
+
   @Mock
   private JavaMailSender javaMailSender;
 
@@ -37,6 +41,10 @@ class SignUpConfirmationServiceTest {
   @InjectMocks
   private SignUpConfirmationService signUpConfirmationService;
 
+  private static final String TEST_EMAIL = "newuser@conectabyte.com.br";
+  private static final String TEST_CODE = "SIGNUPCODE";
+  private static final String TEMPLATE_NAME = "code-verification-email.html";
+
   @BeforeEach
   void before() throws Exception {
     final var loadedProfissuProperties = new PropertiesLoader().loadProperties();
@@ -45,32 +53,35 @@ class SignUpConfirmationServiceTest {
   }
 
   @Test
+  @DisplayName("Should send sign up confirmation email successfully")
   void shouldSendSignUpConfirmationEmailSuccessfully() throws MessagingException {
     final var htmlContent = "<html><body>Reset Code: 123456</body></html>";
     final var mimeMessage = mock(MimeMessage.class);
+    final var emailCodeDto = new EmailCodeDto(TEST_EMAIL, TEST_CODE);
 
     when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
     when(templateEngine.process(any(String.class), any(Context.class))).thenReturn(htmlContent);
 
-    signUpConfirmationService.send(new EmailCodeDto("test@conectabyte.com.br", "CODE"));
+    signUpConfirmationService.send(emailCodeDto);
 
     verify(javaMailSender, times(1)).createMimeMessage();
+    verify(templateEngine, times(1)).process(eq(TEMPLATE_NAME), any(Context.class));
     verify(javaMailSender, times(1)).send(mimeMessage);
-    verify(templateEngine, times(1)).process(any(String.class), any(Context.class));
   }
 
   @Test
-  void shouldLogErrorSendSignUpConfirmationWhenMessagingExceptionIsThrown() throws Exception {
-    final var mimeMessage = mock(MimeMessage.class);
+  @DisplayName("Should log error and not send email when MessagingException occurs")
+  void shouldLogErrorWhenMessagingExceptionIsThrown() throws MessagingException {
+    final var emailCodeDto = new EmailCodeDto(TEST_EMAIL, TEST_CODE);
 
     doAnswer(invocation -> {
       throw new MessagingException("Simulated MessagingException");
     }).when(javaMailSender).createMimeMessage();
 
-    signUpConfirmationService.send(new EmailCodeDto("test@conectabyte.com.br", "CODE"));
+    signUpConfirmationService.send(emailCodeDto);
 
     verify(javaMailSender, times(1)).createMimeMessage();
-    verify(javaMailSender, times(0)).send(mimeMessage);
     verify(templateEngine, times(0)).process(any(String.class), any(Context.class));
+    verify(javaMailSender, times(0)).send(any(MimeMessage.class));
   }
 }

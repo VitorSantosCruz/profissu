@@ -27,11 +27,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/messages")
 @RequiredArgsConstructor
 @Tag(name = "Messages", description = "Operations related to managing messages")
+@Slf4j
 public class MessageController {
   private final MessageService messageService;
 
@@ -46,6 +48,7 @@ public class MessageController {
   @PreAuthorize("@securityConversationService.ownershipCheck(#conversationId) || @securityConversationService.isRequestedServiceOwner(#conversationId)")
   @GetMapping
   public Page<MessageResponseDto> listMessages(@RequestParam Long conversationId, @ParameterObject Pageable pageable) {
+    log.debug("List messages request received. conversationId: {}, pageable: {}", conversationId, pageable);
     return this.messageService.listMessages(conversationId, pageable);
   }
 
@@ -61,6 +64,7 @@ public class MessageController {
   @PostMapping
   public ResponseEntity<MessageResponseDto> sendMessage(@RequestParam Long conversationId,
       @Valid @RequestBody MessageRequestDto messageRequestDto) {
+    log.debug("Send message request received. conversationId: {}, messageRequestDto: {}", conversationId, messageRequestDto);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(this.messageService.sendMessage(conversationId, messageRequestDto));
   }
@@ -76,6 +80,7 @@ public class MessageController {
   @PreAuthorize("@securityMessageService.isMessageReceiver(#id)")
   @PatchMapping("/{id}/read")
   public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
+    log.debug("Mark message as read request received. messageId: {}", id);
     messageService.markAsRead(id);
     return ResponseEntity.accepted().build();
   }

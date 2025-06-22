@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+  <property name="APP_NAME" value="profissu" />
+
+  <property name="LOG_PATTERN_CONSOLE"
+    value="%gray(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}) %green(%-5level) %magenta(%thread) %gray(---) %gray([%X{springAppName:-${APP_NAME}}]) %blue(%logger{36}) %gray(:) [%cyan(%X{X-Correlation-ID})] %white(%msg%n)" />
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN_CONSOLE}</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE" />
+  </root>
+
+  <logger name="org.springframework" level="WARN" />
+  <logger name="br.com.conectabyte.profissu" level="DEBUG" />
+</configuration>

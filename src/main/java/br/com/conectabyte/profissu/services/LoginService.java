@@ -22,21 +22,27 @@ public class LoginService {
 
   @Transactional
   public LoginResponseDto login(LoginRequestDto loginRequest) {
+    log.info("Attempting login for email: {}", loginRequest.email());
+
     final var user = this.validate(loginRequest);
 
+    log.info("Login successful for user ID: {}", user.getId());
     return jwtService.createJwtToken(user);
   }
 
   private User validate(LoginRequestDto loginRequest) {
+    log.debug("Validating credentials for email: {}", loginRequest.email());
     User user = null;
 
     try {
       user = userService.findByEmail(loginRequest.email());
+      log.debug("User found by email: {}", loginRequest.email());
     } catch (Exception e) {
-      log.debug(e.getMessage());
+      log.debug("User not found by email {}: {}", loginRequest.email(), e.getMessage());
     }
 
     if (user == null || !user.isValidPassword(loginRequest.password(), passwordEncoder)) {
+      log.warn("Login failed for email {}: Invalid credentials.", loginRequest.email());
       throw new BadCredentialsException("Credentials is not valid");
     }
 
@@ -45,9 +51,11 @@ public class LoginService {
         .filter(c -> c.getVerificationCompletedAt() == null)
         .findFirst()
         .ifPresent(c -> {
+          log.warn("Login failed for email {}: Email not verified.", loginRequest.email());
           throw new EmailNotVerifiedException("E-mail is not verified");
         });
 
+    log.debug("Credentials validated successfully for user ID: {}", user.getId());
     return user;
   }
 }
