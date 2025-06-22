@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,6 +27,7 @@ import br.com.conectabyte.profissu.utils.TokenUtils;
 import br.com.conectabyte.profissu.utils.UserUtils;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TokenService Tests")
 class TokenServiceTest {
   @Mock
   private TokenRepository tokenRepository;
@@ -51,6 +53,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should save token successfully")
   void shouldSaveTokenSuccessfully() {
     when(tokenRepository.save(any())).thenReturn(token);
 
@@ -60,6 +63,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should delete token successfully")
   void shouldDeleteTokenSuccessfully() {
     doNothing().when(tokenRepository).delete(any());
 
@@ -69,6 +73,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should delete token by user successfully")
   void shouldDeleteTokenByUserSuccessfully() {
     when(user.getToken()).thenReturn(token);
     doNothing().when(tokenRepository).delete(any());
@@ -79,6 +84,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should not delete token when user has no token")
   void shouldNotDeleteTokenWhenUserHasNoToken() {
     when(user.getToken()).thenReturn(null);
 
@@ -89,6 +95,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should build and save token successfully")
   void shouldBuildAndSaveTokenSuccessfully() {
     final var user = UserUtils.create();
     final var encodedValue = "encoded";
@@ -108,6 +115,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should return error when token is missing")
   void shouldReturnErrorWhenTokenIsMissing() {
     when(user.getToken()).thenReturn(null);
 
@@ -117,6 +125,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should return error when token is invalid")
   void shouldReturnErrorWhenTokenIsInvalid() {
     when(user.getToken()).thenReturn(token);
     when(bCryptPasswordEncoder.matches(any(), any())).thenReturn(false);
@@ -127,6 +136,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should return error when token is expired")
   void shouldReturnErrorWhenTokenIsExpired() throws Exception {
     setUp();
     token.setCreatedAt(LocalDateTime.now().minusMinutes(2));
@@ -139,6 +149,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should return null when token is valid")
   void shouldReturnNullWhenTokenIsValid() throws Exception {
     setUp();
     token.setCreatedAt(LocalDateTime.now().plusMinutes(2));
@@ -151,6 +162,7 @@ class TokenServiceTest {
   }
 
   @Test
+  @DisplayName("Should invoke flush on repository")
   void shouldInvokeFlushOnRepository() {
     doNothing().when(tokenRepository).flush();
 

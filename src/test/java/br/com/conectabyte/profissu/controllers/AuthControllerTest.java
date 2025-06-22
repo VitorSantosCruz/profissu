@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -43,7 +44,8 @@ import br.com.conectabyte.profissu.utils.UserUtils;
 
 @WebMvcTest({ AuthController.class, ProfissuProperties.class })
 @Import(SecurityConfig.class)
-public class AuthControllerTest {
+@DisplayName("AuthController Tests")
+class AuthControllerTest {
   private final UserMapper userMapper = UserMapper.INSTANCE;
 
   @MockitoBean
@@ -62,6 +64,7 @@ public class AuthControllerTest {
   private ObjectMapper objectMapper;
 
   @Test
+  @DisplayName("Should return token when credentials are valid")
   void shouldReturnTokenWhenCredentialsAreValid() throws Exception {
     final var token = "token_test";
     final var expiresIn = 1L;
@@ -78,6 +81,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should return unauthorized when credentials are invalid")
   void shouldReturnUnauthorizedWhenCredentialsAreInvalid() throws Exception {
     final var email = "invalid@conectabyte.com.br";
     final var password = "admin";
@@ -92,6 +96,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should return unauthorized when email is not verified")
   void shouldReturnUnauthorizedWhenEmailIsNotVerified() throws Exception {
     final var email = "invalid@conectabyte.com.br";
     final var password = "admin";
@@ -106,15 +111,18 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenRequestBodyIsMalformed() throws Exception {
+  @DisplayName("Should return bad request when login request body is malformed")
+  void shouldReturnBadRequestWhenLoginRequestBodyIsMalformed() throws Exception {
     mockMvc.perform(post("/auth/login")
-        .contentType(MediaType.APPLICATION_JSON))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{invalidJson}"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Malformed json"));
   }
 
   @Test
-  void shouldReturnBadRequestWhenEmailIsMissing() throws Exception {
+  @DisplayName("Should return bad request when login email is missing")
+  void shouldReturnBadRequestWhenLoginEmailIsMissing() throws Exception {
     final var password = "admin";
 
     mockMvc.perform(post("/auth/login")
@@ -125,7 +133,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenPasswordIsMissing() throws Exception {
+  @DisplayName("Should return bad request when login password is missing")
+  void shouldReturnBadRequestWhenLoginPasswordIsMissing() throws Exception {
     final var email = "invalid@conectabyte.com.br";
 
     mockMvc.perform(post("/auth/login")
@@ -136,6 +145,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should register user when data is valid")
   void shouldRegisterUserWhenDataIsValid() throws Exception {
     final var user = UserUtils.create();
 
@@ -160,7 +170,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenEmailIsAlreadyRegistered() throws Exception {
+  @DisplayName("Should return bad request when register request is invalid (e.g., missing name)")
+  void shouldReturnBadRequestWhenRegisterRequestIsInvalid() throws Exception {
     final var user = UserUtils.create();
     user.setContacts(List.of(ContactUtils.create(user)));
     user.setAddresses(List.of(AddressUtils.create(user)));
@@ -174,6 +185,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should accept password recovery request when email is valid")
   void shouldAcceptPasswordRecoveryRequestWhenEmailIsValid() throws Exception {
     final var emailValueRequestDto = new EmailValueRequestDto("test@conectabyte.com.br");
     doNothing().when(userService).recoverPassword(any());
@@ -185,6 +197,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should return bad request when password recovery email is missing")
   void shouldReturnBadRequestWhenPasswordRecoveryEmailIsMissing() throws Exception {
     final var emailValueRequestDto = new EmailValueRequestDto(null);
 
@@ -196,6 +209,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should reset password successfully when data is valid")
   void shouldResetPasswordSuccessfullyWhenDataIsValid() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", "CODE");
     when(userService.resetPassword(any())).thenReturn(new MessageValueResponseDto("Password was updated."));
@@ -208,7 +222,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenCodeIsInvalid() throws Exception {
+  @DisplayName("Should return bad request when reset password code is invalid")
+  void shouldReturnBadRequestWhenResetPasswordCodeIsInvalid() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("invalid@conectabyte.com.br", "@Admin123", "CODE");
 
     when(userService.resetPassword(any())).thenThrow(new ValidationException("Reset code is invalid."));
@@ -221,7 +236,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenResetEmailIsMissing() throws Exception {
+  @DisplayName("Should return bad request when reset password email is missing")
+  void shouldReturnBadRequestWhenResetPasswordEmailIsMissing() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto(null, "@Admin123", "CODE");
 
     mockMvc.perform(post("/auth/password-reset")
@@ -232,6 +248,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should return bad request when reset password is missing")
   void shouldReturnBadRequestWhenResetPasswordIsMissing() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", null, "CODE");
 
@@ -243,7 +260,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenCodeIsMissing() throws Exception {
+  @DisplayName("Should return bad request when reset password code is missing")
+  void shouldReturnBadRequestWhenResetPasswordCodeIsMissing() throws Exception {
     final var resetPasswordRequestDto = new ResetPasswordRequestDto("test@conectabyte.com.br", "@Admin123", null);
 
     mockMvc.perform(post("/auth/password-reset")
@@ -254,6 +272,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should confirm signup successfully when data is valid")
   void shouldConfirmSignupSuccessfullyWhenDataIsValid() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
     when(contactService.contactConfirmation(any())).thenReturn(new MessageValueResponseDto("Sign up was confirmed."));
@@ -266,7 +285,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenSignupCodeIsInvalid() throws Exception {
+  @DisplayName("Should return bad request when signup confirmation code is invalid")
+  void shouldReturnBadRequestWhenSignupConfirmationCodeIsInvalid() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", "CODE");
 
     when(contactService.contactConfirmation(any())).thenThrow(new ValidationException("Reset code is invalid."));
@@ -279,7 +299,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenSignupResetEmailIsMissing() throws Exception {
+  @DisplayName("Should return bad request when signup confirmation email is missing")
+  void shouldReturnBadRequestWhenSignupConfirmationEmailIsMissing() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto(null, "CODE");
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
@@ -290,7 +311,8 @@ public class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenSignupCodeIsMissing() throws Exception {
+  @DisplayName("Should return bad request when signup confirmation code is missing")
+  void shouldReturnBadRequestWhenSignupConfirmationCodeIsMissing() throws Exception {
     final var signUpConfirmationRequestDto = new ContactConfirmationRequestDto("test@conectabyte.com.br", null);
 
     mockMvc.perform(post("/auth/sign-up-confirmation")
@@ -301,6 +323,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should accept sign-up confirmation resend request when email is valid")
   void shouldAcceptSignUpConfirmationResendRequestWhenEmailIsValid() throws Exception {
     final var emailValueRequestDto = new EmailValueRequestDto("test@conectabyte.com.br");
     doNothing().when(userService).resendSignUpConfirmation(any());
@@ -312,6 +335,7 @@ public class AuthControllerTest {
   }
 
   @Test
+  @DisplayName("Should return bad request when sign-up confirmation resend email is missing")
   void shouldReturnBadRequestWhenSignUpConfirmationResendEmailIsMissing() throws Exception {
     final var emailValueRequestDto = new EmailValueRequestDto(null);
 
