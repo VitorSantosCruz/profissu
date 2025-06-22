@@ -28,10 +28,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/requested-services")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Requested services", description = "Operations related to managing requested services")
 public class RequestedServiceController {
   private final RequestedServiceService requestedServiceService;
@@ -44,6 +46,7 @@ public class RequestedServiceController {
   })
   @GetMapping
   public Page<RequestedServiceResponseDto> findAvailableServiceRequests(@ParameterObject Pageable pageable) {
+    log.debug("Find available requested services with pageable: {}", pageable);
     return requestedServiceService.findAvailableServiceRequests(pageable);
   }
 
@@ -55,6 +58,7 @@ public class RequestedServiceController {
   @GetMapping("/by-user")
   public Page<RequestedServiceResponseDto> findByUserId(@RequestParam Long userId,
       @ParameterObject Pageable pageable) {
+    log.debug("Find requested services by userId: {}, pageable: {}", userId, pageable);
     return requestedServiceService.findByUserId(userId, pageable);
   }
 
@@ -67,6 +71,7 @@ public class RequestedServiceController {
   @PostMapping
   public ResponseEntity<RequestedServiceResponseDto> register(
       @Valid @RequestBody RequestedServiceRequestDto requestedServiceRequestDto) {
+    log.debug("Register requested service request received: {}", requestedServiceRequestDto);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(this.requestedServiceService.register(requestedServiceRequestDto));
   }
@@ -82,6 +87,7 @@ public class RequestedServiceController {
   @PatchMapping("/{id}/{requestedServiceStatusEnum}")
   public ResponseEntity<RequestedServiceResponseDto> changeStatusTOcancelOrDone(@PathVariable Long id,
       @PathVariable RequestedServiceStatusEnum requestedServiceStatusEnum) {
+    log.debug("Change status request received. ID: {}, New status: {}", id, requestedServiceStatusEnum);
     return ResponseEntity.ok(requestedServiceService.changeStatusTOcancelOrDone(id, requestedServiceStatusEnum));
   }
 }

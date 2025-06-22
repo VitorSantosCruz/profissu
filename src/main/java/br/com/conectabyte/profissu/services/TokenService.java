@@ -23,41 +23,58 @@ public class TokenService {
   private final ProfissuProperties profissuProperties;
 
   public Token save(Token token) {
-    return this.tokenRepository.save(token);
+    log.debug("Saving token for user ID: {}", token.getUser().getId());
+
+    final var savedToken = this.tokenRepository.save(token);
+
+    log.info("Token saved with ID: {} for user ID: {}", savedToken.getId(), savedToken.getUser().getId());
+    return savedToken;
   }
 
   public void delete(Token token) {
+    log.debug("Deleting token with ID: {}", token.getId());
     this.tokenRepository.delete(token);
+    log.info("Token with ID: {} deleted successfully.", token.getId());
   }
 
   public void flush() {
+    log.debug("Flushing token repository.");
     tokenRepository.flush();
   }
 
   @Transactional
   public void deleteByUser(User user) {
+    log.debug("Attempting to delete token for user ID: {}", user.getId());
+
     final var token = user.getToken();
 
     if (token == null) {
+      log.debug("No token found to delete for user ID: {}", user.getId());
       return;
     }
 
     token.getUser().setToken(null);
-
     this.delete(token);
+    log.info("Token for user ID: {} deleted via deleteByUser method.", user.getId());
   }
 
   @Transactional
   public void save(User user, String code, PasswordEncoder passwordEncoder) {
+    log.debug("Saving new token for user ID: {}", user.getId());
+
     final var token = Token.builder()
         .value(passwordEncoder.encode(code))
         .user(user)
         .build();
+
     this.deleteByUser(user);
     this.save(token);
+    log.info("New token saved for user ID: {}", user.getId());
   }
 
   public String validateToken(User user, String email, String code) {
+    log.debug("Validating token for user email: {}", email);
+
     final var token = user.getToken();
 
     if (token == null) {
@@ -68,7 +85,7 @@ public class TokenService {
     final var isValidToken = token.isValid(code, bCryptPasswordEncoder);
 
     if (!isValidToken) {
-      log.warn("Reset code is invalid.");
+      log.warn("Reset code is invalid for user email: {}", email);
       return "Reset code is invalid.";
     }
 
@@ -76,11 +93,12 @@ public class TokenService {
     final var isExpiredToken = token.getCreatedAt().plusMinutes(expiresIn).isBefore(LocalDateTime.now());
 
     if (isExpiredToken) {
-      log.warn("Reset code is expired.");
+      log.warn("Reset code is expired for user email: {}. Expires in: {} minutes.", email, expiresIn);
       this.deleteByUser(user);
       return "Reset code is expired.";
     }
 
+    log.debug("Token for user email: {} is valid.", email);
     return null;
   }
 }

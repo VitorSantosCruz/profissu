@@ -9,7 +9,6 @@ import org.thymeleaf.TemplateEngine;
 import br.com.conectabyte.profissu.dtos.request.SendEmailDto;
 import br.com.conectabyte.profissu.dtos.request.TitleEmailDto;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
-import br.com.conectabyte.profissu.services.EmailService;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +22,8 @@ public class RequestedServiceCancellationNotificationService extends EmailServic
 
   @Override
   public void send(TitleEmailDto data) {
+    log.info("Attempting to send service request cancellation notification email to: {}", data.email());
+
     final var variables = Map.of(
         "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "serviceName", data.title());
@@ -32,7 +33,8 @@ public class RequestedServiceCancellationNotificationService extends EmailServic
     try {
       sendEmail(sendEmailDto);
     } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", data.email(), e.getMessage());
+      log.error("Failed to send service request cancellation notification email to {}: {}", data.email(),
+          e.getMessage());
     }
   }
 }

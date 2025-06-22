@@ -27,10 +27,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/conversations")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Conversations", description = "Operations related to managing service offers and conversations")
 public class ConversationController {
   private final ConversationService conversationService;
@@ -42,6 +44,7 @@ public class ConversationController {
   })
   @GetMapping
   public Page<ConversationResponseDto> findCurrentUserConversations(@ParameterObject Pageable pageable) {
+    log.debug("Fetching conversations with pageable: {}", pageable);
     return conversationService.findCurrentUserConversations(pageable);
   }
 
@@ -55,6 +58,7 @@ public class ConversationController {
   @PostMapping
   public ResponseEntity<ConversationResponseDto> start(
       @Valid @RequestBody ConversationRequestDto conversationRequestDto) {
+    log.debug("Starting conversation with data: {}", conversationRequestDto);
     return ResponseEntity.status(HttpStatus.CREATED).body(this.conversationService.start(conversationRequestDto));
   }
 
@@ -69,6 +73,7 @@ public class ConversationController {
   @PreAuthorize("@securityConversationService.ownershipCheck(#id)")
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<ConversationResponseDto> cancelOffer(@PathVariable Long id) {
+    log.debug("Cancelling offer for conversation ID: {}", id);
     return ResponseEntity.ok(this.conversationService.changeOfferStatus(id, OfferStatusEnum.CANCELLED));
   }
 
@@ -83,6 +88,7 @@ public class ConversationController {
   @PatchMapping("/{id}/{offerStatus}")
   public ResponseEntity<ConversationResponseDto> changeOfferStatus(@PathVariable Long id,
       @PathVariable OfferStatusEnum offerStatus) {
+    log.debug("Changing offer status for conversation ID: {} to {}", id, offerStatus);
     return ResponseEntity.ok(this.conversationService.changeOfferStatus(id, offerStatus));
   }
 }

@@ -21,7 +21,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/addresses")
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class AddressController {
   })
   @PostMapping
   public ResponseEntity<AddressResponseDto> register(@Valid @RequestBody AddressRequestDto addressRequestDto) {
+    log.debug("Register address request received: {}", addressRequestDto);
     return ResponseEntity.status(HttpStatus.CREATED).body(this.addressService.register(addressRequestDto));
   }
 
@@ -50,6 +53,7 @@ public class AddressController {
   @PutMapping("/{id}")
   public ResponseEntity<AddressResponseDto> update(@PathVariable Long id,
       @Valid @RequestBody AddressRequestDto addressRequestDto) {
+    log.debug("Update address request received. ID: {}, Payload: {}", id, addressRequestDto);
     return ResponseEntity.ok().body(this.addressService.update(id, addressRequestDto));
   }
 }

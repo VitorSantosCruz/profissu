@@ -26,9 +26,14 @@ public class AddressService {
 
   @Transactional
   public AddressResponseDto register(AddressRequestDto addressRequestDto) {
+    log.debug("Registering new address with data: {}", addressRequestDto);
+
     final var userId = this.jwtService.getClaims()
         .map(claims -> Long.valueOf(claims.get("sub").toString()))
         .orElseThrow();
+
+    log.debug("Retrieved user ID: {} from JWT", userId);
+
     final var addressToBeSaved = addressMapper.addressRequestDtoToAddress(addressRequestDto);
     final var user = this.userService.findById(userId);
 
@@ -36,12 +41,17 @@ public class AddressService {
 
     final var savedAddress = addressRepository.save(addressToBeSaved);
 
+    log.info("Address registered successfully with ID: {}", savedAddress.getId());
     return addressMapper.addressToAddressResponseDto(savedAddress);
   }
 
   @Transactional
   public AddressResponseDto update(Long id, AddressRequestDto addressRequestDto) {
+    log.debug("Updating address with ID: {} with data: {}", id, addressRequestDto);
+
     final var address = findById(id);
+
+    log.debug("Found address to update: {}", address.getId());
 
     address.setUpdatedAt(LocalDateTime.now());
     address.setStreet(addressRequestDto.street());
@@ -52,13 +62,20 @@ public class AddressService {
 
     final var updatedAddress = addressRepository.save(address);
 
+    log.info("Address with ID: {} updated successfully.", updatedAddress.getId());
     return addressMapper.addressToAddressResponseDto(updatedAddress);
   }
 
   public Address findById(Long id) {
-    final var optionalAddress = addressRepository.findById(id);
-    final var address = optionalAddress.orElseThrow(() -> new ResourceNotFoundException("Address not found."));
+    log.debug("Attempting to find address by ID: {}", id);
 
+    final var optionalAddress = addressRepository.findById(id);
+    final var address = optionalAddress.orElseThrow(() -> {
+      log.warn("Address with ID: {} not found.", id);
+      return new ResourceNotFoundException("Address not found.");
+    });
+
+    log.debug("Found address with ID: {}", address.getId());
     return address;
   }
 }

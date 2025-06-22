@@ -26,7 +26,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
@@ -41,6 +43,8 @@ public class ReviewController {
   @GetMapping
   public Page<ReviewResponseDto> findByUserId(@RequestParam Long userId, @RequestParam boolean isReviewOwner,
       @ParameterObject Pageable pageable) {
+    log.debug("Find reviews by user request received. User ID: {}, Is Review Owner: {}, Pageable: {}", userId,
+        isReviewOwner, pageable);
     return reviewService.findByUserId(userId, isReviewOwner, pageable);
   }
 
@@ -54,6 +58,8 @@ public class ReviewController {
   @PreAuthorize("@securityRequestedServiceService.ownershipCheck(#requestedServiceId) || @securityRequestedServiceService.isServiceProvider(#requestedServiceId)")
   public ResponseEntity<ReviewResponseDto> register(@RequestParam Long requestedServiceId,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
+    log.debug("Register review request received. Requested Service ID: {}, Payload: {}", requestedServiceId,
+        reviewRequestDto);
     return ResponseEntity.ok().body(this.reviewService.register(requestedServiceId, reviewRequestDto));
   }
 
@@ -67,6 +73,7 @@ public class ReviewController {
   @PutMapping("{id}")
   public ResponseEntity<ReviewResponseDto> updateById(@PathVariable Long id,
       @Valid @RequestBody ReviewRequestDto reviewRequestDto) {
+    log.debug("Update review by ID request received. ID: {}, Payload: {}", id, reviewRequestDto);
     return ResponseEntity.ok().body(this.reviewService.updateById(id, reviewRequestDto));
   }
 
@@ -79,6 +86,7 @@ public class ReviewController {
   @PreAuthorize("@securityReviewService.ownershipCheck(#id) || @securityService.isAdmin()")
   @DeleteMapping("{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+    log.debug("Delete review by ID request received. ID: {}", id);
     this.reviewService.deleteById(id);
     return ResponseEntity.accepted().build();
   }

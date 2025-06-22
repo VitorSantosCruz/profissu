@@ -9,7 +9,6 @@ import org.thymeleaf.TemplateEngine;
 import br.com.conectabyte.profissu.dtos.request.EmailCodeDto;
 import br.com.conectabyte.profissu.dtos.request.SendEmailDto;
 import br.com.conectabyte.profissu.properties.ProfissuProperties;
-import br.com.conectabyte.profissu.services.EmailService;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +22,8 @@ public class ContactConfirmationService extends EmailService<EmailCodeDto> {
 
   @Override
   public void send(EmailCodeDto data) {
+    log.info("Attempting to send contact confirmation email to: {}", data.email());
+
     final var variables = Map.of(
         "profissuLogoUrl", profissuProperties.getProfissu().getUrl() + LOGO_PATH,
         "code", data.code(),
@@ -36,7 +37,7 @@ public class ContactConfirmationService extends EmailService<EmailCodeDto> {
     try {
       sendEmail(sendEmailDto);
     } catch (MessagingException e) {
-      log.error("Failed to send e-mail to {}: {}", data.email(), e.getMessage());
+      log.error("Failed to send contact confirmation email to {}: {}", data.email(), e.getMessage());
     }
   }
 }

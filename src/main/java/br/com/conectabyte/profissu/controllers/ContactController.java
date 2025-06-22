@@ -22,10 +22,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/contacts")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Contacts", description = "Operations related to managing contacts")
 public class ContactController {
   private final ContactService contactService;
@@ -38,6 +40,7 @@ public class ContactController {
   @PostMapping
   public ResponseEntity<ContactResponseDto> register(
       @Validated(ValidatorGroup.class) @RequestBody ContactRequestDto contactRequestDto) {
+    log.debug("Register contact request received: {}", contactRequestDto);
     return ResponseEntity.status(HttpStatus.CREATED).body(this.contactService.register(contactRequestDto));
   }
 
@@ -52,6 +55,7 @@ public class ContactController {
   @PutMapping("/{id}")
   public ResponseEntity<ContactResponseDto> update(@PathVariable Long id,
       @Validated @RequestBody ContactRequestDto contactRequestDto) {
+    log.debug("Update contact request received for ID {}: {}", id, contactRequestDto);
     return ResponseEntity.ok().body(this.contactService.update(id, contactRequestDto));
   }
 }
