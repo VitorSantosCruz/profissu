@@ -65,6 +65,8 @@ jobs:
           MYSQL_DATABASE_TEST: profissu_test
           MYSQL_USER_TEST: admin
           MYSQL_PASSWORD_TEST: admin
+          SECURITY_USER_NAME: admin
+          SECURITY_USER_PASSWORD: admin
         run: |
           mvn verify
 
