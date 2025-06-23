@@ -35,3 +35,6 @@ build/
 ### RSA keys ###
 profissu.key
 profissu.pub
+
+prometheus-password.txt
+.env
